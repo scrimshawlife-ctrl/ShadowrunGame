@@ -1,0 +1,32 @@
+{
+  "id": "run003",
+  "title": "The Mage's Lair",
+  "description": "Blood mage Haruki Sato has barricaded a Seattle tenement. He's got corp guards on payroll and a healing drone keeping them alive. The mage himself stays near the extraction — take him down first or his guards will overwhelm you.",
+  "difficulty": "Hard",
+  "width": 7,
+  "height": 12,
+  "playerSpawn": { "x": 1, "y": 10 },
+  "extractionPoint": { "x": 3, "y": 1 },
+  "map": [
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 4, 0, 0, 1],
+    [1, 0, 2, 2, 2, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 0, 0, 0, 1, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 2, 0, 2, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1]
+  ],
+  "enemies": [
+    { "type": "guard",  "x": 2, "y": 4, "delay": 0 },
+    { "type": "mage",   "x": 3, "y": 2, "delay": 0 },
+    { "type": "healer", "x": 4, "y": 5, "delay": 2 },
+    { "type": "guard",  "x": 2, "y": 6, "delay": 0 },
+    { "type": "drone",  "x": 5, "y": 3, "delay": 3 },
+    { "type": "elite",  "x": 3, "y": 4, "delay": 5 }
+  ]
+}

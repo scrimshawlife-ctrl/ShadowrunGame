@@ -1,0 +1,31 @@
+{
+  "id": "run002",
+  "title": "Ghost Protocol",
+  "description": "A rogue AI has locked down a corporate server farm. Three floors of automated drones — they patrol in patterns, prefer range. Hack the core terminal and extract via the roof. Bring a lot of ammo.",
+  "difficulty": "Normal",
+  "width": 7,
+  "height": 12,
+  "playerSpawn": { "x": 1, "y": 10 },
+  "extractionPoint": { "x": 3, "y": 1 },
+  "map": [
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 4, 0, 0, 1],
+    [1, 0, 2, 0, 2, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 0, 1, 0, 1, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 2, 0, 2, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1]
+  ],
+  "enemies": [
+    { "type": "drone", "x": 4, "y": 5, "delay": 0 },
+    { "type": "drone", "x": 2, "y": 3, "delay": 2 },
+    { "type": "drone", "x": 4, "y": 3, "delay": 2 },
+    { "type": "elite", "x": 3, "y": 2, "delay": 4 },
+    { "type": "drone", "x": 5, "y": 6, "delay": 6 }
+  ]
+}

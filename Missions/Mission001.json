@@ -1,0 +1,30 @@
+{
+  "id": "run001",
+  "title": "The Extraction",
+  "description": "First run. Corp facility on the east side. Two guards on patrol, a drone inbound. Extract the data chip from the server room and get out through the north exit. Don't get cocky — this is just a warm-up.",
+  "difficulty": "Easy",
+  "width": 7,
+  "height": 12,
+  "playerSpawn": { "x": 1, "y": 10 },
+  "extractionPoint": { "x": 3, "y": 1 },
+  "map": [
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 4, 0, 0, 1],
+    [1, 0, 2, 0, 0, 2, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 2, 0, 0, 0, 2, 1],
+    [1, 0, 0, 3, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1]
+  ],
+  "enemies": [
+    { "type": "guard", "x": 4, "y": 5, "delay": 0 },
+    { "type": "guard", "x": 2, "y": 4, "delay": 0 },
+    { "type": "drone", "x": 5, "y": 3, "delay": 3 },
+    { "type": "guard", "x": 3, "y": 2, "delay": 5 }
+  ]
+}

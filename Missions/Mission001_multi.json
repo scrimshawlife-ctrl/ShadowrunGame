@@ -1,0 +1,134 @@
+{
+  "id": "run001_multi",
+  "title": "The Extraction",
+  "description": "Corporate asset extraction. Neutralize hostiles, navigate the facility, and reach the extraction point.",
+  "rooms": [
+    {
+      "id": "room_0",
+      "title": "Perimeter Courtyard",
+      "map": [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 2, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1]
+      ],
+      "playerSpawn": { "x": 1, "y": 12 },
+      "extractionPoint": null,
+      "enemies": [
+        { "type": "guard", "x": 4, "y": 6, "delay": 0 },
+        { "type": "drone", "x": 2, "y": 5, "delay": 2 }
+      ],
+      "connections": [
+        {
+          "targetRoomId": "room_1",
+          "triggerTileX": 3,
+          "triggerTileY": 8,
+          "targetSpawnX": 3,
+          "targetSpawnY": 12
+        }
+      ]
+    },
+    {
+      "id": "room_1",
+      "title": "Security Wing",
+      "map": [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 0, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1]
+      ],
+      "playerSpawn": { "x": 3, "y": 12 },
+      "extractionPoint": null,
+      "enemies": [
+        { "type": "elite", "x": 3, "y": 5, "delay": 0 },
+        { "type": "guard", "x": 2, "y": 7, "delay": 3 }
+      ],
+      "connections": [
+        {
+          "targetRoomId": "room_0",
+          "triggerTileX": 3,
+          "triggerTileY": 10,
+          "targetSpawnX": 3,
+          "targetSpawnY": 8
+        },
+        {
+          "targetRoomId": "room_2",
+          "triggerTileX": 3,
+          "triggerTileY": 8,
+          "targetSpawnX": 3,
+          "targetSpawnY": 12
+        }
+      ]
+    },
+    {
+      "id": "room_2",
+      "title": "Rooftop Helipad",
+      "map": [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 4, 0, 0, 1],
+        [1, 0, 0, 0, 0, 2, 1],
+        [1, 0, 2, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 2, 0, 1],
+        [1, 2, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1]
+      ],
+      "playerSpawn": { "x": 3, "y": 12 },
+      "extractionPoint": { "x": 3, "y": 3 },
+      "enemies": [
+        { "type": "guard", "x": 4, "y": 6, "delay": 0 },
+        { "type": "mage",  "x": 2, "y": 5, "delay": 4 }
+      ],
+      "connections": [
+        {
+          "targetRoomId": "room_1",
+          "triggerTileX": 3,
+          "triggerTileY": 10,
+          "targetSpawnX": 3,
+          "targetSpawnY": 8
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2816 @@
+{
+  "success" : true,
+  "debug_logs" : [
+    "[2026-04-20T17:08:49.634Z] DEBUG: Runtime host: local (in-process)",
+    "[2026-04-20T17:08:49.634Z] VERBOSE [Operation]: Starting operation {app=Simulator, menubar=false, hasAnalyzePrompt=false, mode=auto, annotate=true, operation=see_command}",
+    "[2026-04-20T17:08:49.634Z] VERBOSE [Performance]: Starting timer 'see_command'",
+    "[2026-04-20T17:08:49.635Z] VERBOSE [Permissions]: Checking screen recording permissions",
+    "[2026-04-20T17:08:49.637Z] VERBOSE [Permissions]: Screen recording permission granted",
+    "[2026-04-20T17:08:49.637Z] VERBOSE [Capture]: Starting capture and detection phase",
+    "[2026-04-20T17:08:49.637Z] VERBOSE [Capture]: Determined capture mode {mode=window}",
+    "[2026-04-20T17:08:49.637Z] VERBOSE [Operation]: Starting operation {mode=window, operation=capture_phase}",
+    "[2026-04-20T17:08:49.637Z] VERBOSE [Performance]: Starting timer 'capture_phase'",
+    "[2026-04-20T17:08:49.637Z] VERBOSE [Capture]: Initiating window capture {app=Simulator, windowTitle=iPhone 17 – iOS 26.4}",
+    "[2026-04-20T17:08:49.761Z] VERBOSE [Capture]: Resolved window id for capture {windowId=13293}",
+    "[2026-04-20T17:08:49.761Z] VERBOSE [Performance]: Starting timer 'window_capture'",
+    "[2026-04-20T17:08:49.872Z] VERBOSE [Performance]: Timer 'window_capture' completed {duration_ms=111}",
+    "[2026-04-20T17:08:49.872Z] VERBOSE [Operation]: Operation completed {operation=capture_phase, success=true, mode=window}",
+    "[2026-04-20T17:08:49.872Z] VERBOSE [Performance]: Timer 'capture_phase' completed {duration_ms=235}",
+    "[2026-04-20T17:08:49.873Z] VERBOSE [Performance]: Starting timer 'file_write'",
+    "[2026-04-20T17:08:49.874Z] VERBOSE: Saved screenshot to: screenshots\/run3_title.png",
+    "[2026-04-20T17:08:49.874Z] VERBOSE [Performance]: Timer 'file_write' completed {duration_ms=0}",
+    "[2026-04-20T17:08:49.874Z] VERBOSE [Operation]: Starting operation {operation=element_detection}",
+    "[2026-04-20T17:08:49.874Z] VERBOSE [Performance]: Starting timer 'element_detection'",
+    "[2026-04-20T17:09:01.266Z] VERBOSE [Operation]: Operation completed {operation=element_detection, success=true}",
+    "[2026-04-20T17:09:01.266Z] VERBOSE [Performance]: Timer 'element_detection' completed {duration_ms=11392}",
+    "[2026-04-20T17:09:01.271Z] VERBOSE [Capture]: Capture completed successfully {screenshotSize=59748, snapshotId=7D9CBF06-47FA-4421-8D53-D893968A68BD, elementCount=353}",
+    "[2026-04-20T17:09:01.271Z] VERBOSE [Operation]: Starting operation {operation=generate_annotations}",
+    "[2026-04-20T17:09:01.271Z] VERBOSE [Performance]: Starting timer 'generate_annotations'",
+    "[2026-04-20T17:09:01.276Z] VERBOSE: Graphics context created successfully",
+    "[2026-04-20T17:09:01.279Z] VERBOSE: Original image drawn",
+    "[2026-04-20T17:09:01.286Z] INFO: Annotating 22 enabled elements out of 353 total",
+    "[2026-04-20T17:09:01.286Z] VERBOSE: Image size: (442.0, 943.0)",
+    "[2026-04-20T17:09:01.286Z] VERBOSE: Estimated window origin from elements: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.287Z] VERBOSE: Drawing element: elem_8",
+    "[2026-04-20T17:09:01.287Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.287Z] VERBOSE: label: NEW RUN",
+    "[2026-04-20T17:09:01.287Z] VERBOSE: rect: (854.0572139303482, 578.5560640732266, 212.88557213930346, 48.3981693363844)",
+    "[2026-04-20T17:09:01.287Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.287Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.287Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.287Z] VERBOSE: elementBounds: (854.0572139303482, 316.045766590389, 212.88557213930346, 48.3981693363844)",
+    "[2026-04-20T17:09:01.291Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, density=0.0, rect=(939.4723973274231, 294.045766590389, 42.05520534515381, 22.0)}",
+    "[2026-04-20T17:09:01.292Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(812.0020085851944, 310.045766590389, 42.05520534515381, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.293Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(1066.9427860696517, 310.045766590389, 42.05520534515381, 22.0), hasText=false, density=0.0}",
+    "[2026-04-20T17:09:01.295Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(812.0020085851944, 348.4439359267734, 42.05520534515381, 22.0), hasText=false, density=0.0}",
+    "[2026-04-20T17:09:01.296Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(1066.9427860696517, 348.4439359267734, 42.05520534515381, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.298Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(1066.9427860696517, 329.2448512585812, 42.05520534515381, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.299Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(812.0020085851944, 329.2448512585812, 42.05520534515381, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.299Z] VERBOSE: Drawing element: elem_3",
+    "[2026-04-20T17:09:01.299Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.299Z] VERBOSE: label: Volume Down",
+    "[2026-04-20T17:09:01.299Z] VERBOSE: rect: (739.2340659340659, 490.60000000000014, 17.490109890109892, 63.96043956043957)",
+    "[2026-04-20T17:09:01.299Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.299Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.299Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.299Z] VERBOSE: elementBounds: (739.2340659340659, 388.4395604395603, 17.490109890109892, 63.96043956043957)",
+    "[2026-04-20T17:09:01.302Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(727.0317899274302, 452.39999999999986, 41.89466190338135, 22.0)}",
+    "[2026-04-20T17:09:01.303Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(697.3394040306846, 382.4395604395603, 41.89466190338135, 22.0)}",
+    "[2026-04-20T17:09:01.304Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(756.7241758241759, 382.4395604395603, 41.89466190338135, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.305Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, density=0.0, rect=(697.3394040306846, 436.39999999999986, 41.89466190338135, 22.0)}",
+    "[2026-04-20T17:09:01.307Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(756.7241758241759, 436.39999999999986, 41.89466190338135, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.309Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(756.7241758241759, 409.41978021978, 41.89466190338135, 22.0)}",
+    "[2026-04-20T17:09:01.312Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, density=0.0, rect=(697.3394040306846, 409.41978021978, 41.89466190338135, 22.0)}",
+    "[2026-04-20T17:09:01.312Z] VERBOSE: Drawing element: elem_14",
+    "[2026-04-20T17:09:01.312Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.312Z] VERBOSE: label: Rotate",
+    "[2026-04-20T17:09:01.312Z] VERBOSE: rect: (1136.0, 854.0, 41.0, 52.0)",
+    "[2026-04-20T17:09:01.312Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.312Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.312Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.312Z] VERBOSE: elementBounds: (1136.0, 37.0, 41.0, 52.0)",
+    "[2026-04-20T17:09:01.313Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, density=0.0, rect=(1133.6211018562317, 15.0, 45.75779628753662, 22.0)}",
+    "[2026-04-20T17:09:01.316Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(1133.6211018562317, 89.0, 45.75779628753662, 22.0), hasText=false, density=0.0}",
+    "[2026-04-20T17:09:01.317Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(1177.0, 31.0, 45.75779628753662, 22.0)}",
+    "[2026-04-20T17:09:01.318Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(1177.0, 73.0, 45.75779628753662, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.321Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(1177.0, 52.0, 45.75779628753662, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.321Z] VERBOSE: Drawing element: elem_12",
+    "[2026-04-20T17:09:01.321Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.321Z] VERBOSE: label: Home",
+    "[2026-04-20T17:09:01.321Z] VERBOSE: rect: (1048.0, 854.0, 45.0, 52.0)",
+    "[2026-04-20T17:09:01.321Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.321Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.321Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.321Z] VERBOSE: elementBounds: (1048.0, 37.0, 45.0, 52.0)",
+    "[2026-04-20T17:09:01.322Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(1047.7911534309387, 15.0, 45.41769313812256, 22.0), hasText=false, density=0.0}",
+    "[2026-04-20T17:09:01.323Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(1047.7911534309387, 89.0, 45.41769313812256, 22.0)}",
+    "[2026-04-20T17:09:01.325Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(1002.5823068618774, 31.0, 45.41769313812256, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.327Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(1002.5823068618774, 73.0, 45.41769313812256, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.329Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(1002.5823068618774, 52.0, 45.41769313812256, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.329Z] VERBOSE: Drawing element: elem_13",
+    "[2026-04-20T17:09:01.329Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.329Z] VERBOSE: label: Save Screen",
+    "[2026-04-20T17:09:01.329Z] VERBOSE: rect: (1093.0, 854.0, 43.0, 52.0)",
+    "[2026-04-20T17:09:01.329Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.329Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.329Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.329Z] VERBOSE: elementBounds: (1093.0, 37.0, 43.0, 52.0)",
+    "[2026-04-20T17:09:01.331Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(1091.6912188529968, 15.0, 45.61756229400635, 22.0)}",
+    "[2026-04-20T17:09:01.332Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(1091.6912188529968, 89.0, 45.61756229400635, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.333Z] VERBOSE: Drawing element: elem_9",
+    "[2026-04-20T17:09:01.333Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.333Z] VERBOSE: label: CONTINUE (COMING SOON)",
+    "[2026-04-20T17:09:01.333Z] VERBOSE: rect: (854.0572139303482, 514.670480549199, 212.88557213930346, 48.39816933638451)",
+    "[2026-04-20T17:09:01.333Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.333Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.333Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.333Z] VERBOSE: elementBounds: (854.0572139303482, 379.93135011441643, 212.88557213930346, 48.39816933638451)",
+    "[2026-04-20T17:09:01.335Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(939.5012373924255, 428.32951945080094, 41.997525215148926, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.339Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(812.0596887151993, 373.93135011441643, 41.997525215148926, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.340Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(1066.9427860696517, 373.93135011441643, 41.997525215148926, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.341Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, density=0.0, rect=(812.0596887151993, 412.32951945080094, 41.997525215148926, 22.0)}",
+    "[2026-04-20T17:09:01.342Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(1066.9427860696517, 412.32951945080094, 41.997525215148926, 22.0), hasText=false, density=0.0}",
+    "[2026-04-20T17:09:01.346Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(1066.9427860696517, 393.13043478260875, 41.997525215148926, 22.0), hasText=false, density=0.0}",
+    "[2026-04-20T17:09:01.350Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(812.0596887151993, 393.13043478260875, 41.997525215148926, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.350Z] VERBOSE: Drawing element: elem_4",
+    "[2026-04-20T17:09:01.350Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.350Z] VERBOSE: label: Sleep\/Wake",
+    "[2026-04-20T17:09:01.350Z] VERBOSE: rect: (1163.2758241758243, 491.568131868132, 17.490109890109863, 99.78131868131868)",
+    "[2026-04-20T17:09:01.350Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.350Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.350Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.350Z] VERBOSE: elementBounds: (1163.2758241758243, 351.6505494505493, 17.490109890109863, 99.78131868131868)",
+    "[2026-04-20T17:09:01.354Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(1151.0239399385978, 329.6505494505493, 41.99387836456299, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.358Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, density=0.0, rect=(1151.0239399385978, 451.431868131868, 41.99387836456299, 22.0)}",
+    "[2026-04-20T17:09:01.361Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(1121.2819458112613, 345.6505494505493, 41.99387836456299, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.365Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(1180.765934065934, 345.6505494505493, 41.99387836456299, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.368Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(1121.2819458112613, 435.431868131868, 41.99387836456299, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.371Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(1180.765934065934, 435.431868131868, 41.99387836456299, 22.0)}",
+    "[2026-04-20T17:09:01.376Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(1180.765934065934, 390.54120879120865, 41.99387836456299, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.380Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, density=0.0, rect=(1121.2819458112613, 390.54120879120865, 41.99387836456299, 22.0)}",
+    "[2026-04-20T17:09:01.380Z] VERBOSE: Drawing element: elem_16",
+    "[2026-04-20T17:09:01.380Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.380Z] VERBOSE: label: full screen button",
+    "[2026-04-20T17:09:01.380Z] VERBOSE: rect: (803.0, 872.0, 16.0, 16.0)",
+    "[2026-04-20T17:09:01.380Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.380Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.380Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.380Z] VERBOSE: elementBounds: (803.0, 55.0, 16.0, 16.0)",
+    "[2026-04-20T17:09:01.388Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(788.139787197113, 33.0, 45.720425605773926, 22.0)}",
+    "[2026-04-20T17:09:01.389Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(788.139787197113, 71.0, 45.720425605773926, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.390Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(819.0, 49.0, 45.720425605773926, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.391Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(819.0, 55.0, 45.720425605773926, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.392Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(819.0, 52.0, 45.720425605773926, 22.0)}",
+    "[2026-04-20T17:09:01.392Z] VERBOSE: Drawing element: elem_2",
+    "[2026-04-20T17:09:01.392Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.392Z] VERBOSE: label: Volume Up",
+    "[2026-04-20T17:09:01.392Z] VERBOSE: rect: (739.2340659340659, 567.0824175824177, 17.490109890109892, 63.96043956043957)",
+    "[2026-04-20T17:09:01.392Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.392Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.392Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.392Z] VERBOSE: elementBounds: (739.2340659340659, 311.9571428571427, 17.490109890109892, 63.96043956043957)",
+    "[2026-04-20T17:09:01.393Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(726.9351750897837, 289.9571428571427, 42.087891578674316, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.394Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(697.1461743553916, 305.9571428571427, 42.087891578674316, 22.0), hasText=false, density=0.0}",
+    "[2026-04-20T17:09:01.397Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(756.7241758241759, 305.9571428571427, 42.087891578674316, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.401Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(697.1461743553916, 359.91758241758225, 42.087891578674316, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.404Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, density=0.0, rect=(756.7241758241759, 359.91758241758225, 42.087891578674316, 22.0)}",
+    "[2026-04-20T17:09:01.408Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(756.7241758241759, 332.9373626373624, 42.087891578674316, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.411Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(697.1461743553916, 332.9373626373624, 42.087891578674316, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.412Z] VERBOSE: Drawing element: elem_15",
+    "[2026-04-20T17:09:01.412Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.412Z] VERBOSE: label: close button",
+    "[2026-04-20T17:09:01.412Z] VERBOSE: rect: (757.0, 872.0, 16.0, 16.0)",
+    "[2026-04-20T17:09:01.412Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.412Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.412Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.412Z] VERBOSE: elementBounds: (757.0, 55.0, 16.0, 16.0)",
+    "[2026-04-20T17:09:01.412Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(742.2183351516724, 33.0, 45.56332969665527, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.413Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(742.2183351516724, 71.0, 45.56332969665527, 22.0)}",
+    "[2026-04-20T17:09:01.415Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(711.4366703033447, 49.0, 45.56332969665527, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.420Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(711.4366703033447, 55.0, 45.56332969665527, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.424Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(711.4366703033447, 52.0, 45.56332969665527, 22.0), hasText=false, density=0.0}",
+    "[2026-04-20T17:09:01.424Z] VERBOSE: Drawing element: elem_1",
+    "[2026-04-20T17:09:01.424Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.424Z] VERBOSE: label: Action",
+    "[2026-04-20T17:09:01.424Z] VERBOSE: rect: (739.2340659340659, 655.1824175824177, 17.490109890109892, 34.91648351648348)",
+    "[2026-04-20T17:09:01.424Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.424Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.424Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.424Z] VERBOSE: elementBounds: (739.2340659340659, 252.90109890109886, 17.490109890109892, 34.91648351648348)",
+    "[2026-04-20T17:09:01.428Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(727.8860894727183, 230.90109890109886, 40.186062812805176, 22.0)}",
+    "[2026-04-20T17:09:01.432Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(699.0480031212608, 246.90109890109886, 40.186062812805176, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.435Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(756.7241758241759, 246.90109890109886, 40.186062812805176, 22.0)}",
+    "[2026-04-20T17:09:01.439Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(699.0480031212608, 271.81758241758234, 40.186062812805176, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.443Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(756.7241758241759, 271.81758241758234, 40.186062812805176, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.447Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(756.7241758241759, 259.35934065934066, 40.186062812805176, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.450Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, density=0.0, rect=(699.0480031212608, 259.35934065934066, 40.186062812805176, 22.0)}",
+    "[2026-04-20T17:09:01.450Z] VERBOSE: Drawing element: elem_19",
+    "[2026-04-20T17:09:01.450Z] VERBOSE: type: button",
+    "[2026-04-20T17:09:01.450Z] VERBOSE: label: minimize button",
+    "[2026-04-20T17:09:01.450Z] VERBOSE: rect: (780.0, 872.0, 16.0, 16.0)",
+    "[2026-04-20T17:09:01.450Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.450Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.450Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.450Z] VERBOSE: elementBounds: (780.0, 55.0, 16.0, 16.0)",
+    "[2026-04-20T17:09:01.451Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(765.139787197113, 71.0, 45.720425605773926, 22.0)}",
+    "[2026-04-20T17:09:01.452Z] VERBOSE: Drawing element: menu_350",
+    "[2026-04-20T17:09:01.452Z] VERBOSE: type: menu",
+    "[2026-04-20T17:09:01.452Z] VERBOSE: label: Help",
+    "[2026-04-20T17:09:01.452Z] VERBOSE: rect: (515.0, 913.0, 48.0, 30.0)",
+    "[2026-04-20T17:09:01.452Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.452Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.452Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.452Z] VERBOSE: elementBounds: (515.0, 0.0, 48.0, 30.0)",
+    "[2026-04-20T17:09:01.452Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(511.1931138038635, -22.0, 55.61377239227295, 22.0)}",
+    "[2026-04-20T17:09:01.453Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(511.1931138038635, 30.0, 55.61377239227295, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.454Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(563.0, 4.0, 55.61377239227295, 22.0)}",
+    "[2026-04-20T17:09:01.454Z] VERBOSE: Drawing element: menu_248",
+    "[2026-04-20T17:09:01.454Z] VERBOSE: type: menu",
+    "[2026-04-20T17:09:01.454Z] VERBOSE: label: Features",
+    "[2026-04-20T17:09:01.454Z] VERBOSE: rect: (313.0, 913.0, 73.0, 30.0)",
+    "[2026-04-20T17:09:01.454Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.454Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.454Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.454Z] VERBOSE: elementBounds: (313.0, 0.0, 73.0, 30.0)",
+    "[2026-04-20T17:09:01.459Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(321.5029125213623, 27.0, 55.99417495727539, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.459Z] VERBOSE: Drawing element: menu_213",
+    "[2026-04-20T17:09:01.459Z] VERBOSE: type: menu",
+    "[2026-04-20T17:09:01.459Z] VERBOSE: label: I\/O",
+    "[2026-04-20T17:09:01.459Z] VERBOSE: rect: (275.0, 913.0, 38.0, 30.0)",
+    "[2026-04-20T17:09:01.459Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.459Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.459Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.459Z] VERBOSE: elementBounds: (275.0, 0.0, 38.0, 30.0)",
+    "[2026-04-20T17:09:01.462Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(266.7507619857788, 27.0, 54.49847602844238, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.462Z] VERBOSE: Drawing element: menu_295",
+    "[2026-04-20T17:09:01.462Z] VERBOSE: type: menu",
+    "[2026-04-20T17:09:01.462Z] VERBOSE: label: Window",
+    "[2026-04-20T17:09:01.462Z] VERBOSE: rect: (446.0, 913.0, 69.0, 30.0)",
+    "[2026-04-20T17:09:01.462Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.462Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.462Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.462Z] VERBOSE: elementBounds: (446.0, 0.0, 69.0, 30.0)",
+    "[2026-04-20T17:09:01.463Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(452.5889458656311, -22.0, 55.82210826873779, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.464Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, rect=(452.5889458656311, 30.0, 55.82210826873779, 22.0), hasText=false}",
+    "[2026-04-20T17:09:01.464Z] VERBOSE: Drawing element: menu_276",
+    "[2026-04-20T17:09:01.464Z] VERBOSE: type: menu",
+    "[2026-04-20T17:09:01.464Z] VERBOSE: label: Debug",
+    "[2026-04-20T17:09:01.464Z] VERBOSE: rect: (386.0, 913.0, 60.0, 30.0)",
+    "[2026-04-20T17:09:01.464Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.464Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.464Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.464Z] VERBOSE: elementBounds: (386.0, 0.0, 60.0, 30.0)",
+    "[2026-04-20T17:09:01.469Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(388.362024307251, 27.0, 53.63797569274902, 22.0), hasText=true, density=1.0}",
+    "[2026-04-20T17:09:01.469Z] VERBOSE: Drawing element: menu_22",
+    "[2026-04-20T17:09:01.469Z] VERBOSE: type: menu",
+    "[2026-04-20T17:09:01.469Z] VERBOSE: label: Apple",
+    "[2026-04-20T17:09:01.469Z] VERBOSE: rect: (10.0, 913.0, 34.0, 30.0)",
+    "[2026-04-20T17:09:01.469Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.469Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.469Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.469Z] VERBOSE: elementBounds: (10.0, 0.0, 34.0, 30.0)",
+    "[2026-04-20T17:09:01.474Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=true, rect=(1.928945541381836, 27.0, 50.14210891723633, 22.0), density=0.9990909}",
+    "[2026-04-20T17:09:01.474Z] VERBOSE: Drawing element: menu_164",
+    "[2026-04-20T17:09:01.474Z] VERBOSE: type: menu",
+    "[2026-04-20T17:09:01.474Z] VERBOSE: label: Edit",
+    "[2026-04-20T17:09:01.474Z] VERBOSE: rect: (169.0, 913.0, 44.0, 30.0)",
+    "[2026-04-20T17:09:01.474Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.474Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.474Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.474Z] VERBOSE: elementBounds: (169.0, 0.0, 44.0, 30.0)",
+    "[2026-04-20T17:09:01.477Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(163.942626953125, 27.0, 54.11474609375, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.477Z] VERBOSE: Drawing element: menu_94",
+    "[2026-04-20T17:09:01.477Z] VERBOSE: type: menu",
+    "[2026-04-20T17:09:01.477Z] VERBOSE: label: Simulator",
+    "[2026-04-20T17:09:01.477Z] VERBOSE: rect: (44.0, 913.0, 83.0, 30.0)",
+    "[2026-04-20T17:09:01.477Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.477Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.477Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.477Z] VERBOSE: elementBounds: (44.0, 0.0, 83.0, 30.0)",
+    "[2026-04-20T17:09:01.479Z] VERBOSE [LabelPlacement]: Edge detection for region {density=0.0, hasText=false, rect=(60.3040771484375, 27.0, 50.391845703125, 22.0)}",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: Drawing element: menu_183",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: type: menu",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: label: Device",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: rect: (213.0, 913.0, 62.0, 30.0)",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: elementBounds: (213.0, 0.0, 62.0, 30.0)",
+    "[2026-04-20T17:09:01.479Z] VERBOSE [LabelPlacement]: Edge detection for region {rect=(216.9839038848877, 27.0, 54.03219223022461, 22.0), density=0.0, hasText=false}",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: Drawing element: menu_119",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: type: menu",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: label: File",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: rect: (127.0, 913.0, 42.0, 30.0)",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: enabled: true",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: selected: nil",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: windowOrigin: (0.0, 0.0)",
+    "[2026-04-20T17:09:01.479Z] VERBOSE: elementBounds: (127.0, 0.0, 42.0, 30.0)",
+    "[2026-04-20T17:09:01.481Z] VERBOSE [LabelPlacement]: Edge detection for region {hasText=false, rect=(121.65024471282959, 27.0, 52.69951057434082, 22.0), density=0.0}",
+    "[2026-04-20T17:09:01.490Z] VERBOSE: Created annotated screenshot: screenshots\/run3_title_annotated.png",
+    "[2026-04-20T17:09:01.501Z] VERBOSE [Operation]: Operation completed {annotatedPath=screenshots\/run3_title_annotated.png, success=true, operation=generate_annotations}",
+    "[2026-04-20T17:09:01.501Z] VERBOSE [Performance]: Timer 'generate_annotations' completed {duration_ms=229}",
+    "[2026-04-20T17:09:01.501Z] VERBOSE [Operation]: Operation completed {success=true, executionTimeMs=11867, operation=see_command}",
+    "[2026-04-20T17:09:01.501Z] VERBOSE [Performance]: Timer 'see_command' completed {duration_ms=11867}"
+  ],
+  "data" : {
+    "execution_time" : 11.867244958877563,
+    "ui_map" : "\/Users\/prabu\/.peekaboo\/snapshots\/7D9CBF06-47FA-4421-8D53-D893968A68BD\/snapshot.json",
+    "element_count" : 353,
+    "capture_mode" : "window",
+    "is_dialog" : false,
+    "screenshot_annotated" : "screenshots\/run3_title_annotated.png",
+    "window_title" : "iPhone 17 – iOS 26.4",
+    "success" : true,
+    "interactable_count" : 275,
+    "snapshot_id" : "7D9CBF06-47FA-4421-8D53-D893968A68BD",
+    "ui_elements" : [
+      {
+        "title" : "Action",
+        "role_description" : "button",
+        "label" : "Action",
+        "is_actionable" : true,
+        "role" : "button",
+        "id" : "elem_1"
+      },
+      {
+        "title" : "Volume Up",
+        "role_description" : "button",
+        "label" : "Volume Up",
+        "is_actionable" : true,
+        "role" : "button",
+        "id" : "elem_2"
+      },
+      {
+        "title" : "Volume Down",
+        "role_description" : "button",
+        "label" : "Volume Down",
+        "is_actionable" : true,
+        "role" : "button",
+        "id" : "elem_3"
+      },
+      {
+        "title" : "Sleep\/Wake",
+        "role_description" : "button",
+        "label" : "Sleep\/Wake",
+        "is_actionable" : true,
+        "role" : "button",
+        "id" : "elem_4"
+      },
+      {
+        "description" : "NEW RUN",
+        "role_description" : "button",
+        "label" : "NEW RUN",
+        "is_actionable" : true,
+        "role" : "button",
+        "id" : "elem_8"
+      },
+      {
+        "description" : "CONTINUE (COMING SOON)",
+        "role_description" : "button",
+        "label" : "CONTINUE (COMING SOON)",
+        "is_actionable" : false,
+        "role" : "button",
+        "id" : "elem_9"
+      },
+      {
+        "role_description" : "button",
+        "description" : "Home",
+        "is_actionable" : true,
+        "label" : "Home",
+        "role" : "button",
+        "id" : "elem_12",
+        "help" : "Home"
+      },
+      {
+        "role_description" : "button",
+        "description" : "Save Screen",
+        "is_actionable" : true,
+        "label" : "Save Screen",
+        "role" : "button",
+        "id" : "elem_13",
+        "help" : "Save Screen"
+      },
+      {
+        "role_description" : "button",
+        "description" : "Rotate",
+        "is_actionable" : true,
+        "label" : "Rotate",
+        "role" : "button",
+        "id" : "elem_14",
+        "help" : "Rotate"
+      },
+      {
+        "role_description" : "close button",
+        "label" : "close button",
+        "is_actionable" : true,
+        "role" : "button",
+        "id" : "elem_15"
+      },
+      {
+        "role_description" : "full screen button",
+        "label" : "full screen button",
+        "is_actionable" : true,
+        "help" : "this button also has an action to zoom the window",
+        "role" : "button",
+        "id" : "elem_16"
+      },
+      {
+        "role_description" : "minimize button",
+        "label" : "minimize button",
+        "is_actionable" : true,
+        "role" : "button",
+        "id" : "elem_19"
+      },
+      {
+        "role_description" : "group",
+        "label" : "group",
+        "is_actionable" : true,
+        "role" : "group",
+        "id" : "elem_5"
+      },
+      {
+        "role_description" : "group",
+        "label" : "group",
+        "is_actionable" : false,
+        "role" : "group",
+        "id" : "elem_17"
+      },
+      {
+        "role_description" : "group",
+        "label" : "group",
+        "is_actionable" : false,
+        "role" : "group",
+        "id" : "elem_18"
+      },
+      {
+        "label" : "Apple",
+        "is_actionable" : true,
+        "role" : "menu",
+        "id" : "menu_22"
+      },
+      {
+        "label" : "Simulator",
+        "is_actionable" : true,
+        "role" : "menu",
+        "id" : "menu_94"
+      },
+      {
+        "label" : "File",
+        "is_actionable" : true,
+        "role" : "menu",
+        "id" : "menu_119"
+      },
+      {
+        "label" : "Edit",
+        "is_actionable" : true,
+        "role" : "menu",
+        "id" : "menu_164"
+      },
+      {
+        "label" : "Device",
+        "is_actionable" : true,
+        "role" : "menu",
+        "id" : "menu_183"
+      },
+      {
+        "label" : "I\/O",
+        "is_actionable" : true,
+        "role" : "menu",
+        "id" : "menu_213"
+      },
+      {
+        "label" : "Features",
+        "is_actionable" : true,
+        "role" : "menu",
+        "id" : "menu_248"
+      },
+      {
+        "label" : "Debug",
+        "is_actionable" : true,
+        "role" : "menu",
+        "id" : "menu_276"
+      },
+      {
+        "label" : "Window",
+        "is_actionable" : true,
+        "role" : "menu",
+        "id" : "menu_295"
+      },
+      {
+        "label" : "Help",
+        "is_actionable" : true,
+        "role" : "menu",
+        "id" : "menu_350"
+      },
+      {
+        "title" : "iPhone 17 – iOS 26.4",
+        "role_description" : "standard window",
+        "label" : "iPhone 17 – iOS 26.4",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "elem_0"
+      },
+      {
+        "description" : "SHADOWRUN",
+        "role_description" : "text",
+        "label" : "text",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "elem_6"
+      },
+      {
+        "description" : "TACTICAL",
+        "role_description" : "text",
+        "label" : "text",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "elem_7"
+      },
+      {
+        "description" : "v0.1 \/\/ TACTICAL COMBAT SYSTEM",
+        "role_description" : "text",
+        "label" : "text",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "elem_10"
+      },
+      {
+        "role_description" : "toolbar",
+        "label" : "toolbar",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "elem_11"
+      },
+      {
+        "role_description" : "text",
+        "label" : "iPhone 17",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "elem_20"
+      },
+      {
+        "role_description" : "text",
+        "label" : "iOS 26.4",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "elem_21"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_23"
+      },
+      {
+        "title" : "About This Mac",
+        "label" : "About This Mac",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_24"
+      },
+      {
+        "title" : "System Information",
+        "label" : "System Information",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_25"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_26"
+      },
+      {
+        "title" : "System Settings…, 2 updates",
+        "label" : "System Settings…, 2 updates",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_27"
+      },
+      {
+        "title" : "App Store…, 6 updates",
+        "label" : "App Store…, 6 updates",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_28"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_29"
+      },
+      {
+        "title" : "Recent Items",
+        "label" : "Recent Items",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_30"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_31"
+      },
+      {
+        "title" : "Applications",
+        "label" : "Applications",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_32"
+      },
+      {
+        "title" : "Claude",
+        "label" : "Claude",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_33"
+      },
+      {
+        "title" : "Show “Claude” in Finder",
+        "label" : "Show “Claude” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_34"
+      },
+      {
+        "title" : "Google Chrome",
+        "label" : "Google Chrome",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_35"
+      },
+      {
+        "title" : "Show “Google Chrome” in Finder",
+        "label" : "Show “Google Chrome” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_36"
+      },
+      {
+        "title" : "iPhone Mirroring",
+        "label" : "iPhone Mirroring",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_37"
+      },
+      {
+        "title" : "Show “iPhone Mirroring” in Finder",
+        "label" : "Show “iPhone Mirroring” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_38"
+      },
+      {
+        "title" : "Pages",
+        "label" : "Pages",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_39"
+      },
+      {
+        "title" : "Show “Pages” in Finder",
+        "label" : "Show “Pages” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_40"
+      },
+      {
+        "title" : "Preview",
+        "label" : "Preview",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_41"
+      },
+      {
+        "title" : "Show “Preview” in Finder",
+        "label" : "Show “Preview” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_42"
+      },
+      {
+        "title" : "QuickTime Player",
+        "label" : "QuickTime Player",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_43"
+      },
+      {
+        "title" : "Show “QuickTime Player” in Finder",
+        "label" : "Show “QuickTime Player” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_44"
+      },
+      {
+        "title" : "Safari",
+        "label" : "Safari",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_45"
+      },
+      {
+        "title" : "Show “Safari” in Finder",
+        "label" : "Show “Safari” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_46"
+      },
+      {
+        "title" : "Simulator",
+        "label" : "Simulator",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_47"
+      },
+      {
+        "title" : "Show “Simulator” in Finder",
+        "label" : "Show “Simulator” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_48"
+      },
+      {
+        "title" : "Terminal",
+        "label" : "Terminal",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_49"
+      },
+      {
+        "title" : "Show “Terminal” in Finder",
+        "label" : "Show “Terminal” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_50"
+      },
+      {
+        "title" : "Xcode",
+        "label" : "Xcode",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_51"
+      },
+      {
+        "title" : "Show “Xcode” in Finder",
+        "label" : "Show “Xcode” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_52"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_53"
+      },
+      {
+        "title" : "Documents",
+        "label" : "Documents",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_54"
+      },
+      {
+        "title" : "BattleScene.swift",
+        "label" : "BattleScene.swift",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_55"
+      },
+      {
+        "title" : "Show “BattleScene.swift” in Finder",
+        "label" : "Show “BattleScene.swift” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_56"
+      },
+      {
+        "title" : "hf-test-image.jpg",
+        "label" : "hf-test-image.jpg",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_57"
+      },
+      {
+        "title" : "Show “hf-test-image.jpg” in Finder",
+        "label" : "Show “hf-test-image.jpg” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_58"
+      },
+      {
+        "title" : "MissionLoader.swift",
+        "label" : "MissionLoader.swift",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_59"
+      },
+      {
+        "title" : "Show “MissionLoader.swift” in Finder",
+        "label" : "Show “MissionLoader.swift” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_60"
+      },
+      {
+        "title" : "Screenshot 2026-04-19 at 1.51.43 AM.png",
+        "label" : "Screenshot 2026-04-19 at 1.51.43 AM.png",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_61"
+      },
+      {
+        "title" : "Show “Screenshot 2026-04-19 at 1.51.43 AM.png” in Finder",
+        "label" : "Show “Screenshot 2026-04-19 at 1.51.43 AM.png” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_62"
+      },
+      {
+        "title" : "ShadowrunGame-screenshot.png",
+        "label" : "ShadowrunGame-screenshot.png",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_63"
+      },
+      {
+        "title" : "Show “ShadowrunGame-screenshot.png” in Finder",
+        "label" : "Show “ShadowrunGame-screenshot.png” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_64"
+      },
+      {
+        "title" : "ShadowrunGame.xcodeproj",
+        "label" : "ShadowrunGame.xcodeproj",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_65"
+      },
+      {
+        "title" : "Show “ShadowrunGame.xcodeproj” in Finder",
+        "label" : "Show “ShadowrunGame.xcodeproj” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_66"
+      },
+      {
+        "title" : "ShadowrunGame.xcodeproj",
+        "label" : "ShadowrunGame.xcodeproj",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_67"
+      },
+      {
+        "title" : "Show “ShadowrunGame.xcodeproj” in Finder",
+        "label" : "Show “ShadowrunGame.xcodeproj” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_68"
+      },
+      {
+        "title" : "ShadowrunGame.xcodeproj",
+        "label" : "ShadowrunGame.xcodeproj",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_69"
+      },
+      {
+        "title" : "Show “ShadowrunGame.xcodeproj” in Finder",
+        "label" : "Show “ShadowrunGame.xcodeproj” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_70"
+      },
+      {
+        "title" : "TileMap.swift",
+        "label" : "TileMap.swift",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_71"
+      },
+      {
+        "title" : "Show “TileMap.swift” in Finder",
+        "label" : "Show “TileMap.swift” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_72"
+      },
+      {
+        "title" : "TileMap.swift",
+        "label" : "TileMap.swift",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_73"
+      },
+      {
+        "title" : "Show “TileMap.swift” in Finder",
+        "label" : "Show “TileMap.swift” in Finder",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_74"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_75"
+      },
+      {
+        "title" : "Servers",
+        "label" : "Servers",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_76"
+      },
+      {
+        "title" : "Macintosh HD",
+        "label" : "Macintosh HD",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_77"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_78"
+      },
+      {
+        "title" : "Clear Menu",
+        "label" : "Clear Menu",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_79"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_80"
+      },
+      {
+        "title" : "Force Quit…",
+        "keyboard_shortcut" : "⎋",
+        "label" : "Force Quit…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_81"
+      },
+      {
+        "title" : "Force Quit Simulator",
+        "keyboard_shortcut" : "⎋",
+        "label" : "Force Quit Simulator",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_82"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_83"
+      },
+      {
+        "title" : "Sleep",
+        "label" : "Sleep",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_84"
+      },
+      {
+        "title" : "Restart…",
+        "label" : "Restart…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_85"
+      },
+      {
+        "title" : "Restart",
+        "label" : "Restart",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_86"
+      },
+      {
+        "title" : "Shut Down…",
+        "label" : "Shut Down…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_87"
+      },
+      {
+        "title" : "Shut Down",
+        "label" : "Shut Down",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_88"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_89"
+      },
+      {
+        "title" : "Lock Screen",
+        "keyboard_shortcut" : "Q",
+        "label" : "Lock Screen",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_90"
+      },
+      {
+        "title" : "Log Out prabu…",
+        "keyboard_shortcut" : "Q",
+        "label" : "Log Out prabu…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_91"
+      },
+      {
+        "title" : "Log Out prabu",
+        "keyboard_shortcut" : "Q",
+        "label" : "Log Out prabu",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_92"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_93"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_95"
+      },
+      {
+        "title" : "About Simulator",
+        "label" : "About Simulator",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_96"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_97"
+      },
+      {
+        "title" : "Settings…",
+        "keyboard_shortcut" : ",",
+        "label" : "Settings…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_98"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_99"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_100"
+      },
+      {
+        "title" : "Services",
+        "label" : "Services",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_101"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_102"
+      },
+      {
+        "title" : "Activity Monitor",
+        "label" : "Activity Monitor",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_103"
+      },
+      {
+        "title" : "Allocations & Leaks",
+        "label" : "Allocations & Leaks",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_104"
+      },
+      {
+        "title" : "File Activity",
+        "label" : "File Activity",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_105"
+      },
+      {
+        "title" : "System Trace",
+        "label" : "System Trace",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_106"
+      },
+      {
+        "title" : "Time Profile Active Application",
+        "label" : "Time Profile Active Application",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_107"
+      },
+      {
+        "title" : "Time Profile App Under Mouse",
+        "label" : "Time Profile App Under Mouse",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_108"
+      },
+      {
+        "title" : "Time Profile Entire System",
+        "label" : "Time Profile Entire System",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_109"
+      },
+      {
+        "title" : "Toggle Instruments Recording",
+        "label" : "Toggle Instruments Recording",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_110"
+      },
+      {
+        "title" : "Services Settings…",
+        "label" : "Services Settings…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_111"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_112"
+      },
+      {
+        "title" : "Hide Simulator",
+        "keyboard_shortcut" : "H",
+        "label" : "Hide Simulator",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_113"
+      },
+      {
+        "title" : "Hide Others",
+        "keyboard_shortcut" : "H",
+        "label" : "Hide Others",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_114"
+      },
+      {
+        "title" : "Show All",
+        "label" : "Show All",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_115"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_116"
+      },
+      {
+        "title" : "Quit Simulator",
+        "keyboard_shortcut" : "Q",
+        "label" : "Quit Simulator",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_117"
+      },
+      {
+        "title" : "Quit Simulator…",
+        "keyboard_shortcut" : "Q",
+        "label" : "Quit Simulator…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_118"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_120"
+      },
+      {
+        "title" : "New Simulator…",
+        "label" : "New Simulator…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_121"
+      },
+      {
+        "title" : "Open Simulator",
+        "label" : "Open Simulator",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_122"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_123"
+      },
+      {
+        "title" : "iPhone 17 Pro",
+        "label" : "iPhone 17 Pro",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_124"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPhone 17 Pro",
+        "label" : "iOS 26.4 (23E244) - iPhone 17 Pro",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_125"
+      },
+      {
+        "title" : "iPhone 17 Pro Max",
+        "label" : "iPhone 17 Pro Max",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_126"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPhone 17 Pro Max",
+        "label" : "iOS 26.4 (23E244) - iPhone 17 Pro Max",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_127"
+      },
+      {
+        "title" : "iPhone 17e",
+        "label" : "iPhone 17e",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_128"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPhone 17e",
+        "label" : "iOS 26.4 (23E244) - iPhone 17e",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_129"
+      },
+      {
+        "title" : "iPhone Air",
+        "label" : "iPhone Air",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_130"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPhone Air",
+        "label" : "iOS 26.4 (23E244) - iPhone Air",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_131"
+      },
+      {
+        "title" : "iPhone 17",
+        "label" : "iPhone 17",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_132"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPhone 17",
+        "label" : "iOS 26.4 (23E244) - iPhone 17",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_133"
+      },
+      {
+        "title" : "iPad Pro 13-inch (M5)",
+        "label" : "iPad Pro 13-inch (M5)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_134"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPad Pro 13-inch (M5)",
+        "label" : "iOS 26.4 (23E244) - iPad Pro 13-inch (M5)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_135"
+      },
+      {
+        "title" : "iPad Pro 11-inch (M5)",
+        "label" : "iPad Pro 11-inch (M5)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_136"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPad Pro 11-inch (M5)",
+        "label" : "iOS 26.4 (23E244) - iPad Pro 11-inch (M5)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_137"
+      },
+      {
+        "title" : "iPad mini (A17 Pro)",
+        "label" : "iPad mini (A17 Pro)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_138"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPad mini (A17 Pro)",
+        "label" : "iOS 26.4 (23E244) - iPad mini (A17 Pro)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_139"
+      },
+      {
+        "title" : "iPad Air 13-inch (M4)",
+        "label" : "iPad Air 13-inch (M4)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_140"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPad Air 13-inch (M4)",
+        "label" : "iOS 26.4 (23E244) - iPad Air 13-inch (M4)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_141"
+      },
+      {
+        "title" : "iPad Air 11-inch (M4)",
+        "label" : "iPad Air 11-inch (M4)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_142"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPad Air 11-inch (M4)",
+        "label" : "iOS 26.4 (23E244) - iPad Air 11-inch (M4)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_143"
+      },
+      {
+        "title" : "iPad (A16)",
+        "label" : "iPad (A16)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_144"
+      },
+      {
+        "title" : "iOS 26.4 (23E244) - iPad (A16)",
+        "label" : "iOS 26.4 (23E244) - iPad (A16)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_145"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_146"
+      },
+      {
+        "title" : "Save Screen",
+        "keyboard_shortcut" : "S",
+        "label" : "Save Screen",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_147"
+      },
+      {
+        "title" : "Save Screen…",
+        "keyboard_shortcut" : "S",
+        "label" : "Save Screen…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_148"
+      },
+      {
+        "title" : "Record Screen",
+        "keyboard_shortcut" : "R",
+        "label" : "Record Screen",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_149"
+      },
+      {
+        "title" : "Record Screen…",
+        "keyboard_shortcut" : "R",
+        "label" : "Record Screen…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_150"
+      },
+      {
+        "title" : "Stop Recording",
+        "label" : "Stop Recording",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_151"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_152"
+      },
+      {
+        "title" : "GPU Selection",
+        "label" : "GPU Selection",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_153"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_154"
+      },
+      {
+        "title" : "Automatic",
+        "label" : "Automatic",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_155"
+      },
+      {
+        "title" : "Prefer Integrated GPU",
+        "label" : "Prefer Integrated GPU",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_156"
+      },
+      {
+        "title" : "Prefer Discrete GPU",
+        "label" : "Prefer Discrete GPU",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_157"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_158"
+      },
+      {
+        "title" : "Use External GPU When Available",
+        "label" : "Use External GPU When Available",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_159"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_160"
+      },
+      {
+        "title" : "Close Window",
+        "keyboard_shortcut" : "W",
+        "label" : "Close Window",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_161"
+      },
+      {
+        "title" : "Close All",
+        "keyboard_shortcut" : "W",
+        "label" : "Close All",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_162"
+      },
+      {
+        "title" : "Close Window…",
+        "keyboard_shortcut" : "W",
+        "label" : "Close Window…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_163"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_165"
+      },
+      {
+        "title" : "Undo",
+        "keyboard_shortcut" : "Z",
+        "label" : "Undo",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_166"
+      },
+      {
+        "title" : "Redo",
+        "keyboard_shortcut" : "Z",
+        "label" : "Redo",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_167"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_168"
+      },
+      {
+        "title" : "Cut",
+        "label" : "Cut",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_169"
+      },
+      {
+        "title" : "Copy",
+        "label" : "Copy",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_170"
+      },
+      {
+        "title" : "Copy Screen",
+        "keyboard_shortcut" : "C",
+        "label" : "Copy Screen",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_171"
+      },
+      {
+        "title" : "Paste",
+        "label" : "Paste",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_172"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_173"
+      },
+      {
+        "title" : "Automatically Sync Pasteboard",
+        "label" : "Automatically Sync Pasteboard",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_174"
+      },
+      {
+        "title" : "Get Pasteboard",
+        "label" : "Get Pasteboard",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_175"
+      },
+      {
+        "title" : "Send Pasteboard",
+        "label" : "Send Pasteboard",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_176"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_177"
+      },
+      {
+        "title" : "AutoFill",
+        "label" : "AutoFill",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_178"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_179"
+      },
+      {
+        "title" : "Contact…",
+        "label" : "Contact…",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_180"
+      },
+      {
+        "title" : "Passwords…",
+        "label" : "Passwords…",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_181"
+      },
+      {
+        "title" : "Credit Card…",
+        "label" : "Credit Card…",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_182"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_184"
+      },
+      {
+        "title" : "Restart",
+        "label" : "Restart",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_185"
+      },
+      {
+        "title" : "Erase All Content and Settings…",
+        "label" : "Erase All Content and Settings…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_186"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_187"
+      },
+      {
+        "title" : "Rotate Left",
+        "keyboard_shortcut" : "",
+        "label" : "Rotate Left",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_188"
+      },
+      {
+        "title" : "Rotate Right",
+        "keyboard_shortcut" : "",
+        "label" : "Rotate Right",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_189"
+      },
+      {
+        "title" : "Orientation",
+        "label" : "Orientation",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_190"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_191"
+      },
+      {
+        "title" : "Portrait",
+        "label" : "Portrait",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_192"
+      },
+      {
+        "title" : "Landscape Right",
+        "label" : "Landscape Right",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_193"
+      },
+      {
+        "title" : "Portrait Upside Down",
+        "label" : "Portrait Upside Down",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_194"
+      },
+      {
+        "title" : "Landscape Left",
+        "label" : "Landscape Left",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_195"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_196"
+      },
+      {
+        "title" : "Face Up",
+        "label" : "Face Up",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_197"
+      },
+      {
+        "title" : "Face Down",
+        "label" : "Face Down",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_198"
+      },
+      {
+        "title" : "Rotate Device Automatically",
+        "label" : "Rotate Device Automatically",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_199"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_200"
+      },
+      {
+        "title" : "Home",
+        "keyboard_shortcut" : "H",
+        "label" : "Home",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_201"
+      },
+      {
+        "title" : "Re-Center Open Apps",
+        "label" : "Re-Center Open Apps",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_202"
+      },
+      {
+        "title" : "Lock",
+        "keyboard_shortcut" : "L",
+        "label" : "Lock",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_203"
+      },
+      {
+        "title" : "Action Button",
+        "label" : "Action Button",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_204"
+      },
+      {
+        "title" : "Siri",
+        "keyboard_shortcut" : "H",
+        "label" : "Siri",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_205"
+      },
+      {
+        "title" : "Shake",
+        "keyboard_shortcut" : "Z",
+        "label" : "Shake",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_206"
+      },
+      {
+        "title" : "App Switcher",
+        "keyboard_shortcut" : "H",
+        "label" : "App Switcher",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_207"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_208"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_209"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_210"
+      },
+      {
+        "title" : "Trigger Screenshot",
+        "label" : "Trigger Screenshot",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_211"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_212"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_214"
+      },
+      {
+        "title" : "Input",
+        "label" : "Input",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_215"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_216"
+      },
+      {
+        "title" : "Send Keyboard Input to Device",
+        "keyboard_shortcut" : "K",
+        "label" : "Send Keyboard Input to Device",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_217"
+      },
+      {
+        "title" : "Keyboard",
+        "label" : "Keyboard",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_218"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_219"
+      },
+      {
+        "title" : "Use the Same Keyboard Language as macOS",
+        "label" : "Use the Same Keyboard Language as macOS",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_220"
+      },
+      {
+        "title" : "Connect Hardware Keyboard",
+        "keyboard_shortcut" : "K",
+        "label" : "Connect Hardware Keyboard",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_221"
+      },
+      {
+        "title" : "Toggle Software Keyboard",
+        "keyboard_shortcut" : "K",
+        "label" : "Toggle Software Keyboard",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_222"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_223"
+      },
+      {
+        "title" : "Audio Input",
+        "label" : "Audio Input",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_224"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_225"
+      },
+      {
+        "title" : "System",
+        "label" : "System",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_226"
+      },
+      {
+        "title" : "Audio Output",
+        "label" : "Audio Output",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_227"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_228"
+      },
+      {
+        "title" : "System (Mac mini Speakers)",
+        "label" : "System (Mac mini Speakers)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_229"
+      },
+      {
+        "title" : "Monitor",
+        "label" : "Monitor",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_230"
+      },
+      {
+        "title" : "Mac mini Speakers",
+        "label" : "Mac mini Speakers",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_231"
+      },
+      {
+        "title" : "Increase Volume",
+        "keyboard_shortcut" : "",
+        "label" : "Increase Volume",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_232"
+      },
+      {
+        "title" : "Decrease Volume",
+        "keyboard_shortcut" : "",
+        "label" : "Decrease Volume",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_233"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_234"
+      },
+      {
+        "title" : "External Displays",
+        "label" : "External Displays",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_235"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_236"
+      },
+      {
+        "title" : "Disabled",
+        "label" : "Disabled",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_237"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_238"
+      },
+      {
+        "title" : "640×480",
+        "label" : "640×480",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_239"
+      },
+      {
+        "title" : "720×480",
+        "label" : "720×480",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_240"
+      },
+      {
+        "title" : "1024×768",
+        "label" : "1024×768",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_241"
+      },
+      {
+        "title" : "1280×720 (720p)",
+        "label" : "1280×720 (720p)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_242"
+      },
+      {
+        "title" : "1920×1080 (1080p)",
+        "label" : "1920×1080 (1080p)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_243"
+      },
+      {
+        "title" : "3840×2160 (4K)",
+        "label" : "3840×2160 (4K)",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_244"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_245"
+      },
+      {
+        "title" : "CarPlay",
+        "label" : "CarPlay",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_246"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_247"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_249"
+      },
+      {
+        "title" : "Face ID",
+        "label" : "Face ID",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_250"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_251"
+      },
+      {
+        "title" : "Enrolled",
+        "label" : "Enrolled",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_252"
+      },
+      {
+        "title" : "Matching Face",
+        "keyboard_shortcut" : "M",
+        "label" : "Matching Face",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_253"
+      },
+      {
+        "title" : "Non-matching Face",
+        "keyboard_shortcut" : "N",
+        "label" : "Non-matching Face",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_254"
+      },
+      {
+        "title" : "Authorize Apple Pay",
+        "keyboard_shortcut" : "A",
+        "label" : "Authorize Apple Pay",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_255"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_256"
+      },
+      {
+        "title" : "Toggle Appearance",
+        "keyboard_shortcut" : "A",
+        "label" : "Toggle Appearance",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_257"
+      },
+      {
+        "title" : "Toggle In-call Status Bar",
+        "keyboard_shortcut" : "Y",
+        "label" : "Toggle In-call Status Bar",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_258"
+      },
+      {
+        "title" : "Show StandBy",
+        "label" : "Show StandBy",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_259"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_260"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_261"
+      },
+      {
+        "title" : "Increase Preferred Text Size",
+        "keyboard_shortcut" : "+",
+        "label" : "Increase Preferred Text Size",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_262"
+      },
+      {
+        "title" : "Decrease Preferred Text Size",
+        "keyboard_shortcut" : "-",
+        "label" : "Decrease Preferred Text Size",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_263"
+      },
+      {
+        "title" : "Toggle Increase Contrast",
+        "label" : "Toggle Increase Contrast",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_264"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_265"
+      },
+      {
+        "title" : "Trigger iCloud Sync",
+        "keyboard_shortcut" : "I",
+        "label" : "Trigger iCloud Sync",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_266"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_267"
+      },
+      {
+        "title" : "Location",
+        "label" : "Location",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_268"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_269"
+      },
+      {
+        "title" : "None",
+        "label" : "None",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_270"
+      },
+      {
+        "title" : "Custom Location…",
+        "label" : "Custom Location…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_271"
+      },
+      {
+        "title" : "City Run",
+        "label" : "City Run",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_272"
+      },
+      {
+        "title" : "City Bicycle Ride",
+        "label" : "City Bicycle Ride",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_273"
+      },
+      {
+        "title" : "Freeway Drive",
+        "label" : "Freeway Drive",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_274"
+      },
+      {
+        "title" : "Apple",
+        "label" : "Apple",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_275"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_277"
+      },
+      {
+        "title" : "Slow Animations",
+        "label" : "Slow Animations",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_278"
+      },
+      {
+        "title" : "Graphics Quality Override",
+        "label" : "Graphics Quality Override",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_279"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_280"
+      },
+      {
+        "title" : "Device Default",
+        "label" : "Device Default",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_281"
+      },
+      {
+        "title" : "Low Quality",
+        "label" : "Low Quality",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_282"
+      },
+      {
+        "title" : "High Quality",
+        "label" : "High Quality",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_283"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_284"
+      },
+      {
+        "title" : "Color Blended Layers",
+        "label" : "Color Blended Layers",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_285"
+      },
+      {
+        "title" : "Color Copied Images",
+        "label" : "Color Copied Images",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_286"
+      },
+      {
+        "title" : "Color Misaligned Images",
+        "label" : "Color Misaligned Images",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_287"
+      },
+      {
+        "title" : "Color Off-screen Rendered",
+        "label" : "Color Off-screen Rendered",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_288"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_289"
+      },
+      {
+        "title" : "Open System Log…",
+        "keyboard_shortcut" : "\/",
+        "label" : "Open System Log…",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_290"
+      },
+      {
+        "title" : "Simulate Memory Warning",
+        "keyboard_shortcut" : "M",
+        "label" : "Simulate Memory Warning",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_291"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_292"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_293"
+      },
+      {
+        "title" : "Show Parallel Testing Devices",
+        "label" : "Show Parallel Testing Devices",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_294"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_296"
+      },
+      {
+        "title" : "Minimize",
+        "keyboard_shortcut" : "M",
+        "label" : "Minimize",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_297"
+      },
+      {
+        "title" : "Minimize All",
+        "label" : "Minimize All",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_298"
+      },
+      {
+        "title" : "Zoom All",
+        "label" : "Zoom All",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_299"
+      },
+      {
+        "title" : "Fill",
+        "keyboard_shortcut" : "F",
+        "label" : "Fill",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_300"
+      },
+      {
+        "title" : "Center",
+        "keyboard_shortcut" : "C",
+        "label" : "Center",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_301"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_302"
+      },
+      {
+        "title" : "Move & Resize",
+        "label" : "Move & Resize",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_303"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_304"
+      },
+      {
+        "title" : "Halves",
+        "label" : "Halves",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_305"
+      },
+      {
+        "title" : "Left",
+        "label" : "Left",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_306"
+      },
+      {
+        "title" : "Right",
+        "label" : "Right",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_307"
+      },
+      {
+        "title" : "Top",
+        "label" : "Top",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_308"
+      },
+      {
+        "title" : "Bottom",
+        "label" : "Bottom",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_309"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_310"
+      },
+      {
+        "title" : "Quarters",
+        "label" : "Quarters",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_311"
+      },
+      {
+        "title" : "Top Left",
+        "label" : "Top Left",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_312"
+      },
+      {
+        "title" : "Top Right",
+        "label" : "Top Right",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_313"
+      },
+      {
+        "title" : "Bottom Left",
+        "label" : "Bottom Left",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_314"
+      },
+      {
+        "title" : "Bottom Right",
+        "label" : "Bottom Right",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_315"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_316"
+      },
+      {
+        "title" : "Arrange",
+        "label" : "Arrange",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_317"
+      },
+      {
+        "title" : "Left & Right",
+        "label" : "Left & Right",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_318"
+      },
+      {
+        "title" : "Left & Quarters",
+        "label" : "Left & Quarters",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_319"
+      },
+      {
+        "title" : "Right & Left",
+        "label" : "Right & Left",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_320"
+      },
+      {
+        "title" : "Right & Quarters",
+        "label" : "Right & Quarters",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_321"
+      },
+      {
+        "title" : "Top & Bottom",
+        "label" : "Top & Bottom",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_322"
+      },
+      {
+        "title" : "Top & Quarters",
+        "label" : "Top & Quarters",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_323"
+      },
+      {
+        "title" : "Bottom & Top",
+        "label" : "Bottom & Top",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_324"
+      },
+      {
+        "title" : "Bottom & Quarters",
+        "label" : "Bottom & Quarters",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_325"
+      },
+      {
+        "title" : "Quarters",
+        "label" : "Quarters",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_326"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_327"
+      },
+      {
+        "title" : "Return to Previous Size",
+        "keyboard_shortcut" : "R",
+        "label" : "Return to Previous Size",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_328"
+      },
+      {
+        "title" : "Full Screen Tile",
+        "label" : "Full Screen Tile",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_329"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_330"
+      },
+      {
+        "title" : "Left of Screen",
+        "label" : "Left of Screen",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_331"
+      },
+      {
+        "title" : "Right of Screen",
+        "label" : "Right of Screen",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_332"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_333"
+      },
+      {
+        "title" : "Remove Window from Set",
+        "label" : "Remove Window from Set",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_334"
+      },
+      {
+        "title" : "Enter Full Screen",
+        "keyboard_shortcut" : "F",
+        "label" : "Enter Full Screen",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_335"
+      },
+      {
+        "title" : "Show Device Bezels",
+        "label" : "Show Device Bezels",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_336"
+      },
+      {
+        "title" : "Show Apple TV Remote",
+        "keyboard_shortcut" : "R",
+        "label" : "Show Apple TV Remote",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_337"
+      },
+      {
+        "title" : "Stay On Top",
+        "label" : "Stay On Top",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_338"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_339"
+      },
+      {
+        "title" : "Physical Size",
+        "keyboard_shortcut" : "1",
+        "label" : "Physical Size",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_340"
+      },
+      {
+        "title" : "Point Accurate",
+        "keyboard_shortcut" : "2",
+        "label" : "Point Accurate",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_341"
+      },
+      {
+        "title" : "Pixel Accurate",
+        "keyboard_shortcut" : "3",
+        "label" : "Pixel Accurate",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_342"
+      },
+      {
+        "title" : "Fit Screen",
+        "keyboard_shortcut" : "4",
+        "label" : "Fit Screen",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_343"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_344"
+      },
+      {
+        "title" : "Bring All to Front",
+        "label" : "Bring All to Front",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_345"
+      },
+      {
+        "title" : "Arrange in Front",
+        "label" : "Arrange in Front",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_346"
+      },
+      {
+        "title" : "",
+        "label" : "",
+        "is_actionable" : false,
+        "role" : "other",
+        "id" : "menuitem_347"
+      },
+      {
+        "title" : "iPhone 17 – iOS 26.4",
+        "label" : "iPhone 17 – iOS 26.4",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_348"
+      },
+      {
+        "title" : "iPhone 17 Pro – iOS 26.4",
+        "label" : "iPhone 17 Pro – iOS 26.4",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_349"
+      },
+      {
+        "label" : "Menu Item",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_351"
+      },
+      {
+        "title" : "Simulator Help",
+        "keyboard_shortcut" : "?",
+        "label" : "Simulator Help",
+        "is_actionable" : true,
+        "role" : "other",
+        "id" : "menuitem_352"
+      }
+    ],
+    "screenshot_raw" : "screenshots\/run3_title.png",
+    "application_name" : "Simulator"
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "id": "run005_multi",
+  "title": "Mekton Blues",
+  "description": "Rival corps are fighting over a stolen Mekton prototype. Infiltrate the warehouse complex, navigate the factory floor, and extract with the prototype before the opposition does.",
+  "rooms": [
+    {
+      "id": "room_0",
+      "title": "Warehouse Entry",
+      "map": [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 2, 0, 1],
+        [1, 0, 0, 2, 0, 0, 1],
+        [1, 2, 0, 0, 0, 2, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1]
+      ],
+      "playerSpawn": { "x": 1, "y": 10 },
+      "extractionPoint": null,
+      "enemies": [
+        { "type": "drone", "x": 4, "y": 4, "delay": 0 },
+        { "type": "elite", "x": 2, "y": 3, "delay": 1 }
+      ],
+      "connections": [
+        {
+          "targetRoomId": "room_1",
+          "triggerTileX": 3,
+          "triggerTileY": 6,
+          "targetSpawnX": 3,
+          "targetSpawnY": 10
+        }
+      ]
+    },
+    {
+      "id": "room_1",
+      "title": "Factory Floor",
+      "map": [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 0, 1, 0, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 3, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1]
+      ],
+      "playerSpawn": { "x": 3, "y": 10 },
+      "extractionPoint": null,
+      "enemies": [
+        { "type": "elite",  "x": 3, "y": 3, "delay": 0 },
+        { "type": "drone",  "x": 2, "y": 5, "delay": 1 },
+        { "type": "healer", "x": 4, "y": 5, "delay": 3 }
+      ],
+      "connections": [
+        {
+          "targetRoomId": "room_0",
+          "triggerTileX": 3,
+          "triggerTileY": 8,
+          "targetSpawnX": 3,
+          "targetSpawnY": 6
+        },
+        {
+          "targetRoomId": "room_2",
+          "triggerTileX": 3,
+          "triggerTileY": 6,
+          "targetSpawnX": 3,
+          "targetSpawnY": 10
+        }
+      ]
+    },
+    {
+      "id": "room_2",
+      "title": "Mech Bay",
+      "map": [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 4, 0, 0, 1],
+        [1, 0, 2, 0, 2, 0, 1],
+        [1, 0, 0, 2, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 2, 0, 0, 0, 2, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1]
+      ],
+      "playerSpawn": { "x": 3, "y": 10 },
+      "extractionPoint": { "x": 3, "y": 1 },
+      "enemies": [
+        { "type": "mech",  "x": 3, "y": 3, "delay": 0 },
+        { "type": "drone", "x": 2, "y": 4, "delay": 2 },
+        { "type": "mage",  "x": 4, "y": 2, "delay": 4 }
+      ],
+      "connections": [
+        {
+          "targetRoomId": "room_1",
+          "triggerTileX": 3,
+          "triggerTileY": 8,
+          "targetSpawnX": 3,
+          "targetSpawnY": 6
+        }
+      ]
+    }
+  ]
+}

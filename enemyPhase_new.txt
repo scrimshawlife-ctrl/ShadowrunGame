@@ -1,0 +1,2 @@
+# enemyPhase implementation notes
+# Enemy AI logic has been moved to GameState.swift (runEnemyAI, enemyPhase)

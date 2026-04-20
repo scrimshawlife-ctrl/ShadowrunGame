@@ -1,0 +1,113 @@
+{
+  "id": "run002_multi",
+  "title": "Ghost Protocol",
+  "description": "A rogue AI has locked down a corporate server farm. Navigate the facility, neutralize its security drones, and extract the core data.",
+  "rooms": [
+    {
+      "id": "room_0",
+      "title": "Server Room Alpha",
+      "map": [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 2, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1]
+      ],
+      "playerSpawn": { "x": 1, "y": 10 },
+      "extractionPoint": null,
+      "enemies": [
+        { "type": "drone", "x": 4, "y": 4, "delay": 0 },
+        { "type": "drone", "x": 2, "y": 3, "delay": 2 }
+      ],
+      "connections": [
+        {
+          "targetRoomId": "room_1",
+          "triggerTileX": 3,
+          "triggerTileY": 6,
+          "targetSpawnX": 3,
+          "targetSpawnY": 10
+        }
+      ]
+    },
+    {
+      "id": "room_1",
+      "title": "AI Core Chamber",
+      "map": [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 0, 0, 0, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1]
+      ],
+      "playerSpawn": { "x": 3, "y": 10 },
+      "extractionPoint": null,
+      "enemies": [
+        { "type": "elite", "x": 3, "y": 3, "delay": 0 },
+        { "type": "drone", "x": 4, "y": 5, "delay": 2 }
+      ],
+      "connections": [
+        {
+          "targetRoomId": "room_0",
+          "triggerTileX": 3,
+          "triggerTileY": 8,
+          "targetSpawnX": 3,
+          "targetSpawnY": 6
+        },
+        {
+          "targetRoomId": "room_2",
+          "triggerTileX": 3,
+          "triggerTileY": 6,
+          "targetSpawnX": 3,
+          "targetSpawnY": 10
+        }
+      ]
+    },
+    {
+      "id": "room_2",
+      "title": "Extraction Hub",
+      "map": [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 4, 0, 0, 1],
+        [1, 0, 0, 0, 0, 2, 1],
+        [1, 0, 2, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 3, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1]
+      ],
+      "playerSpawn": { "x": 3, "y": 10 },
+      "extractionPoint": { "x": 3, "y": 1 },
+      "enemies": [
+        { "type": "drone", "x": 2, "y": 4, "delay": 0 },
+        { "type": "drone", "x": 5, "y": 3, "delay": 3 }
+      ],
+      "connections": [
+        {
+          "targetRoomId": "room_1",
+          "triggerTileX": 3,
+          "triggerTileY": 8,
+          "targetSpawnX": 3,
+          "targetSpawnY": 6
+        }
+      ]
+    }
+  ]
+}
