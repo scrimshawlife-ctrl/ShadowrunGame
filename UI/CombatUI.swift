@@ -663,6 +663,179 @@ struct LootBadge: View {
     }
 }
 
+struct IntelMetricBadge: View {
+    let label: String
+    let value: String
+    let tint: Color
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(label)
+                .font(.system(size: 7, weight: .black, design: .monospaced))
+                .foregroundColor(tint.opacity(0.78))
+            Text(value)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(.white.opacity(0.92))
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(tint.opacity(0.12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(tint.opacity(0.35), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct CombatUtilityButton: View {
+    let title: String
+    let value: String
+    let tint: Color
+    let action: () -> Void
+    var disabled: Bool = false
+
+    var body: some View {
+        Button(action: {
+            guard !disabled else { return }
+            HapticsManager.shared.buttonTap()
+            action()
+        }) {
+            VStack(spacing: 2) {
+                Text(title)
+                    .font(.system(size: 8, weight: .black, design: .monospaced))
+                    .foregroundColor(.white.opacity(disabled ? 0.35 : 0.88))
+                Text(value)
+                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    .foregroundColor(disabled ? CombatTheme.textMuted.opacity(0.55) : tint)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(disabled ? Color.black.opacity(0.2) : tint.opacity(0.12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(disabled ? tint.opacity(0.18) : tint.opacity(0.38), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
+        .opacity(disabled ? 0.45 : 1.0)
+    }
+}
+
+struct MissionIntelCard: View {
+    @ObservedObject var gameState: GameState
+    let onClose: () -> Void
+
+    private var roomTitle: String {
+        RoomManager.shared.currentRoom?.title ?? "Mission Intel"
+    }
+
+    private var objectiveSummary: String {
+        switch gameState.currentMissionType {
+        case .stealth:
+            return "Stay low for \(gameState.missionTargetTurns) turns."
+        case .assault:
+            return "Eliminate the hostile force."
+        case .extraction:
+            return "Reach extraction at (\(gameState.extractionX),\(gameState.extractionY))."
+        }
+    }
+
+    private var progressSummary: String? {
+        switch gameState.currentMissionType {
+        case .stealth:
+            return "Progress \(gameState.currentTurnCount)/\(gameState.missionTargetTurns)"
+        case .assault:
+            return nil
+        case .extraction:
+            return "Exit tile is marked with a green glow."
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(roomTitle.uppercased())
+                        .font(.system(size: 14, weight: .black, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.96))
+                        .lineLimit(1)
+                    Text("MISSION INTEL")
+                        .font(.system(size: 8, weight: .black, design: .monospaced))
+                        .foregroundColor(CombatTheme.accent.opacity(0.82))
+                }
+                Spacer(minLength: 8)
+                Button(action: onClose) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(CombatTheme.textMuted.opacity(0.9))
+                }
+                .buttonStyle(.plain)
+            }
+
+            HStack(spacing: 6) {
+                IntelMetricBadge(label: "ROUND", value: "R\(gameState.roundNumber)", tint: CombatTheme.secondary)
+                IntelMetricBadge(label: "ENEMIES", value: "\(gameState.livingEnemies.count)/\(gameState.enemies.count)", tint: CombatTheme.enemyColor)
+                IntelMetricBadge(label: "TRACE", value: "\(gameState.traceLevel)/\(gameState.traceThreshold)", tint: gameState.traceTier >= 2 ? CombatTheme.enemyColor : CombatTheme.accent)
+            }
+
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 10) {
+                    intelSection("OBJECTIVE", text: objectiveSummary)
+
+                    if let progressSummary {
+                        intelSection("PROGRESS", text: progressSummary)
+                    }
+
+                    intelSection("MISSION TYPE", text: "\(gameState.missionTypeLabel)\n\(gameState.missionTypeHint)")
+                    intelSection("PRESSURE", text: gameState.generateCombinedPressurePreview())
+                    intelSection("REACTION", text: "Corp: \(gameState.generateWorldReactionMessage())\nGang: \(gameState.generateGangReactionMessage())")
+                    intelSection(
+                        "PAYOUT",
+                        text: """
+                        Base \(gameState.baseMissionPayout)  Risk +\(gameState.riskBonus)
+                        Total \(gameState.finalMissionPayout)
+                        \(gameState.generateRewardPreview())
+                        """
+                    )
+                }
+            }
+            .frame(maxHeight: 220)
+        }
+        .padding(14)
+        .frame(maxWidth: 320, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(CombatTheme.panelBG.opacity(0.96))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(CombatTheme.panelEdge.opacity(0.52), lineWidth: 1)
+                )
+        )
+        .shadow(color: Color.black.opacity(0.28), radius: 16, x: 0, y: 8)
+    }
+
+    @ViewBuilder
+    private func intelSection(_ title: String, text: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.system(size: 8, weight: .black, design: .monospaced))
+                .foregroundColor(CombatTheme.textWhite.opacity(0.8))
+            Text(text)
+                .font(.system(size: 10, weight: .regular, design: .monospaced))
+                .foregroundColor(CombatTheme.textMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
 // MARK: - Corner Bracket Helper
 
 struct CornerBracket: View {
@@ -1214,6 +1387,7 @@ struct CombatUI: View {
     @State private var showingItemPicker = false
     @State private var showingSpellPicker = false
     @State private var isEnemyTurnDisplay: Bool = false
+    @State private var showingMissionIntel = true
 
     private var specialAbilityTitle: String {
         switch (gameState.activeCharacter ?? gameState.currentCharacter)?.archetype {
@@ -1283,7 +1457,7 @@ struct CombatUI: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottomTrailing) {
             VStack(spacing: 6) {
                 // Turn indicator banner
                 TurnIndicatorBanner(
@@ -1367,280 +1541,113 @@ struct CombatUI: View {
                 }
 
                 // Compact status bar
-                HStack(spacing: 8) {
+                HStack(alignment: .top, spacing: 10) {
                     StatusDisplay(gameState: gameState)
-                    // Round + loot inline
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("R\(gameState.roundNumber)")
-                            .font(.system(size: 9, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                        Text("Enemies: \(gameState.livingEnemies.count)/\(gameState.enemies.count)")
-                            .font(.system(size: 9, design: .monospaced))
-                            .foregroundColor(CombatTheme.enemyColor)
-                        Text("TRACE: \(gameState.traceLevel)/\(gameState.traceThreshold)   TIER:\(gameState.traceTierLabel)   DMG:+\(gameState.escalationDamageBonusForCurrentTrace)   ROLE: \(gameState.playerRoleLabel)   PRESET: \(gameState.missionPresetLabel)   TYPE: \(gameState.missionTypeLabel)")
+                    Spacer(minLength: 0)
+                    VStack(alignment: .trailing, spacing: 6) {
+                        HStack(spacing: 6) {
+                            IntelMetricBadge(label: "ROUND", value: "R\(gameState.roundNumber)", tint: CombatTheme.secondary)
+                            IntelMetricBadge(label: "ENEMY", value: "\(gameState.livingEnemies.count)", tint: CombatTheme.enemyColor)
+                            IntelMetricBadge(
+                                label: "TRACE",
+                                value: "\(gameState.traceLevel)/\(gameState.traceThreshold)",
+                                tint: gameState.traceTier >= 2 ? CombatTheme.enemyColor : CombatTheme.accent
+                            )
+                        }
+
+                        Text("TYPE \(gameState.missionTypeLabel)  PRESET \(gameState.missionPresetLabel)")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundColor(gameState.traceTier >= 2 ? CombatTheme.enemyColor : (gameState.traceTier == 1 ? Color.orange : CombatTheme.accent))
-                        Text("MISSION TYPE: \(gameState.missionTypeLabel)")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.88))
+                            .multilineTextAlignment(.trailing)
+
                         Text(gameState.missionTypeHint)
                             .font(.system(size: 8, weight: .regular, design: .monospaced))
                             .foregroundColor(CombatTheme.textMuted)
+                            .lineLimit(2)
                             .multilineTextAlignment(.trailing)
-                        Text("MISSION INTEL")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
-                        Text(gameState.generateCombinedPressurePreview())
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text("DETAILS")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
-                        Text("Trace: \(gameState.traceTierLabel) (+\(gameState.escalationDamageBonusForCurrentTrace) dmg) · Heat: \(gameState.heatTierLabel)")
-                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
-                            .foregroundColor({
-                                switch gameState.missionHeatTier {
-                                case .high: return CombatTheme.enemyColor
-                                case .medium: return Color.orange
-                                case .low: return CombatTheme.textMuted
-                                }
-                            }())
-                            .multilineTextAlignment(.trailing)
-                        Text("Corp: +\(gameState.lastAppliedCorpEnemyModifier) enemies · Attention \(gameState.factionAttention[.corp, default: 0])")
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text("Gang: radius \(gameState.lastAppliedGangAmbushRadius) · Attention \(gameState.factionAttention[.gang, default: 0])")
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text("REACTION")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
-                        Text("Corp: \(gameState.generateWorldReactionMessage())")
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text("Gang: \(gameState.generateGangReactionMessage())")
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text("NEXT")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
-                        Text("Corp: \(gameState.generateMissionModifierPreview())")
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text("Gang: \(gameState.generateGangMissionPreview())")
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text("REWARD")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
-                        Text("Tier: \(gameState.rewardTierLabel(gameState.lastRewardTier))")
-                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text("Multiplier: x\(String(format: "%.2f", gameState.lastRewardMultiplier))")
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text("PAYOUT:")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
-                        Text("Base: \(gameState.baseMissionPayout)")
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        if gameState.lastRewardTier == .high {
-                            Text("HIGH RISK BONUS")
-                                .font(.system(size: 8, weight: .black, design: .monospaced))
-                                .foregroundColor(CombatTheme.enemyColor)
-                        } else if gameState.lastRewardTier == .medium {
-                            Text("INCREASED PAYOUT")
-                                .font(.system(size: 8, weight: .black, design: .monospaced))
-                                .foregroundColor(Color.orange)
-                        }
-                        Text("Risk Bonus: +\(gameState.riskBonus)")
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text("Total: \(gameState.finalMissionPayout)")
-                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        Text(gameState.generateRewardPreview())
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .multilineTextAlignment(.trailing)
-                        if gameState.didApplyHighTraceEscalationBonusLastMission {
-                            Text("ESCALATION:")
-                                .font(.system(size: 8, weight: .black, design: .monospaced))
-                                .foregroundColor(CombatTheme.textWhite.opacity(0.82))
-                            Text("High trace accelerated corporate response.")
-                                .font(.system(size: 8, weight: .regular, design: .monospaced))
-                                .foregroundColor(CombatTheme.textMuted)
-                                .multilineTextAlignment(.trailing)
-                        }
-                        if gameState.didApplyAttentionRecoveryLastMission {
-                            Text("RECOVERY:")
-                                .font(.system(size: 8, weight: .black, design: .monospaced))
-                                .foregroundColor(CombatTheme.textWhite.opacity(0.82))
-                            Text("Low-profile mission reduced faction attention.")
-                                .font(.system(size: 8, weight: .regular, design: .monospaced))
-                                .foregroundColor(CombatTheme.textMuted)
-                                .multilineTextAlignment(.trailing)
-                        }
-                        Text({
-                            switch gameState.currentMissionType {
-                            case .stealth:
-                                return "OBJECTIVE: STAY LOW FOR \(gameState.missionTargetTurns) TURNS"
-                            case .assault:
-                                return "OBJECTIVE: ELIMINATE TARGET"
-                            case .extraction:
-                                return "OBJECTIVE: REACH EXTRACTION"
-                            }
-                        }())
-                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.88))
+
                         if gameState.currentMissionType == .stealth {
-                            Text("PROGRESS: \(gameState.currentTurnCount)/\(gameState.missionTargetTurns)")
+                            Text("PROGRESS \(gameState.currentTurnCount)/\(gameState.missionTargetTurns)")
                                 .font(.system(size: 8, weight: .semibold, design: .monospaced))
-                                .foregroundColor(gameState.missionComplete ? Color(hex: "00FF88") : CombatTheme.textMuted)
+                                .foregroundColor(gameState.missionComplete ? CombatTheme.accent : CombatTheme.textMuted)
                         }
-                        if gameState.combatEnded {
-                            Text(gameState.combatWon == true ? "MISSION COMPLETE" : "MISSION FAILED")
-                                .font(.system(size: 9, weight: .black, design: .monospaced))
-                                .foregroundColor(gameState.combatWon == true ? Color(hex: "00FF88") : CombatTheme.enemyColor)
-                            Text("COMBAT ENDED — ACTIONS LOCKED")
-                                .font(.system(size: 7, weight: .bold, design: .monospaced))
-                                .foregroundColor(CombatTheme.textMuted)
-                        }
+
                         if gameState.traceEscalationLevel >= 1 && gameState.playerRole == .street {
                             Text("RESISTING ESCALATION")
                                 .font(.system(size: 8, weight: .bold, design: .monospaced))
                                 .foregroundColor(CombatTheme.accent.opacity(0.9))
                         }
+
+                        if gameState.combatEnded {
+                            Text(gameState.combatWon == true ? "MISSION COMPLETE" : "MISSION FAILED")
+                                .font(.system(size: 9, weight: .black, design: .monospaced))
+                                .foregroundColor(gameState.combatWon == true ? CombatTheme.accent : CombatTheme.enemyColor)
+                        }
+
                         LootBadge(items: gameState.loot)
                     }
-                    Button(action: {
-                        HapticsManager.shared.buttonTap()
-                        gameState.cyclePlayerRole()
-                    }) {
-                        Text("ROLE")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.9))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color(hex: "555577").opacity(0.16))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .stroke(Color(hex: "555577").opacity(0.45), lineWidth: 1)
-                                    )
-                            )
+                }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        CombatUtilityButton(
+                            title: "ROLE",
+                            value: gameState.playerRoleLabel,
+                            tint: Color(hex: "8C7BFF"),
+                            action: { gameState.cyclePlayerRole() }
+                        )
+                        .accessibilityIdentifier("cycle_role_button")
+
+                        CombatUtilityButton(
+                            title: "PRESET",
+                            value: gameState.missionPresetLabel,
+                            tint: Color(hex: "00D4FF"),
+                            action: { gameState.cycleMissionPreset() }
+                        )
+                        .accessibilityIdentifier("cycle_preset_button")
+
+                        CombatUtilityButton(
+                            title: "TYPE",
+                            value: gameState.missionTypeLabel,
+                            tint: Color(hex: "FFC857"),
+                            action: { gameState.cycleMissionType() }
+                        )
+                        .accessibilityIdentifier("cycle_type_button")
+
+                        CombatUtilityButton(
+                            title: "MODE",
+                            value: gameState.actionMode == .street ? "STREET" : "SIGNAL",
+                            tint: gameState.actionMode == .street ? CombatTheme.accent : Color(hex: "FF8800"),
+                            action: { gameState.actionMode = (gameState.actionMode == .street) ? .signal : .street }
+                        )
+                        .accessibilityIdentifier("action_mode_toggle_button")
+
+                        CombatUtilityButton(
+                            title: "LAY LOW",
+                            value: hasActedThisRound ? "USED" : "READY",
+                            tint: Color(hex: "B8BCC8"),
+                            action: onRecover,
+                            disabled: gameState.combatEnded || isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound
+                        )
+                        .accessibilityIdentifier("trace_recover_button")
+
+                        CombatUtilityButton(
+                            title: "INTEL",
+                            value: showingMissionIntel ? "HIDE" : "SHOW",
+                            tint: CombatTheme.accent,
+                            action: { showingMissionIntel.toggle() }
+                        )
+                        .accessibilityIdentifier("toggle_intel_button")
+
+                        CombatUtilityButton(
+                            title: "DIAG",
+                            value: diagnosticsVisible ? "ON" : "OFF",
+                            tint: diagnosticsVisible ? CombatTheme.accent : CombatTheme.textMuted,
+                            action: onToggleDiagnostics
+                        )
+                        .accessibilityIdentifier("toggle_diagnostics_button")
                     }
-                    .accessibilityIdentifier("cycle_role_button")
-                    Button(action: {
-                        HapticsManager.shared.buttonTap()
-                        gameState.cycleMissionPreset()
-                    }) {
-                        Text("PRESET")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.9))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color(hex: "336677").opacity(0.16))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .stroke(Color(hex: "336677").opacity(0.45), lineWidth: 1)
-                                    )
-                            )
-                    }
-                    .accessibilityIdentifier("cycle_preset_button")
-                    Button(action: {
-                        HapticsManager.shared.buttonTap()
-                        gameState.cycleMissionType()
-                    }) {
-                        Text("TYPE")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.9))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color(hex: "665533").opacity(0.16))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .stroke(Color(hex: "665533").opacity(0.45), lineWidth: 1)
-                                    )
-                            )
-                    }
-                    .accessibilityIdentifier("cycle_type_button")
-                    Button(action: {
-                        HapticsManager.shared.buttonTap()
-                        gameState.actionMode = (gameState.actionMode == .street) ? .signal : .street
-                    }) {
-                        Text(gameState.actionMode == .street ? "STREET" : "SIGNAL")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(gameState.actionMode == .street ? CombatTheme.accent : Color(hex: "FF8800"))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill((gameState.actionMode == .street ? CombatTheme.accent : Color(hex: "FF8800")).opacity(0.14))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .stroke((gameState.actionMode == .street ? CombatTheme.accent : Color(hex: "FF8800")).opacity(0.45), lineWidth: 1)
-                                    )
-                            )
-                    }
-                    .accessibilityIdentifier("action_mode_toggle_button")
-                    Button(action: {
-                        HapticsManager.shared.buttonTap()
-                        onRecover()
-                    }) {
-                        Text("LAY LOW")
-                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.85))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color(hex: "888899").opacity(0.16))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .stroke(Color(hex: "888899").opacity(0.45), lineWidth: 1)
-                                    )
-                            )
-                    }
-                    .disabled(gameState.combatEnded || isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound)
-                    .opacity((gameState.combatEnded || isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound) ? 0.4 : 1.0)
-                    .accessibilityIdentifier("trace_recover_button")
-                    Button(action: {
-                        HapticsManager.shared.buttonTap()
-                        onToggleDiagnostics()
-                    }) {
-                        Image(systemName: diagnosticsVisible ? "waveform.path.ecg.text" : "waveform.path.ecg")
-                            .font(.system(size: 12, weight: .black))
-                            .foregroundColor(diagnosticsVisible ? CombatTheme.accent : CombatTheme.textMuted)
-                            .padding(6)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(diagnosticsVisible ? CombatTheme.accent.opacity(0.12) : Color.clear)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .stroke(diagnosticsVisible ? CombatTheme.accent.opacity(0.45) : CombatTheme.secondary.opacity(0.35), lineWidth: 1)
-                                    )
-                            )
-                    }
-                    .accessibilityIdentifier("toggle_diagnostics_button")
+                    .padding(.horizontal, 2)
                 }
 
                 // Action buttons
@@ -1671,6 +1678,19 @@ struct CombatUI: View {
                     .fill(CombatTheme.background.opacity(0.90))
             )
 
+            if showingMissionIntel {
+                MissionIntelCard(
+                    gameState: gameState,
+                    onClose: {
+                        HapticsManager.shared.buttonTap()
+                        showingMissionIntel = false
+                    }
+                )
+                .padding(.trailing, 10)
+                .padding(.bottom, 288)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+
             // Item picker sheet overlay
             if showingItemPicker {
                 Color.black.opacity(0.6)
@@ -1698,6 +1718,7 @@ struct CombatUI: View {
         }
         .animation(.easeInOut(duration: 0.2), value: showingItemPicker)
         .animation(.easeInOut(duration: 0.2), value: showingSpellPicker)
+        .animation(.easeInOut(duration: 0.22), value: showingMissionIntel)
         .animation(.easeInOut(duration: 0.25), value: isEnemyTurnDisplay)
         .onReceive(NotificationCenter.default.publisher(for: .enemyPhaseBegan)) { _ in
             withAnimation { isEnemyTurnDisplay = true }
