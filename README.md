@@ -17,6 +17,23 @@
 
 ---
 
+## 🤝 Collaborator Handoff
+
+If you are picking this repo up from another contributor, start here:
+
+1. Read `AGENTS.md` for workflow conventions, branch/commit expectations, and PR standards.
+2. Read `plans.md` for active priorities, decision history, and immediate next steps.
+3. Review `docs/TurnAuthorityReport.md` and `docs/TraceSystem.md` before touching gameplay logic.
+4. Keep `GameState` as runtime authority; rendering/UI should remain projection layers.
+
+Handoff updates should always include:
+- what changed
+- what remains
+- what is blocked
+- what should be tackled next
+
+---
+
 ## 🎮 Core Loop
 
 ![Loop](docs/assets/shadowrune-loop.svg)
@@ -37,9 +54,6 @@
 | Normal | baseline | no modifier |
 | Hacker | control | +1 trace recovery on Lay Low |
 | Street | resistance | -1 escalated damage |
-
----
-
 
 ---
 
@@ -106,6 +120,8 @@
 
 ```text
 .
+├── AGENTS.md
+├── plans.md
 ├── Assets.xcassets/
 ├── Entities/
 ├── Game/
@@ -157,6 +173,7 @@ Note: iOS builds require macOS + Xcode.
 | 1 | Turn authority mapping and diagnostics reporting | `GameState` documented as runtime authority |
 | 2 | Trace loop (`Street/Signal`), Lay Low, role modifiers, escalation hooks | Deterministic pressure loop integrated |
 | 3 | Docs + visual cleanup pass | README + SVG visual docs standardized |
+| 4 | Collaborator handoff docs (`README`, `AGENTS.md`, `plans.md`) | Team continuity and clearer execution lanes |
 
 ---
 
