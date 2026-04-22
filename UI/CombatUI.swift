@@ -1377,9 +1377,38 @@ struct CombatUI: View {
                         Text("Enemies: \(gameState.livingEnemies.count)/\(gameState.enemies.count)")
                             .font(.system(size: 9, design: .monospaced))
                             .foregroundColor(CombatTheme.enemyColor)
-                        Text("TRACE: \(gameState.traceLevel)/\(gameState.traceThreshold)   ESC:\(gameState.traceEscalationLevel)   ROLE: \(gameState.playerRoleLabel)   PRESET: \(gameState.missionPresetLabel)   TYPE: \(gameState.missionTypeLabel)")
+                        Text("TRACE: \(gameState.traceLevel)/\(gameState.traceThreshold)   TIER:\(gameState.traceTierLabel)   DMG:+\(gameState.escalationDamageBonusForCurrentTrace)   ROLE: \(gameState.playerRoleLabel)   PRESET: \(gameState.missionPresetLabel)   TYPE: \(gameState.missionTypeLabel)")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundColor(gameState.isTraceTriggered ? CombatTheme.enemyColor : CombatTheme.accent)
+                            .foregroundColor(gameState.traceTier >= 2 ? CombatTheme.enemyColor : (gameState.traceTier == 1 ? Color.orange : CombatTheme.accent))
+                        Text("HEAT: \(gameState.heatTierLabel) (\(gameState.missionHeat))")
+                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                            .foregroundColor({
+                                switch gameState.missionHeatTier {
+                                case .high: return CombatTheme.enemyColor
+                                case .medium: return Color.orange
+                                case .low: return CombatTheme.textMuted
+                                }
+                            }())
+                        Text("CORP ATTENTION: \(gameState.factionAttention[.corp, default: 0])")
+                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                        Text("WORLD REACTION:")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
+                        Text(gameState.generateWorldReactionMessage())
+                            .font(.system(size: 8, weight: .regular, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
+                        Text("NEXT MISSION:")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
+                        Text(gameState.generateMissionModifierPreview())
+                            .font(.system(size: 8, weight: .regular, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
+                        Text("APPLIED MOD: +\(gameState.lastAppliedCorpEnemyModifier) ENEMIES")
+                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
                         Text(gameState.missionType == .eliminate
                              ? "OBJECTIVE: ELIMINATE TARGET"
                              : "OBJECTIVE: SURVIVE \(gameState.missionTargetTurns) TURNS")

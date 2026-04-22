@@ -25,6 +25,7 @@ final class BattleScene: SKScene {
     private var characterNodes: [UUID: SKNode] = [:]
     private var selectedCharacterNode: SKNode?
     private var currentTurnIndex: Int = 0
+    private var lastRenderedTraceTier: Int = -1
 
     /// Movement range for BFS pathfinding — 2 hexes per turn (SR5 standard walk range)
     private var movementRange: Int { return 2 }
@@ -132,6 +133,7 @@ final class BattleScene: SKScene {
             // Subtle CRT scanlines — fixed overlay on viewport
             addSubtleScanlines(to: cam)
         }
+        refreshTraceVisuals(force: true)
     }
 
     private func addSubtleScanlines(to parent: SKNode) {
@@ -445,6 +447,30 @@ final class BattleScene: SKScene {
                 SpriteManager.shared.stopIdle(target: spriteNode)
             }
         }
+        refreshActiveUnitHighlight(activeId: activeId)
+    }
+
+    /// Keep one obvious ring on the currently active unit for turn readability.
+    private func refreshActiveUnitHighlight(activeId: UUID?) {
+        let playerIds = Set(GameState.shared.playerTeam.map(\.id))
+        for (id, node) in characterNodes where playerIds.contains(id) {
+            node.childNode(withName: "activeTurnRing")?.removeFromParent()
+        }
+
+        guard let activeId, let activeNode = characterNodes[activeId] else { return }
+        let ring = SKShapeNode(circleOfRadius: TileMap.hexRadius * 0.56)
+        ring.name = "activeTurnRing"
+        ring.strokeColor = UIColor(hex: "#00D8FF")
+        ring.lineWidth = 3
+        ring.fillColor = .clear
+        ring.zPosition = 12
+        activeNode.addChild(ring)
+
+        ring.run(SKAction.repeatForever(SKAction.sequence([
+            SKAction.fadeAlpha(to: 0.35, duration: 0.45),
+            SKAction.fadeAlpha(to: 0.95, duration: 0.45)
+        ])), withKey: "activePulse")
+        ring.run(SKAction.repeatForever(SKAction.rotate(byAngle: .pi * 2, duration: 2.8)), withKey: "activeSpin")
     }
 
     private func showSelectionRing(for characterId: UUID) {
@@ -459,11 +485,19 @@ final class BattleScene: SKScene {
             SpriteManager.shared.animateSelect(target: node)
             selectedCharacterNode = node
             HapticsManager.shared.selectionChanged()
+            let pop = SKAction.sequence([
+                SKAction.scale(to: 1.05, duration: 0.08),
+                SKAction.scale(to: 1.0, duration: 0.10)
+            ])
+            node.run(pop, withKey: "selectionPop")
             // Highlight attackable enemy tiles and movable empty tiles
             if let sprite = node as? SpriteNode {
                 highlightTiles(aroundX: sprite.tileX, y: sprite.tileY)
             }
         }
+
+        let activeId = GameState.shared.activeCharacter?.id ?? GameState.shared.currentCharacter?.id
+        refreshActiveUnitHighlight(activeId: activeId)
     }
 
     private var highlightNodes: [SKNode] = []
@@ -487,7 +521,7 @@ final class BattleScene: SKScene {
                 x: tileCenter(sprite.tileX, sprite.tileY).x,
                 y: tileCenter(sprite.tileX, sprite.tileY).y
             )
-            n.zPosition = 3
+            n.zPosition = 8
             n.name = "highlight"
             addChild(n)
             highlightNodes.append(n)
@@ -506,7 +540,7 @@ final class BattleScene: SKScene {
             crossH.fillColor = UIColor(hex: "#FF3333").withAlphaComponent(0.9)
             crossH.strokeColor = .clear
             crossH.position = n.position
-            crossH.zPosition = 4
+            crossH.zPosition = 9
             crossH.name = "highlight"
             addChild(crossH)
             highlightNodes.append(crossH)
@@ -515,7 +549,7 @@ final class BattleScene: SKScene {
             crossV.fillColor = UIColor(hex: "#FF3333").withAlphaComponent(0.9)
             crossV.strokeColor = .clear
             crossV.position = n.position
-            crossV.zPosition = 4
+            crossV.zPosition = 9
             crossV.name = "highlight"
             addChild(crossV)
             highlightNodes.append(crossV)
@@ -531,14 +565,14 @@ final class BattleScene: SKScene {
             }
             if !occupied {
                 let n = SKShapeNode(path: TileMap.hexPath(radius: TileMap.hexRadius - 4))
-                n.strokeColor = UIColor(hex: "#00FF88").withAlphaComponent(1.0)
+                n.strokeColor = UIColor(hex: "#00D8FF").withAlphaComponent(0.95)
                 n.lineWidth = 2.5
-                n.fillColor = UIColor(hex: "#00FF88").withAlphaComponent(0.15)
+                n.fillColor = UIColor(hex: "#00D8FF").withAlphaComponent(0.20)
                 n.position = CGPoint(
                     x: tileCenter(tx, ty).x,
                     y: tileCenter(tx, ty).y
                 )
-                n.zPosition = 3
+                n.zPosition = 6
                 n.name = "highlight"
                 addChild(n)
                 highlightNodes.append(n)
@@ -550,29 +584,6 @@ final class BattleScene: SKScene {
                 ])
                 n.run(SKAction.repeatForever(movePulse))
 
-                // Add subtle corner dots near the hex vertices
-                let cornerSize: CGFloat = 3
-                let hR = TileMap.hexRadius - 4
-                let hH = TileMap.hexRowSpacing / 2.0 - 3
-                let cornerPositions = [
-                    CGPoint(x: -hR, y:  hH),
-                    CGPoint(x:  hR, y:  hH),
-                    CGPoint(x:  hR, y: -hH),
-                    CGPoint(x: -hR, y: -hH)
-                ]
-                for cornerPos in cornerPositions {
-                    let dot = SKShapeNode(circleOfRadius: cornerSize)
-                    dot.fillColor = UIColor(hex: "#00FF88")
-                    dot.strokeColor = .clear
-                    dot.position = CGPoint(
-                        x: n.position.x + cornerPos.x,
-                        y: n.position.y + cornerPos.y
-                    )
-                    dot.zPosition = 4
-                    dot.name = "highlight"
-                    addChild(dot)
-                    highlightNodes.append(dot)
-                }
             }
         }
     }
@@ -657,6 +668,7 @@ final class BattleScene: SKScene {
     /// Load a mission's tile map.
     func loadMap(_ tileMap: TileMap) {
         self.tileMap = tileMap
+        addBoardBackplate(for: tileMap)
         let mapNode = tileMap.buildNode()
         // Center the map node in the scene so all tiles are within the camera's view.
         mapNode.position = mapOrigin
@@ -670,8 +682,78 @@ final class BattleScene: SKScene {
 
         // Re-center camera on the now-centered map.
         positionCameraOnMap()
+        refreshTraceVisuals(force: true)
 
         print("[BattleScene] loadMap: mapNode at \(mapNode.position), mapSize=\(tileMap.size), scene.size=\(self.size), mapOrigin=\(mapOrigin)")
+    }
+
+    /// Adds a deterministic backplate under the map to improve board readability and depth.
+    private func addBoardBackplate(for tileMap: TileMap) {
+        childNode(withName: "boardBackplate")?.removeFromParent()
+
+        let backplate = SKShapeNode(
+            rectOf: CGSize(width: tileMap.size.width + 44, height: tileMap.size.height + 36),
+            cornerRadius: 16
+        )
+        backplate.name = "boardBackplate"
+        backplate.fillColor = UIColor(hex: "#050A11").withAlphaComponent(0.88)
+        backplate.strokeColor = UIColor(hex: "#1B2E43").withAlphaComponent(0.9)
+        backplate.lineWidth = 1.6
+        backplate.zPosition = -40
+        backplate.position = CGPoint(
+            x: mapOrigin.x + tileMap.size.width / 2,
+            y: mapOrigin.y + tileMap.size.height / 2
+        )
+        addChild(backplate)
+
+        // Subtle deterministic scan-lines clipped to the backplate footprint.
+        let scanlineLayer = SKNode()
+        scanlineLayer.zPosition = -39
+        let lineSpacing: CGFloat = 9
+        var y = -tileMap.size.height / 2
+        while y <= tileMap.size.height / 2 {
+            let line = SKShapeNode(rectOf: CGSize(width: tileMap.size.width + 32, height: 0.6))
+            line.fillColor = UIColor(hex: "#00B8FF").withAlphaComponent(0.06)
+            line.strokeColor = .clear
+            line.position = CGPoint(x: 0, y: y)
+            scanlineLayer.addChild(line)
+            y += lineSpacing
+        }
+        scanlineLayer.position = backplate.position
+        addChild(scanlineLayer)
+    }
+
+    private func refreshTraceVisuals(force: Bool = false) {
+        let tier = GameState.shared.traceTier
+        guard force || tier != lastRenderedTraceTier else { return }
+        lastRenderedTraceTier = tier
+
+        guard let backplate = childNode(withName: "boardBackplate") as? SKShapeNode else { return }
+        let scanlineNodes = children
+            .filter { $0.zPosition == -39 }
+            .flatMap(\.children)
+            .compactMap { $0 as? SKShapeNode }
+
+        switch tier {
+        case 2:
+            backplate.fillColor = UIColor(hex: "#22060A").withAlphaComponent(0.9)
+            backplate.strokeColor = UIColor(hex: "#FF5566").withAlphaComponent(0.9)
+            for node in scanlineNodes {
+                node.fillColor = UIColor(hex: "#FF5544").withAlphaComponent(0.08)
+            }
+        case 1:
+            backplate.fillColor = UIColor(hex: "#1E1408").withAlphaComponent(0.9)
+            backplate.strokeColor = UIColor(hex: "#FFAA44").withAlphaComponent(0.9)
+            for node in scanlineNodes {
+                node.fillColor = UIColor(hex: "#FFAA44").withAlphaComponent(0.07)
+            }
+        default:
+            backplate.fillColor = UIColor(hex: "#050A11").withAlphaComponent(0.88)
+            backplate.strokeColor = UIColor(hex: "#1B2E43").withAlphaComponent(0.9)
+            for node in scanlineNodes {
+                node.fillColor = UIColor(hex: "#00B8FF").withAlphaComponent(0.06)
+            }
+        }
     }
 
     private func addMapCoordinateLabels(tileMap: TileMap) {
@@ -755,6 +837,9 @@ final class BattleScene: SKScene {
             focusCamera(on: first.positionX, y: first.positionY)
         }
 
+        let activeId = GameState.shared.activeCharacter?.id ?? GameState.shared.currentCharacter?.id
+        refreshActiveUnitHighlight(activeId: activeId)
+
         print("[BattleScene] syncCombatantsFromGameState(\(reason)) players=\(desiredPlayers.count) enemies=\(desiredEnemies.count) nodes=\(characterNodes.count)")
     }
 
@@ -783,12 +868,12 @@ final class BattleScene: SKScene {
     // MARK: - Character Placement
 
     /// Place a character sprite on the map, accounting for map centering offset.
-    /// Uses a direct, self-contained visual (bright hex + letter) so the
-    /// character is guaranteed visible regardless of sprite-sheet loading state.
     func placeCharacter(_ character: Character) {
-        let node = makeCharacterVisual(
+        let node = SpriteManager.shared.createCharacter(
             team: "player",
-            archetype: character.archetype.rawValue,
+            type: character.archetype.rawValue,
+            x: character.positionX,
+            y: character.positionY,
             name: character.name,
             level: character.level
         )
@@ -798,7 +883,7 @@ final class BattleScene: SKScene {
         node.tileY = character.positionY
         node.team = "player"
         node.position = tileCenter(character.positionX, character.positionY)
-        node.zPosition = 9999   // above EVERYTHING in the scene
+        node.zPosition = 40
         node.alpha = 1.0
         node.isHidden = false
         addChild(node)
@@ -807,107 +892,13 @@ final class BattleScene: SKScene {
         print("[BattleScene] placeCharacter \(character.name) at tile(\(character.positionX),\(character.positionY)) → pos \(node.position) scene.size=\(self.size) mapOrigin=\(mapOrigin) parent=\(node.parent?.name ?? "nil")")
     }
 
-    /// Build a simple, bright, always-visible character container.
-    /// Use SKSpriteNode quads instead of SKShapeNode-heavy art here. The map/highlights
-    /// render fine, but the prior shape-stack marker was not reliably visible on the
-    /// simulator, while plain sprites are rock-solid and still clearly communicate team.
-    private func makeCharacterVisual(team: String, archetype: String, name: String, level: Int) -> SpriteNode {
-        let container = SpriteNode()
-
-        let isPlayer = team == "player"
-        let fillColor: UIColor
-        let strokeColor: UIColor
-        let letterColor: UIColor
-        let letter: String
-
-        if isPlayer {
-            let k = archetype.lowercased()
-            switch k {
-            case let s where s.contains("samurai"):
-                fillColor = UIColor(red: 1.00, green: 0.40, blue: 0.20, alpha: 1.0); letter = "S"
-            case let s where s.contains("mage"):
-                fillColor = UIColor(red: 0.40, green: 0.60, blue: 1.00, alpha: 1.0); letter = "M"
-            case let s where s.contains("decker"):
-                fillColor = UIColor(red: 0.00, green: 0.85, blue: 1.00, alpha: 1.0); letter = "D"
-            case let s where s.contains("face"):
-                fillColor = UIColor(red: 1.00, green: 0.80, blue: 0.00, alpha: 1.0); letter = "F"
-            default:
-                fillColor = UIColor(red: 0.00, green: 1.00, blue: 0.53, alpha: 1.0); letter = String(name.prefix(1).uppercased())
-            }
-            strokeColor = UIColor.white
-            letterColor = UIColor(red: 0.05, green: 0.10, blue: 0.08, alpha: 1.0)
-        } else {
-            let k = archetype.lowercased()
-            switch k {
-            case "guard":  fillColor = UIColor(red: 1.00, green: 0.20, blue: 0.20, alpha: 1.0)
-            case "drone":  fillColor = UIColor(red: 1.00, green: 0.50, blue: 0.00, alpha: 1.0)
-            case "elite":  fillColor = UIColor(red: 0.80, green: 0.00, blue: 1.00, alpha: 1.0)
-            case "mage":   fillColor = UIColor(red: 0.00, green: 0.80, blue: 1.00, alpha: 1.0)
-            default:        fillColor = UIColor(red: 1.00, green: 0.20, blue: 0.20, alpha: 1.0)
-            }
-            strokeColor = UIColor(red: 1.00, green: 0.95, blue: 0.20, alpha: 1.0)
-            letterColor = UIColor.white
-            letter = String((archetype.first.map(String.init) ?? "E").uppercased())
-        }
-
-        let shadow = SKSpriteNode(color: UIColor.black.withAlphaComponent(0.45),
-                                  size: CGSize(width: TileMap.hexRadius * 1.8, height: TileMap.hexRadius * 0.55))
-        shadow.position = CGPoint(x: 0, y: -22)
-        shadow.zPosition = -2
-        shadow.name = "characterShadow"
-        container.addChild(shadow)
-
-        let glow = SKSpriteNode(color: strokeColor.withAlphaComponent(0.24),
-                                size: CGSize(width: TileMap.hexRadius * 2.35, height: TileMap.hexRadius * 2.35))
-        glow.zRotation = .pi / 4
-        glow.zPosition = -1
-        glow.name = "characterGlow"
-        container.addChild(glow)
-
-        let border = SKSpriteNode(color: strokeColor,
-                                  size: CGSize(width: TileMap.hexRadius * 1.95, height: TileMap.hexRadius * 1.95))
-        border.zRotation = .pi / 4
-        border.zPosition = 0
-        border.name = "characterBorder"
-        container.addChild(border)
-
-        let core = SKSpriteNode(color: fillColor,
-                                size: CGSize(width: TileMap.hexRadius * 1.58, height: TileMap.hexRadius * 1.58))
-        core.zRotation = .pi / 4
-        core.zPosition = 1
-        core.name = "characterCore"
-        container.addChild(core)
-
-        let center = SKSpriteNode(color: fillColor.withAlphaComponent(0.98),
-                                  size: CGSize(width: TileMap.hexRadius * 1.02, height: TileMap.hexRadius * 1.02))
-        center.zPosition = 2
-        center.name = "characterCenter"
-        container.addChild(center)
-
-        let label = SKLabelNode(text: letter)
-        label.fontName = "Helvetica-Bold"
-        label.fontSize = 38
-        label.fontColor = letterColor
-        label.verticalAlignmentMode = .center
-        label.horizontalAlignmentMode = .center
-        label.position = CGPoint(x: 0, y: -1)
-        label.zPosition = 3
-        label.name = "characterLetter"
-        container.addChild(label)
-
-        container.run(SKAction.repeatForever(SKAction.sequence([
-            SKAction.scale(to: 1.06, duration: 0.9),
-            SKAction.scale(to: 1.00, duration: 0.9)
-        ])))
-
-        return container
-    }
-
     /// Place an enemy sprite on the map, accounting for map centering offset.
     func placeEnemy(_ enemy: Enemy) {
-        let node = makeCharacterVisual(
+        let node = SpriteManager.shared.createCharacter(
             team: "enemy",
-            archetype: enemy.archetype,
+            type: enemy.archetype,
+            x: enemy.positionX,
+            y: enemy.positionY,
             name: enemy.name,
             level: 1
         )
@@ -917,9 +908,22 @@ final class BattleScene: SKScene {
         node.tileY = enemy.positionY
         node.team = "enemy"
         node.position = tileCenter(enemy.positionX, enemy.positionY)
-        node.zPosition = 9999   // above EVERYTHING in the scene
+        node.zPosition = 41
         node.alpha = 1.0
         node.isHidden = false
+
+        let threatRing = SKShapeNode(circleOfRadius: TileMap.hexRadius * 0.48)
+        threatRing.name = "enemyThreatRing"
+        threatRing.strokeColor = UIColor(hex: "#FF3344").withAlphaComponent(0.65)
+        threatRing.lineWidth = 2
+        threatRing.fillColor = .clear
+        threatRing.position = CGPoint(x: 0, y: -8)
+        threatRing.zPosition = 5
+        node.addChild(threatRing)
+        threatRing.run(SKAction.repeatForever(SKAction.sequence([
+            SKAction.fadeAlpha(to: 0.25, duration: 0.55),
+            SKAction.fadeAlpha(to: 0.75, duration: 0.55)
+        ])))
 
         // HP bar — floats above enemy tile.
         let enemyBarWidth: CGFloat = 32.0
@@ -1111,6 +1115,7 @@ final class BattleScene: SKScene {
         }
         let mapNode = newTileMap.buildNode()
         mapNode.position = mapOrigin
+        addBoardBackplate(for: newTileMap)
         addChild(mapNode)
 
         // Center camera on map first — will be refined to character position below.
@@ -1281,25 +1286,17 @@ final class BattleScene: SKScene {
 
         // Check extraction tile — win immediately if all enemies are cleared and player stands on it
         if isExtractionTile(tileX, tileY) {
-            // Only trigger extraction win if no living enemies remain
-            if GameState.shared.enemies.filter({ $0.isAlive }).isEmpty {
-                // Move character to extraction tile first
-                if let sprite = selectedCharacterNode as? SpriteNode,
-                   let charEntry = characterNodes.first(where: { $0.value === sprite }) {
-                    animateCharacterMove(characterId: charEntry.key, toTileX: tileX, toTileY: tileY)
-                    sprite.tileX = tileX
-                    sprite.tileY = tileY
-                }
-                GameState.shared.addLog("🚁 EXTRACTION SUCCESS — Runners are out!")
-                GameState.shared.combatWon = true
-                GameState.shared.combatEnded = true
-                // Post victory notification
-                NotificationCenter.default.post(name: .combatAction, object: nil, userInfo: ["result": "victory"])
-                return
+            // Extraction resolution is GameState-authoritative.
+            if let sprite = selectedCharacterNode as? SpriteNode,
+               let charEntry = characterNodes.first(where: { $0.value === sprite }) {
+                animateCharacterMove(characterId: charEntry.key, toTileX: tileX, toTileY: tileY)
+                sprite.tileX = tileX
+                sprite.tileY = tileY
+                GameState.shared.requestExtraction(characterId: charEntry.key, tileX: tileX, tileY: tileY)
             } else {
-                GameState.shared.addLog("Clear all enemies before extraction!")
-                return
+                GameState.shared.requestExtraction(characterId: nil, tileX: tileX, tileY: tileY)
             }
+            return
         }
 
         // Find what's on this tile
@@ -1463,6 +1460,7 @@ final class BattleScene: SKScene {
     /// .enemyPhaseCompleted firing (e.g. DispatchGroup leak or silent crash in enemy AI),
     /// force-unblock and restore the player's turn so the game doesn't freeze permanently.
     override func update(_ currentTime: TimeInterval) {
+        refreshTraceVisuals()
         if GameState.shared.isPlayerInputBlocked {
             if inputBlockedSince == nil {
                 inputBlockedSince = currentTime

@@ -24,7 +24,8 @@ Reasoning:
 ### 2) Secondary/coordinator surface
 - `Rendering/BattleScene.swift`
   - Consumes `GameState` notifications and synchronizes visual/input state.
-  - Also sets some turn-related flags (`isPlayerInputBlocked`, `isPlayerTurn`, active/selected ids) in response to phase events/timeouts.
+  - May set some turn-related recovery flags (`isPlayerInputBlocked`, `isPlayerTurn`, active/selected ids) in response to phase events/timeouts.
+  - Extraction taps request resolution through `GameState` instead of directly finalizing combat outcomes.
 
 ### 3) Dormant/duplicate authority surface
 - `Game/TurnManager.swift`
@@ -75,6 +76,7 @@ Turn/render synchronization is notification-driven:
 2. **GameState + BattleScene shared writes**
    - `BattleScene` writes turn flags/active actor during completion/safety paths.
    - This is operationally useful for freeze recovery, but it means turn-state mutation is not single-file pure.
+   - Mission outcome finalization (victory/defeat/extraction) should remain `GameState`-only.
 
 3. **Phase naming split**
    - App-level phase state (`PhaseManager.currentPhase`) and combat turn phase (`GameState` flags) are separate and intentionally layered, but can be confused during debugging.

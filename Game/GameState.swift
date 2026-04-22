@@ -95,6 +95,18 @@ enum MissionType {
     case eliminate
 }
 
+enum HeatTier {
+    case low
+    case medium
+    case high
+}
+
+enum Faction: String, Hashable {
+    case corp
+    case gang
+    case unknown
+}
+
 // MARK: - Singleton combat/game runtime state
 
 /// Singleton combat/game runtime state — accessible across all layers.
@@ -209,11 +221,41 @@ final class GameState: ObservableObject {
         traceLevel >= traceThreshold
     }
 
+    /// Tier 0: below threshold (low), Tier 1: triggered (medium), Tier 2: high pressure.
+    /// Deterministic and fully derived from existing trace values.
+    var traceTier: Int {
+        if traceLevel >= traceThreshold * 2 { return 2 }
+        if traceLevel >= traceThreshold { return 1 }
+        return 0
+    }
+
+    var traceTierLabel: String {
+        switch traceTier {
+        case 2: return "HIGH"
+        case 1: return "MED"
+        default: return "LOW"
+        }
+    }
+
+    /// Enemy incoming damage modifier derived from trace tier.
+    /// Tier 0 = +0, Tier 1 = +base, Tier 2 = +(base + 1)
+    var escalationDamageBonusForCurrentTrace: Int {
+        switch traceTier {
+        case 2:
+            return escalationDamageBonus + 1
+        case 1:
+            return escalationDamageBonus
+        default:
+            return 0
+        }
+    }
+
     func applyStreetAction() {
         // Explicitly no trace mutation.
     }
 
     func applySignalAction() {
+        let previousTier = traceTier
         addLog("TRACE +\(traceGainPerSignal) (Signal)")
         traceLevel += traceGainPerSignal
         if !isTraceTriggered && traceLevel == traceThreshold - 1 {
@@ -223,16 +265,18 @@ final class GameState: ObservableObject {
             hasLoggedTraceTriggerForCurrentRun = true
             addLog("⚠️ TRACE TRIGGERED — hostile network awareness increased.")
         }
-        if isTraceTriggered && traceEscalationLevel == 0 {
-            traceEscalationLevel = 1
-            addLog("⚠️ TRACE ESCALATION — enemies adapting")
+        let newTier = traceTier
+        traceEscalationLevel = newTier
+        if newTier != previousTier {
+            addLog("⚠️ TRACE \(traceTierLabel) — enemy damage +\(escalationDamageBonusForCurrentTrace)")
         }
     }
 
     private func escalatedIncomingDamage(_ baseDamage: Int) -> Int {
         guard baseDamage > 0 else { return baseDamage }
-        guard traceEscalationLevel >= 1 else { return baseDamage }
-        let escalatedDamage = baseDamage + escalationDamageBonus
+        let dynamicBonus = escalationDamageBonusForCurrentTrace
+        guard dynamicBonus > 0 else { return baseDamage }
+        let escalatedDamage = baseDamage + dynamicBonus
         if playerRole == .street {
             addLog("STREET — bracing against escalation")
             let reducedDamage = max(0, escalatedDamage - 1)
@@ -243,6 +287,7 @@ final class GameState: ObservableObject {
     }
 
     func applyTraceRecovery() {
+        let previousTier = traceTier
         let recoveryAmount: Int
         if playerRole == .hacker {
             recoveryAmount = traceRecoveryPerLayLow + 1
@@ -256,6 +301,11 @@ final class GameState: ObservableObject {
             addLog("TRACE -\(previous - traceLevel) (Lay Low)")
         } else {
             addLog("TRACE -0 (Lay Low)")
+        }
+        let newTier = traceTier
+        traceEscalationLevel = newTier
+        if newTier != previousTier {
+            addLog("TRACE \(traceTierLabel) — enemy damage +\(escalationDamageBonusForCurrentTrace)")
         }
     }
 
@@ -415,6 +465,14 @@ final class GameState: ObservableObject {
     @Published var combatEnded: Bool = false
     @Published var missionType: MissionType = .survive
     @Published var missionComplete: Bool = false
+    @Published var missionHeat: Int = 0
+    @Published var missionHeatTier: HeatTier = .low
+    @Published var factionAttention: [Faction: Int] = [
+        .corp: 0,
+        .gang: 0,
+        .unknown: 0
+    ]
+    @Published var lastAppliedCorpEnemyModifier: Int = 0
     @Published var missionTargetTurns: Int = 6
     @Published var currentTurnCount: Int = 0
     var activeCharacter: Character? {
@@ -463,6 +521,54 @@ final class GameState: ObservableObject {
         return "owner=GameState idx=\(currentTurnIndex) round=\(roundNumber) playerTurn=\(isPlayerTurn) inputBlocked=\(isPlayerInputBlocked) active=\(activeId)"
     }
 
+    var heatTierLabel: String {
+        switch missionHeatTier {
+        case .low: return "LOW"
+        case .medium: return "MEDIUM"
+        case .high: return "HIGH"
+        }
+    }
+
+    func generateWorldReactionMessage() -> String {
+        let corpAttention = factionAttention[.corp, default: 0]
+        if corpAttention >= 3 {
+            return "Persistent attention detected. Future operations may be compromised."
+        }
+
+        switch missionHeatTier {
+        case .low:
+            return "Run completed clean. No significant attention."
+        case .medium:
+            return "Corporate systems flagged unusual activity."
+        case .high:
+            return "High alert triggered. Surveillance and response risk increased."
+        }
+    }
+
+    func generateMissionModifierPreview() -> String {
+        let corpAttention = factionAttention[.corp, default: 0]
+        switch corpAttention {
+        case 0:
+            return "No increased security detected."
+        case 1...2:
+            return "Moderate surveillance expected next mission."
+        default:
+            return "High security expected: increased enemy presence likely."
+        }
+    }
+
+    func corpAttentionEnemyModifier() -> Int {
+        let corpAttention = factionAttention[.corp, default: 0]
+        switch corpAttention {
+        case 0:
+            return 0
+        case 1...2:
+            return 1
+        default:
+            return 2
+        }
+    }
+
     /// Live hit-preview for the currently selected attacker → target pair.
     /// Returns nil if no valid attacker or target is selected.
     var hitPreview: CombatMechanics.HitPreview? {
@@ -481,6 +587,80 @@ final class GameState: ObservableObject {
 
     // MARK: - Setup
 
+    private func makeEnemy(for type: String) -> Enemy {
+        switch type {
+        case "guard": return Enemy.corpGuard()
+        case "drone": return Enemy.securityDrone()
+        case "elite": return Enemy.eliteGuard()
+        case "mage": return Enemy.corpMage()
+        case "healer": return Enemy.medic()
+        default: return Enemy.corpGuard()
+        }
+    }
+
+    private func applyCorpAttentionEnemyInfluence(spawnTemplates: [(type: String, x: Int, y: Int)], map: [[Int]]) {
+        let modifier = corpAttentionEnemyModifier()
+        lastAppliedCorpEnemyModifier = 0
+
+        guard modifier > 0 else {
+            addLog("No enemy presence increase from corp attention.")
+            return
+        }
+        guard !spawnTemplates.isEmpty else {
+            addLog("Corp attention modifier available (+\(modifier)), but no spawn templates found.")
+            return
+        }
+
+        let width = map.first?.count ?? TileMap.mapWidth
+        let height = map.count
+        let offsets: [(Int, Int)] = [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1)]
+
+        var occupied = Set(playerTeam.filter(\.isAlive).map { "\($0.positionX),\($0.positionY)" })
+        for enemy in enemies where enemy.isAlive {
+            occupied.insert("\(enemy.positionX),\(enemy.positionY)")
+        }
+        for pending in pendingSpawns where pending.enemy.isAlive {
+            occupied.insert("\(pending.enemy.positionX),\(pending.enemy.positionY)")
+        }
+
+        var applied = 0
+        for i in 0..<modifier {
+            let template = spawnTemplates[i % spawnTemplates.count]
+            let enemy = makeEnemy(for: template.type)
+
+            var placed = false
+            for probe in 0..<offsets.count {
+                let offset = offsets[(probe + i) % offsets.count]
+                let x = max(0, min(width - 1, template.x + offset.0))
+                let y = max(0, min(height - 1, template.y + offset.1))
+                guard y >= 0, y < map.count, x >= 0, x < map[y].count else { continue }
+                guard map[y][x] != 1 else { continue }
+                let key = "\(x),\(y)"
+                guard !occupied.contains(key) else { continue }
+                enemy.positionX = x
+                enemy.positionY = y
+                enemies.append(enemy)
+                occupied.insert(key)
+                applied += 1
+                placed = true
+                break
+            }
+
+            if !placed {
+                addLog("Corp attention spawn skipped: no safe tile for extra enemy \(i + 1)/\(modifier).")
+            }
+        }
+
+        lastAppliedCorpEnemyModifier = applied
+        if applied == 0 {
+            addLog("Corp attention increased threat profile, but no extra enemies could be placed.")
+        } else if applied < modifier {
+            addLog("Corp attention increased enemy presence by +\(applied) (requested +\(modifier)).")
+        } else {
+            addLog("Corp attention increased enemy presence by +\(applied).")
+        }
+    }
+
     func setupMission(_ mission: Mission) {
         print("[GameState] setupMission: \(mission.title)")
         playerTeam = Character.allRunners
@@ -495,15 +675,7 @@ final class GameState: ObservableObject {
         pendingSpawns = []
 
         for spawn in mission.enemies {
-            let enemy: Enemy
-            switch spawn.type {
-            case "guard":   enemy = Enemy.corpGuard()
-            case "drone":   enemy = Enemy.securityDrone()
-            case "elite":   enemy = Enemy.eliteGuard()
-            case "mage":    enemy = Enemy.corpMage()
-            case "healer":  enemy = Enemy.medic()
-            default:        enemy = Enemy.corpGuard()
-            }
+            let enemy = makeEnemy(for: spawn.type)
             enemy.positionX = spawn.x
             enemy.positionY = spawn.y
 
@@ -526,10 +698,16 @@ final class GameState: ObservableObject {
         hasLoggedTraceTriggerForCurrentRun = false
         actionMode = .street
         missionComplete = false
+        missionHeat = 0
+        missionHeatTier = .low
         currentTurnCount = 0
         combatLog = ["Mission started: \(mission.title)"]
         extractionX = mission.extractionPoint.x
         extractionY = mission.extractionPoint.y
+        applyCorpAttentionEnemyInfluence(
+            spawnTemplates: mission.enemies.map { ($0.type, $0.x, $0.y) },
+            map: mission.map
+        )
         addLog("Reach extraction at (\(mission.extractionPoint.x), \(mission.extractionPoint.y))")
         // Spawn immediate enemies (delay=0) before combat starts
         processDelayedSpawns(enemyPhaseIndex: 0)
@@ -566,15 +744,7 @@ final class GameState: ObservableObject {
 
         // Only load enemies from the first room (others spawn when entered)
         for spawn in firstRoom.enemies {
-            let enemy: Enemy
-            switch spawn.type {
-            case "guard":   enemy = Enemy.corpGuard()
-            case "drone":   enemy = Enemy.securityDrone()
-            case "elite":   enemy = Enemy.eliteGuard()
-            case "mage":    enemy = Enemy.corpMage()
-            case "healer":  enemy = Enemy.medic()
-            default:        enemy = Enemy.corpGuard()
-            }
+            let enemy = makeEnemy(for: spawn.type)
             enemy.positionX = spawn.x
             enemy.positionY = spawn.y
 
@@ -599,8 +769,14 @@ final class GameState: ObservableObject {
         hasLoggedTraceTriggerForCurrentRun = false
         actionMode = .street
         missionComplete = false
+        missionHeat = 0
+        missionHeatTier = .low
         currentTurnCount = 0
         combatLog = ["Mission started: \(mission.title)", "Entering: \(firstRoom.title)"]
+        applyCorpAttentionEnemyInfluence(
+            spawnTemplates: firstRoom.enemies.map { ($0.type, $0.x, $0.y) },
+            map: firstRoom.map
+        )
 
         if let ext = firstRoom.extractionPoint {
             extractionX = ext.x
@@ -1172,10 +1348,10 @@ final class GameState: ObservableObject {
 
         currentTurnCount += 1
         if missionType == .survive && !missionComplete && currentTurnCount >= missionTargetTurns {
-            addLog("MISSION COMPLETE — SURVIVED \(missionTargetTurns) TURNS")
-            missionComplete = true
-            combatWon = true
-            combatEnded = true
+            finalizeCombat(
+                won: true,
+                missionLog: "MISSION COMPLETE — SURVIVED \(missionTargetTurns) TURNS"
+            )
             return
         }
 
@@ -1223,20 +1399,16 @@ final class GameState: ObservableObject {
     /// Check if combat is over
     func checkCombatEnd() {
         if missionType == .eliminate && livingEnemies.isEmpty && pendingSpawns.isEmpty {
-            addLog("MISSION COMPLETE — TARGET ELIMINATED")
-            missionComplete = true
-            combatWon = true
-            combatEnded = true
+            finalizeCombat(won: true, missionLog: "MISSION COMPLETE — TARGET ELIMINATED")
             return
         }
 
         if livingPlayers.isEmpty {
-            HapticsManager.shared.defeat()
-            addLog("MISSION FAILED — ALL UNITS DOWN")
-            addLog("=== DEFEAT ===")
-            missionComplete = true
-            combatWon = false
-            combatEnded = true
+            finalizeCombat(
+                won: false,
+                missionLog: "MISSION FAILED — ALL UNITS DOWN",
+                terminalLog: "=== DEFEAT ==="
+            )
         }
     }
 
@@ -1248,12 +1420,114 @@ final class GameState: ObservableObject {
         guard livingEnemies.isEmpty && pendingSpawns.isEmpty else { return }
         let onExtraction = livingPlayers.contains { $0.positionX == extractionX && $0.positionY == extractionY }
         if onExtraction {
-            HapticsManager.shared.victory()
-            addLog("🚁 EXTRACTION SUCCESS — Runners are out!")
-            addLog("=== VICTORY ===")
-            combatWon = true
-            combatEnded = true
+            finalizeCombat(
+                won: true,
+                missionLog: "🚁 EXTRACTION SUCCESS — Runners are out!",
+                terminalLog: "=== VICTORY ==="
+            )
         }
+    }
+
+    /// Request extraction resolution through GameState authority.
+    /// Callers should pass the selected living character id (if available) and tapped tile.
+    /// GameState validates extraction tile, updates model position, and finalizes mission state.
+    func requestExtraction(characterId: UUID?, tileX: Int, tileY: Int) {
+        guard !combatEnded else { return }
+
+        guard tileX == extractionX && tileY == extractionY else {
+            addLog("That is not the extraction point.")
+            return
+        }
+
+        guard let id = characterId,
+              let char = playerTeam.first(where: { $0.id == id && $0.isAlive }) else {
+            addLog("Select a character, then step onto extraction.")
+            return
+        }
+
+        // Authority write: synchronize model-space position with the tile the player tapped.
+        char.positionX = tileX
+        char.positionY = tileY
+
+        if !(livingEnemies.isEmpty && pendingSpawns.isEmpty) {
+            addLog("Clear all enemies before extraction!")
+            return
+        }
+
+        checkExtraction()
+    }
+
+    /// Centralized mission outcome finalization.
+    /// Ensures all victory/defeat paths mutate through GameState and emit one shared completion signal.
+    private func finalizeCombat(won: Bool, missionLog: String, terminalLog: String? = nil) {
+        guard !combatEnded else { return }
+        if won {
+            HapticsManager.shared.victory()
+        } else {
+            HapticsManager.shared.defeat()
+        }
+        addLog(missionLog)
+        finalizeMissionHeat()
+        applyFactionAttention()
+        addLog(generateWorldReactionMessage())
+        addLog(generateMissionModifierPreview())
+        if let terminalLog {
+            addLog(terminalLog)
+        }
+        missionComplete = true
+        combatWon = won
+        combatEnded = true
+        NotificationCenter.default.post(
+            name: .combatAction,
+            object: nil,
+            userInfo: ["result": won ? "victory" : "defeat"]
+        )
+    }
+
+    /// Heat is mission-boundary consequence state.
+    /// v0.1 intentionally has no gameplay effect.
+    private func finalizeMissionHeat() {
+        let sourceTraceTier = traceTier
+        var derivedTier = sourceTraceTier
+
+        // Optional scaffold modifier: if mission ends at high trace, apply +1 tier (clamped).
+        if sourceTraceTier >= 2 {
+            derivedTier = min(2, derivedTier + 1)
+        }
+
+        missionHeat = derivedTier
+        switch derivedTier {
+        case 2:
+            missionHeatTier = .high
+        case 1:
+            missionHeatTier = .medium
+        default:
+            missionHeatTier = .low
+        }
+
+        addLog("Mission complete: Heat level \(heatTierLabel) (derived from trace \(traceTierLabel))")
+    }
+
+    /// Heat -> world awareness scaffold.
+    /// v0.1 only records/logs attention; it does not affect gameplay.
+    private func applyFactionAttention() {
+        let increment: Int
+        let reactionLog: String
+        switch missionHeatTier {
+        case .low:
+            increment = 0
+            reactionLog = "No significant attention detected."
+        case .medium:
+            increment = 1
+            reactionLog = "Corporate systems flagged unusual activity."
+        case .high:
+            increment = 2
+            reactionLog = "High alert: corporate surveillance increased."
+        }
+
+        factionAttention[.corp, default: 0] += increment
+        addLog(reactionLog)
+        addLog("CORP ATTENTION: \(factionAttention[.corp, default: 0])")
     }
 
     /// Mission's extraction point — set by setupMission from the mission JSON.
