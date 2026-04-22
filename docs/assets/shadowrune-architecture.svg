@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="360" viewBox="0 0 880 360" role="img" aria-labelledby="t d">
+  <title id="t">Shadowrune Architecture</title>
+  <desc id="d">SwiftUI App flows into GameState, with UI and BattleScene as projections around authority.</desc>
+  <defs>
+    <style>
+      .bg { fill: #0b0f14; }
+      .nodeC { fill: #111827; stroke: #00e5ff; stroke-width: 2.5; rx: 12; }
+      .nodeM { fill: #1f1620; stroke: #ff3d81; stroke-width: 2.5; rx: 12; }
+      .txt { fill: #e5f6ff; font: 600 17px Inter, Arial, sans-serif; }
+      .sub { fill: #b8d6df; font: 400 13px Inter, Arial, sans-serif; }
+      .arrow { stroke: #00e5ff; stroke-width: 2.5; fill: none; marker-end: url(#ah); }
+    </style>
+    <marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00e5ff"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="880" height="360"/>
+
+  <rect class="nodeC" x="340" y="36" width="200" height="76"/>
+  <text class="txt" x="385" y="74">SwiftUI App</text>
+
+  <rect class="nodeM" x="320" y="148" width="240" height="86"/>
+  <text class="txt" x="382" y="183">GameState</text>
+  <text class="sub" x="366" y="205">GameState = authority</text>
+
+  <rect class="nodeC" x="126" y="258" width="220" height="74"/>
+  <text class="txt" x="222" y="292">UI</text>
+  <text class="sub" x="173" y="314">reads + dispatches intents</text>
+
+  <rect class="nodeC" x="534" y="258" width="220" height="74"/>
+  <text class="txt" x="602" y="292">BattleScene</text>
+  <text class="sub" x="579" y="314">renders combat state</text>
+
+  <line class="arrow" x1="440" y1="112" x2="440" y2="148"/>
+  <line class="arrow" x1="390" y1="234" x2="290" y2="258"/>
+  <line class="arrow" x1="490" y1="234" x2="590" y2="258"/>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="280" viewBox="0 0 980 280" role="img" aria-labelledby="t d">
+  <title id="t">Shadowrune Roles</title>
+  <desc id="d">Three role cards: Normal, Hacker, and Street with one-line modifiers.</desc>
+  <defs>
+    <style>
+      .bg { fill: #0b0f14; }
+      .card { fill: #111827; stroke: #00e5ff; stroke-width: 2.5; rx: 12; }
+      .cardM { fill: #1f1620; stroke: #ff3d81; stroke-width: 2.5; rx: 12; }
+      .h { fill: #e5f6ff; font: 700 20px Inter, Arial, sans-serif; }
+      .s { fill: #b8d6df; font: 400 14px Inter, Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="980" height="280"/>
+
+  <rect class="card" x="40" y="46" width="280" height="188"/>
+  <text class="h" x="131" y="94">NORMAL</text>
+  <text class="s" x="114" y="136">baseline role profile</text>
+  <text class="s" x="105" y="162">modifier: none</text>
+
+  <rect class="cardM" x="350" y="46" width="280" height="188"/>
+  <text class="h" x="445" y="94">HACKER</text>
+  <text class="s" x="408" y="136">control-oriented pressure play</text>
+  <text class="s" x="388" y="162">Lay Low recovers +1 trace</text>
+
+  <rect class="card" x="660" y="46" width="280" height="188"/>
+  <text class="h" x="760" y="94">STREET</text>
+  <text class="s" x="718" y="136">resilience under escalation</text>
+  <text class="s" x="710" y="162">-1 escalated incoming damage</text>
+</svg>

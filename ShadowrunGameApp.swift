@@ -1,5 +1,6 @@
 import SwiftUI
 import SpriteKit
+import QuartzCore
 
 // MARK: - Mission Objective Banner
 
@@ -600,6 +601,7 @@ struct BriefingView: View {
 struct CombatView: View {
     @ObservedObject var manager: PhaseManager
     @ObservedObject var gameState: GameState
+    @State private var showDiagnostics = false
 
     private var victoryText: String {
         switch manager.selectedMissionId ?? "" {
@@ -648,6 +650,33 @@ struct CombatView: View {
                     .padding(.top, 8)
                     Spacer()
                 }
+
+                // TOP RIGHT: lightweight diagnostics
+                VStack {
+                    HStack {
+                        Spacer()
+                        if showDiagnostics {
+                            CombatDiagnosticsPanel(
+                                phase: manager.currentPhase,
+                                round: gameState.roundNumber,
+                                activeActorId: (gameState.activeCharacter ?? gameState.currentCharacter)?.id.uuidString,
+                                fpsText: FPSMonitor.shared.currentFPSLabel,
+                                authoritySummary: gameState.turnAuthoritySummary,
+                                traceLevel: gameState.traceLevel,
+                                traceThreshold: gameState.traceThreshold,
+                                traceTriggered: gameState.isTraceTriggered,
+                                traceEscalationLevel: gameState.traceEscalationLevel,
+                                traceGainPerSignal: gameState.traceGainPerSignal,
+                                traceRecoveryPerLayLow: gameState.traceRecoveryPerLayLow,
+                                traceTelemetrySummary: gameState.traceTelemetrySummary(),
+                                playerRole: gameState.playerRoleLabel
+                            )
+                            .padding(.top, 8)
+                            .padding(.trailing, 12)
+                        }
+                    }
+                    Spacer()
+                }
             }
 
             if gameState.combatEnded {
@@ -684,6 +713,8 @@ struct CombatView: View {
                 // SwiftUI combat UI — bottom-aligned, content-sized
                 CombatUI(
                     gameState: gameState,
+                    diagnosticsVisible: showDiagnostics,
+                    onToggleDiagnostics: { showDiagnostics.toggle() },
                     onAttack: { gameState.performAttack() },
                     onDefend: { gameState.performDefend() },
                     onSpell: { /* handled by SpellPickerSheet inside CombatUI */ },
@@ -691,6 +722,7 @@ struct CombatView: View {
                     onHack: { gameState.performHack() },
                     onIntimidate: { gameState.performIntimidate() },
                     onItems: { gameState.performUseItem() },
+                    onRecover: { gameState.performLayLow() },
                     onEndTurn: { gameState.endTurn() }
                 )
                 .background(
@@ -699,6 +731,110 @@ struct CombatView: View {
             }
         }
         .ignoresSafeArea(edges: .bottom)
+        .onAppear { FPSMonitor.shared.start() }
+        .onDisappear { FPSMonitor.shared.stop() }
+    }
+}
+
+private struct CombatDiagnosticsPanel: View {
+    let phase: GamePhase
+    let round: Int
+    let activeActorId: String?
+    let fpsText: String
+    let authoritySummary: String
+    let traceLevel: Int
+    let traceThreshold: Int
+    let traceTriggered: Bool
+    let traceEscalationLevel: Int
+    let traceGainPerSignal: Int
+    let traceRecoveryPerLayLow: Int
+    let traceTelemetrySummary: String
+    let playerRole: String
+
+    private var actorLabel: String {
+        guard let activeActorId, !activeActorId.isEmpty else { return "n/a" }
+        return String(activeActorId.prefix(8))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("diag")
+                .font(.system(size: 8, weight: .black, design: .monospaced))
+                .foregroundColor(Color(hex: "00FF88").opacity(0.75))
+            Text("phase: \(phase.displayName.lowercased())")
+            Text("round: \(round)")
+            Text("actor: \(actorLabel)")
+            Text("fps: \(fpsText)")
+            Text("trace: \(traceLevel)/\(traceThreshold) trig=\(traceTriggered ? "yes" : "no")")
+            Text("traceEsc: \(traceEscalationLevel)")
+            Text("role: \(playerRole)")
+            Text("cadence: th\(traceThreshold) +\(traceGainPerSignal) / -\(traceRecoveryPerLayLow)")
+            Text(traceTelemetrySummary)
+            Text(authoritySummary)
+                .lineLimit(2)
+                .foregroundColor(.white.opacity(0.65))
+        }
+        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+        .foregroundColor(.white.opacity(0.9))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.black.opacity(0.72))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(hex: "00FF88").opacity(0.3), lineWidth: 1)
+                )
+        )
+        .accessibilityIdentifier("combat_diagnostics_panel")
+    }
+}
+
+@MainActor
+private final class FPSMonitor: ObservableObject {
+    static let shared = FPSMonitor()
+
+    @Published private(set) var currentFPSLabel: String = "n/a"
+
+    private var displayLink: CADisplayLink?
+    private var lastTimestamp: CFTimeInterval = 0
+    private var frameCount: Int = 0
+
+    private init() {}
+
+    func start() {
+        guard displayLink == nil else { return }
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in self?.start() }
+            return
+        }
+        lastTimestamp = 0
+        frameCount = 0
+        currentFPSLabel = "n/a"
+
+        let link = CADisplayLink(target: self, selector: #selector(step(_:)))
+        link.add(to: .main, forMode: .common)
+        displayLink = link
+    }
+
+    func stop() {
+        displayLink?.invalidate()
+        displayLink = nil
+        currentFPSLabel = "n/a"
+    }
+
+    @objc private func step(_ link: CADisplayLink) {
+        if lastTimestamp == 0 {
+            lastTimestamp = link.timestamp
+            return
+        }
+        frameCount += 1
+        let delta = link.timestamp - lastTimestamp
+        guard delta >= 1 else { return }
+        let fps = Int((Double(frameCount) / delta).rounded())
+        currentFPSLabel = fps > 0 ? "\(fps)" : "n/a"
+        frameCount = 0
+        lastTimestamp = link.timestamp
     }
 }
 

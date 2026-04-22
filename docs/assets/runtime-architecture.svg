@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="520" viewBox="0 0 980 520" role="img" aria-labelledby="title desc">
+  <title id="title">Shadowrune Runtime Architecture</title>
+  <desc id="desc">Diagram showing app phases, GameState authority, rendering and UI surfaces, and data domains.</desc>
+  <defs>
+    <style>
+      .bg { fill: #0b1020; }
+      .card { fill: #121a33; stroke: #6aa3ff; stroke-width: 2; rx: 12; }
+      .card2 { fill: #101828; stroke: #5eead4; stroke-width: 2; rx: 12; }
+      .title { font: 700 22px Inter, Arial, sans-serif; fill: #e5ecff; }
+      .label { font: 600 15px Inter, Arial, sans-serif; fill: #dbe7ff; }
+      .small { font: 400 13px Inter, Arial, sans-serif; fill: #b8c7e6; }
+      .arrow { stroke: #9fb8ff; stroke-width: 2.5; marker-end: url(#arrowhead); fill: none; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#9fb8ff" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="980" height="520"/>
+  <text class="title" x="28" y="42">Shadowrune Runtime Architecture</text>
+
+  <rect class="card" x="28" y="72" width="280" height="120"/>
+  <text class="label" x="44" y="103">ShadowrunGameApp / PhaseManager</text>
+  <text class="small" x="44" y="129">title → mission select → briefing → combat</text>
+  <text class="small" x="44" y="151">High-level navigation authority</text>
+
+  <rect class="card2" x="350" y="72" width="300" height="170"/>
+  <text class="label" x="368" y="103">GameState (authoritative runtime)</text>
+  <text class="small" x="368" y="129">turn index, round, active actor</text>
+  <text class="small" x="368" y="151">trace state, escalation, combat log</text>
+  <text class="small" x="368" y="173">action resolution + enemy phase orchestration</text>
+
+  <rect class="card" x="692" y="72" width="260" height="170"/>
+  <text class="label" x="710" y="103">BattleScene (SpriteKit)</text>
+  <text class="small" x="710" y="129">tile map, unit sprites, effects</text>
+  <text class="small" x="710" y="151">notification-driven sync with GameState</text>
+  <text class="small" x="710" y="173">input gate + visual transitions</text>
+
+  <rect class="card" x="28" y="272" width="280" height="170"/>
+  <text class="label" x="44" y="303">CombatUI (SwiftUI)</text>
+  <text class="small" x="44" y="329">overlay controls and diagnostics</text>
+  <text class="small" x="44" y="351">reads round/turn/trace/log projections</text>
+  <text class="small" x="44" y="373">dispatches player actions to GameState</text>
+
+  <rect class="card2" x="350" y="292" width="300" height="150"/>
+  <text class="label" x="368" y="323">Domain Data</text>
+  <text class="small" x="368" y="349">Entities/ (Character, Weapon, Spell, Armor)</text>
+  <text class="small" x="368" y="371">Missions/ (mission + room JSON)</text>
+  <text class="small" x="368" y="393">Loaded/consumed by GameState + BattleScene</text>
+
+  <line class="arrow" x1="308" y1="132" x2="350" y2="132"/>
+  <line class="arrow" x1="650" y1="160" x2="692" y2="160"/>
+  <line class="arrow" x1="692" y1="188" x2="650" y2="188"/>
+  <line class="arrow" x1="308" y1="333" x2="350" y2="333"/>
+  <line class="arrow" x1="350" y1="355" x2="308" y2="355"/>
+  <line class="arrow" x1="500" y1="242" x2="500" y2="292"/>
+
+  <text class="small" x="36" y="486">Note: TurnManager exists as a dormant duplicate model and is not the primary runtime authority.</text>
+</svg>

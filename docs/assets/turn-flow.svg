@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="420" viewBox="0 0 980 420" role="img" aria-labelledby="title desc">
+  <title id="title">Turn and Combat Flow</title>
+  <desc id="desc">Flow chart of player turn, action completion, enemy phase, and round restart.</desc>
+  <defs>
+    <style>
+      .bg { fill: #0f172a; }
+      .node { fill: #1e293b; stroke: #38bdf8; stroke-width: 2; rx: 12; }
+      .node2 { fill: #1f2937; stroke: #34d399; stroke-width: 2; rx: 12; }
+      .node3 { fill: #3f1d2e; stroke: #fb7185; stroke-width: 2; rx: 12; }
+      .title { font: 700 21px Inter, Arial, sans-serif; fill: #e2e8f0; }
+      .label { font: 600 14px Inter, Arial, sans-serif; fill: #e2e8f0; }
+      .small { font: 400 12.5px Inter, Arial, sans-serif; fill: #cbd5e1; }
+      .arrow { stroke: #93c5fd; stroke-width: 2.5; marker-end: url(#ah); fill: none; }
+    </style>
+    <marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#93c5fd"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="980" height="420"/>
+  <text class="title" x="28" y="38">GameState Turn/Combat Flow</text>
+
+  <rect class="node" x="32" y="78" width="170" height="80"/>
+  <text class="label" x="48" y="108">Begin Round</text>
+  <text class="small" x="48" y="130">select active actor</text>
+
+  <rect class="node" x="244" y="78" width="190" height="80"/>
+  <text class="label" x="260" y="108">Player Action</text>
+  <text class="small" x="260" y="130">attack/defend/blitz/hack/lay low</text>
+
+  <rect class="node2" x="476" y="78" width="200" height="80"/>
+  <text class="label" x="492" y="108">completeAction(...)</text>
+  <text class="small" x="492" y="130">mark acted + resolve effects</text>
+
+  <rect class="node" x="718" y="78" width="220" height="80"/>
+  <text class="label" x="734" y="108">endTurn()</text>
+  <text class="small" x="734" y="130">advance actor or phase switch</text>
+
+  <rect class="node3" x="718" y="214" width="220" height="90"/>
+  <text class="label" x="734" y="247">enemyPhase()</text>
+  <text class="small" x="734" y="269">AI resolves actions</text>
+  <text class="small" x="734" y="286">then beginRound()</text>
+
+  <rect class="node2" x="476" y="230" width="200" height="74"/>
+  <text class="label" x="492" y="258">Round +1</text>
+  <text class="small" x="492" y="278">emit round/turn notifications</text>
+
+  <rect class="node" x="244" y="230" width="190" height="74"/>
+  <text class="label" x="260" y="258">UI + BattleScene Sync</text>
+  <text class="small" x="260" y="278">consume notifications</text>
+
+  <line class="arrow" x1="202" y1="118" x2="244" y2="118"/>
+  <line class="arrow" x1="434" y1="118" x2="476" y2="118"/>
+  <line class="arrow" x1="676" y1="118" x2="718" y2="118"/>
+
+  <line class="arrow" x1="828" y1="158" x2="828" y2="214"/>
+  <line class="arrow" x1="718" y1="260" x2="676" y2="260"/>
+  <line class="arrow" x1="476" y1="267" x2="434" y2="267"/>
+  <line class="arrow" x1="244" y1="267" x2="117" y2="267"/>
+  <line class="arrow" x1="117" y1="267" x2="117" y2="158"/>
+
+  <text class="small" x="36" y="372">Trace hooks: Signal actions increase trace; Lay Low decreases trace; escalation modifies incoming damage.</text>
+</svg>

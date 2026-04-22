@@ -1200,6 +1200,8 @@ struct HitPreviewCard: View {
 
 struct CombatUI: View {
     @ObservedObject var gameState: GameState
+    let diagnosticsVisible: Bool
+    let onToggleDiagnostics: () -> Void
     let onAttack: () -> Void
     let onDefend: () -> Void
     let onSpell: () -> Void
@@ -1207,6 +1209,7 @@ struct CombatUI: View {
     let onHack: () -> Void
     let onIntimidate: () -> Void
     let onItems: () -> Void
+    let onRecover: () -> Void
     let onEndTurn: () -> Void
     @State private var showingItemPicker = false
     @State private var showingSpellPicker = false
@@ -1374,8 +1377,149 @@ struct CombatUI: View {
                         Text("Enemies: \(gameState.livingEnemies.count)/\(gameState.enemies.count)")
                             .font(.system(size: 9, design: .monospaced))
                             .foregroundColor(CombatTheme.enemyColor)
+                        Text("TRACE: \(gameState.traceLevel)/\(gameState.traceThreshold)   ESC:\(gameState.traceEscalationLevel)   ROLE: \(gameState.playerRoleLabel)   PRESET: \(gameState.missionPresetLabel)   TYPE: \(gameState.missionTypeLabel)")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(gameState.isTraceTriggered ? CombatTheme.enemyColor : CombatTheme.accent)
+                        Text(gameState.missionType == .eliminate
+                             ? "OBJECTIVE: ELIMINATE TARGET"
+                             : "OBJECTIVE: SURVIVE \(gameState.missionTargetTurns) TURNS")
+                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.88))
+                        if gameState.missionType == .survive {
+                            Text("PROGRESS: \(gameState.currentTurnCount)/\(gameState.missionTargetTurns)")
+                                .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                                .foregroundColor(gameState.missionComplete ? Color(hex: "00FF88") : CombatTheme.textMuted)
+                        }
+                        if gameState.combatEnded {
+                            Text(gameState.combatWon == true ? "MISSION COMPLETE" : "MISSION FAILED")
+                                .font(.system(size: 9, weight: .black, design: .monospaced))
+                                .foregroundColor(gameState.combatWon == true ? Color(hex: "00FF88") : CombatTheme.enemyColor)
+                            Text("COMBAT ENDED — ACTIONS LOCKED")
+                                .font(.system(size: 7, weight: .bold, design: .monospaced))
+                                .foregroundColor(CombatTheme.textMuted)
+                        }
+                        if gameState.traceEscalationLevel >= 1 && gameState.playerRole == .street {
+                            Text("RESISTING ESCALATION")
+                                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                .foregroundColor(CombatTheme.accent.opacity(0.9))
+                        }
                         LootBadge(items: gameState.loot)
                     }
+                    Button(action: {
+                        HapticsManager.shared.buttonTap()
+                        gameState.cyclePlayerRole()
+                    }) {
+                        Text("ROLE")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.9))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color(hex: "555577").opacity(0.16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(Color(hex: "555577").opacity(0.45), lineWidth: 1)
+                                    )
+                            )
+                    }
+                    .accessibilityIdentifier("cycle_role_button")
+                    Button(action: {
+                        HapticsManager.shared.buttonTap()
+                        gameState.cycleMissionPreset()
+                    }) {
+                        Text("PRESET")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.9))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color(hex: "336677").opacity(0.16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(Color(hex: "336677").opacity(0.45), lineWidth: 1)
+                                    )
+                            )
+                    }
+                    .accessibilityIdentifier("cycle_preset_button")
+                    Button(action: {
+                        HapticsManager.shared.buttonTap()
+                        gameState.cycleMissionType()
+                    }) {
+                        Text("TYPE")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.9))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color(hex: "665533").opacity(0.16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(Color(hex: "665533").opacity(0.45), lineWidth: 1)
+                                    )
+                            )
+                    }
+                    .accessibilityIdentifier("cycle_type_button")
+                    Button(action: {
+                        HapticsManager.shared.buttonTap()
+                        gameState.actionMode = (gameState.actionMode == .street) ? .signal : .street
+                    }) {
+                        Text(gameState.actionMode == .street ? "STREET" : "SIGNAL")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundColor(gameState.actionMode == .street ? CombatTheme.accent : Color(hex: "FF8800"))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill((gameState.actionMode == .street ? CombatTheme.accent : Color(hex: "FF8800")).opacity(0.14))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke((gameState.actionMode == .street ? CombatTheme.accent : Color(hex: "FF8800")).opacity(0.45), lineWidth: 1)
+                                    )
+                            )
+                    }
+                    .accessibilityIdentifier("action_mode_toggle_button")
+                    Button(action: {
+                        HapticsManager.shared.buttonTap()
+                        onRecover()
+                    }) {
+                        Text("LAY LOW")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.85))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color(hex: "888899").opacity(0.16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(Color(hex: "888899").opacity(0.45), lineWidth: 1)
+                                    )
+                            )
+                    }
+                    .disabled(gameState.combatEnded || isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound)
+                    .opacity((gameState.combatEnded || isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound) ? 0.4 : 1.0)
+                    .accessibilityIdentifier("trace_recover_button")
+                    Button(action: {
+                        HapticsManager.shared.buttonTap()
+                        onToggleDiagnostics()
+                    }) {
+                        Image(systemName: diagnosticsVisible ? "waveform.path.ecg.text" : "waveform.path.ecg")
+                            .font(.system(size: 12, weight: .black))
+                            .foregroundColor(diagnosticsVisible ? CombatTheme.accent : CombatTheme.textMuted)
+                            .padding(6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(diagnosticsVisible ? CombatTheme.accent.opacity(0.12) : Color.clear)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(diagnosticsVisible ? CombatTheme.accent.opacity(0.45) : CombatTheme.secondary.opacity(0.35), lineWidth: 1)
+                                    )
+                            )
+                    }
+                    .accessibilityIdentifier("toggle_diagnostics_button")
                 }
 
                 // Action buttons
@@ -1388,7 +1532,7 @@ struct CombatUI: View {
                     specialIcon: specialAbilityIcon,
                     specialColor: specialAbilityColor,
                     onEndTurn: onEndTurn,
-                    disabled: isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound
+                    disabled: gameState.combatEnded || isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound
                 )
 
                 // Hit preview — shown when a target is selected
@@ -1450,6 +1594,8 @@ struct CombatUI_Previews: PreviewProvider {
             Color.black.ignoresSafeArea()
             CombatUI(
                 gameState: GameState.shared,
+                diagnosticsVisible: false,
+                onToggleDiagnostics: {},
                 onAttack: {},
                 onDefend: {},
                 onSpell: {},
@@ -1457,6 +1603,7 @@ struct CombatUI_Previews: PreviewProvider {
                 onHack: {},
                 onIntimidate: {},
                 onItems: {},
+                onRecover: {},
                 onEndTurn: {}
             )
         }

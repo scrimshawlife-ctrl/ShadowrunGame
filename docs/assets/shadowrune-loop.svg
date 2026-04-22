@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="320" viewBox="0 0 980 320" role="img" aria-labelledby="t d">
+  <title id="t">Shadowrune Core Loop</title>
+  <desc id="d">Signal to Trace to Escalation to Consequence, with Lay Low feeding back into Trace.</desc>
+  <defs>
+    <style>
+      .bg { fill: #0b0f14; }
+      .nodeC { fill: #111827; stroke: #00e5ff; stroke-width: 2.5; rx: 12; }
+      .nodeM { fill: #1f1620; stroke: #ff3d81; stroke-width: 2.5; rx: 12; }
+      .txt { fill: #e5f6ff; font: 600 17px Inter, Arial, sans-serif; }
+      .sub { fill: #b8d6df; font: 400 13px Inter, Arial, sans-serif; }
+      .arrow { stroke: #00e5ff; stroke-width: 2.5; fill: none; marker-end: url(#ah); }
+      .arrowM { stroke: #ff3d81; stroke-width: 2.5; fill: none; marker-end: url(#ahm); }
+    </style>
+    <marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00e5ff"/>
+    </marker>
+    <marker id="ahm" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ff3d81"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="980" height="320"/>
+
+  <rect class="nodeC" x="48" y="100" width="170" height="82"/>
+  <text class="txt" x="94" y="132">Signal</text>
+  <text class="sub" x="75" y="156">high output action</text>
+
+  <rect class="nodeC" x="278" y="100" width="170" height="82"/>
+  <text class="txt" x="336" y="132">Trace</text>
+  <text class="sub" x="302" y="156">exposure meter</text>
+
+  <rect class="nodeM" x="508" y="100" width="190" height="82"/>
+  <text class="txt" x="547" y="132">Escalation</text>
+  <text class="sub" x="538" y="156">threshold reached</text>
+
+  <rect class="nodeM" x="758" y="100" width="170" height="82"/>
+  <text class="txt" x="789" y="132">Consequence</text>
+  <text class="sub" x="784" y="156">harder hits</text>
+
+  <rect class="nodeC" x="300" y="220" width="130" height="62"/>
+  <text class="txt" x="333" y="257">Lay Low</text>
+
+  <line class="arrow" x1="218" y1="141" x2="278" y2="141"/>
+  <line class="arrow" x1="448" y1="141" x2="508" y2="141"/>
+  <line class="arrowM" x1="698" y1="141" x2="758" y2="141"/>
+  <line class="arrow" x1="365" y1="220" x2="365" y2="182"/>
+</svg>
