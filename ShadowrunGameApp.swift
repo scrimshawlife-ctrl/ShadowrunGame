@@ -1134,6 +1134,9 @@ struct DebriefView: View {
 // MARK: - Phase Manager
 
 /// Renamed to avoid collision with combat runtime GameState class
+/// Canonical active phase-flow authority for UI/runtime screen routing.
+/// Transition rule edits must be specified in
+/// `docs/architecture/PhaseFlowAuthorityMatrix.md` first.
 @MainActor
 final class PhaseManager: ObservableObject {
 
@@ -1157,6 +1160,8 @@ final class PhaseManager: ObservableObject {
 
     var stateStack: [GamePhase] { stateHistory }
 
+    /// Canonical transition matrix implementation (active authority).
+    /// Keep in lockstep with `PhaseFlowAuthorityMatrix.md`.
     private func computeNext(from state: GamePhase, event: StateTransition) -> GamePhase {
         switch (state, event) {
         case (.title, .startGame):              return .missionSelect
