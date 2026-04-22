@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 struct MissionSetupService {
     private static func archetypeLabel(_ archetype: EnemyArchetype) -> String {
         switch archetype {

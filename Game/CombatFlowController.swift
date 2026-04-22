@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 struct CombatFlowController {
     static func beginRound(gameState: GameState) {
         CombatFlowController.resetTurnTracking(gameState: gameState)

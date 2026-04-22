@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 struct ExtractionController {
     static func checkExtraction(gameState: GameState) {
         guard gameState.currentMissionType == .extraction else { return }

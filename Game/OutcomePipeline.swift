@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 struct OutcomePipeline {
 
     static func execute(

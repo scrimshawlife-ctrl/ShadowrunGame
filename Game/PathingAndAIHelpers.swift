@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 struct PathingAndAIHelpers {
 
     static func hexNeighbors(gameState: GameState, x: Int, y: Int) -> [(Int, Int)] {

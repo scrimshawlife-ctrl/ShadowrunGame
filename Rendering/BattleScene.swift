@@ -898,8 +898,8 @@ final class BattleScene: SKScene {
     /// Place a character sprite on the map, accounting for map centering offset.
     func placeCharacter(_ character: Character) {
         let node = SpriteManager.shared.createCharacter(
-            team: "player",
             type: character.archetype.rawValue,
+            team: "player",
             x: character.positionX,
             y: character.positionY,
             name: character.name,
@@ -923,8 +923,8 @@ final class BattleScene: SKScene {
     /// Place an enemy sprite on the map, accounting for map centering offset.
     func placeEnemy(_ enemy: Enemy) {
         let node = SpriteManager.shared.createCharacter(
-            team: "enemy",
             type: enemy.archetype,
+            team: "enemy",
             x: enemy.positionX,
             y: enemy.positionY,
             name: enemy.name,
