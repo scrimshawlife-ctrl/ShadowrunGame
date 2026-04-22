@@ -127,6 +127,7 @@ enum Faction: String, Hashable {
 final class GameState: ObservableObject {
 
     static let shared = GameState()
+    var sessionState = GameSessionState()
 
     private init() {}
 
@@ -191,12 +192,18 @@ final class GameState: ObservableObject {
 
     @Published var currentTurnIndex: Int = 0
     @Published var roundNumber: Int = 1
-    var enemyPhaseCount: Int = 0  // how many enemy phases have completed (for delayed spawns)
+    var enemyPhaseCount: Int {  // how many enemy phases have completed (for delayed spawns)
+        get { sessionState.enemyPhaseCount }
+        set { sessionState.enemyPhaseCount = newValue }
+    }
     @Published var isPlayerTurn: Bool = true
     /// When true, blocks player input in BattleScene while enemy phase is running.
     @Published var isPlayerInputBlocked: Bool = false
     /// Guards against double-triggering enemyPhase() within the same frame/turn.
-    var isEnemyPhaseRunning: Bool = false
+    var isEnemyPhaseRunning: Bool {
+        get { sessionState.isEnemyPhaseRunning }
+        set { sessionState.isEnemyPhaseRunning = newValue }
+    }
     @Published var actionMode: ActionMode = .street
     @Published var playerRole: PlayerRole = .normal
     @Published var selectedMissionPreset: MissionPreset = .standard
@@ -206,28 +213,21 @@ final class GameState: ObservableObject {
     var traceRecoveryPerLayLow: Int { TraceCadence.recoveryPerLayLow }
     var escalationDamageBonus: Int { TraceCadence.escalationDamageBonus(for: selectedMissionPreset) }
     @Published var traceEscalationLevel: Int = 0
-    var hasLoggedTraceTriggerForCurrentRun: Bool = false
+    var hasLoggedTraceTriggerForCurrentRun: Bool {
+        get { sessionState.hasLoggedTraceTriggerForCurrentRun }
+        set { sessionState.hasLoggedTraceTriggerForCurrentRun = newValue }
+    }
 
     // MARK: - Turn Structure (Issue 1 fix)
     // Track which players have NOT yet acted this round. Empty = all acted = enemy phase.
-    private var playersWhoHaveNotActed: Set<UUID> = []
+    var playersWhoHaveNotActed: Set<UUID> {
+        get { sessionState.playersWhoHaveNotActed }
+        set { sessionState.playersWhoHaveNotActed = newValue }
+    }
 
     /// Reset turn-tracking state at the start of each round.
-    private func resetTurnTracking() {
-        // Stunned characters auto-skip their turn (they can't act while fully stunned)
-        // They still count as "acted" so the round advances without them.
-        playersWhoHaveNotActed = Set(
-            playerTeam.filter { $0.isAlive && $0.status != .stunned }.map { $0.id }
-        )
-        // Reset per-character action flags at start of new round
-        for char in playerTeam {
-            char.hasActedThisRound = false
-            // Log stunned characters being skipped
-            if char.isAlive && char.status == .stunned {
-                addLog("💤 \(char.name) is STUNNED — skipping turn. (Stun \(char.currentStun)/\(char.maxStun))")
-                char.hasActedThisRound = true
-            }
-        }
+    func resetTurnTracking() {
+        CombatFlowController.resetTurnTracking(gameState: self)
     }
 
     var isTraceTriggered: Bool {
@@ -405,53 +405,29 @@ final class GameState: ObservableObject {
 
     /// Call at the START of each round (before first player acts).
     func beginRound() {
-        resetTurnTracking()
-        isDefending = false
-        defendingCharacterId = nil
-        // Natural stun recovery: each character rolls BOD+WIL to reduce stun (SR5 recovery rules)
-        recoverStunAtRoundStart()
-        // Mana regen: mages and deckers recover 1 resource point per round passively
-        for char in playerTeam where char.isAlive {
-            if char.archetype == .mage || char.archetype == .decker {
-                let prev = char.currentMana
-                char.currentMana = min(char.maxMana, char.currentMana + 1)
-                if char.currentMana > prev {
-                    addLog("✨ \(char.name) recovers 1 mana. (\(char.currentMana)/\(char.maxMana))")
-                }
-            }
-        }
+        CombatFlowController.beginRound(gameState: self)
     }
 
     /// SR5 stun recovery: at the start of each round, each living character rolls BOD+WIL.
     /// Each hit reduces stun by 1 (simplified from real SR5 rest-based recovery).
-    private func recoverStunAtRoundStart() {
-        for char in playerTeam where char.isAlive && char.currentStun > 0 {
-            let recoveryPool = char.attributes.bod + char.attributes.wil
-            let roll = DiceEngine.roll(pool: recoveryPool)
-            if roll.hits > 0 {
-                char.recoverStun(amount: roll.hits)
-            }
-        }
-        for enemy in enemies where enemy.isAlive && enemy.currentStun > 0 {
-            let recoveryPool = enemy.attributes.bod + enemy.attributes.wil
-            let roll = DiceEngine.roll(pool: recoveryPool)
-            if roll.hits > 0 {
-                enemy.currentStun = max(0, enemy.currentStun - roll.hits)
-                if enemy.status == .stunned && enemy.currentStun < enemy.maxStun {
-                    enemy.status = .wounded
-                }
-            }
-        }
+    func recoverStunAtRoundStart() {
+        CombatFlowController.recoverStunAtRoundStart(gameState: self)
     }
 
     // MARK: - Current Mission Tiles (for enemy pathfinding)
 
-    var currentMissionTiles: [[Int]] = []
+    var currentMissionTiles: [[Int]] {
+        get { sessionState.currentMissionTiles }
+        set { sessionState.currentMissionTiles = newValue }
+    }
 
     // MARK: - Pending Enemy Spawns
 
     /// Enemies not yet on the map (waiting for their delay timer)
-    var pendingSpawns: [PendingSpawn] = []
+    var pendingSpawns: [PendingSpawn] {
+        get { sessionState.pendingSpawns }
+        set { sessionState.pendingSpawns = newValue }
+    }
 
     struct PendingSpawn: Identifiable {
         let id = UUID()
@@ -481,29 +457,110 @@ final class GameState: ObservableObject {
 
     @Published var selectedCharacterId: UUID?
     @Published var targetCharacterId: UUID?
-    @Published var combatWon: Bool?
+    var combatWon: Bool? {
+        get { sessionState.combatWon }
+        set {
+            objectWillChange.send()
+            sessionState.combatWon = newValue
+        }
+    }
     @Published var combatEnded: Bool = false
     @Published var currentMissionType: MissionType = .stealth
-    @Published var currentMapSituation: MapSituation = .corridor
+    var currentMapSituation: MapSituation {
+        get { sessionState.currentMapSituation }
+        set {
+            objectWillChange.send()
+            sessionState.currentMapSituation = newValue
+        }
+    }
     @Published var missionComplete: Bool = false
-    @Published var missionHeat: Int = 0
-    @Published var missionHeatTier: HeatTier = .low
+    var missionHeat: Int {
+        get { sessionState.missionHeat }
+        set {
+            objectWillChange.send()
+            sessionState.missionHeat = newValue
+        }
+    }
+    var missionHeatTier: HeatTier {
+        get { sessionState.missionHeatTier }
+        set {
+            objectWillChange.send()
+            sessionState.missionHeatTier = newValue
+        }
+    }
     @Published var factionAttention: [Faction: Int] = [
         .corp: 0,
         .gang: 0,
         .unknown: 0
     ]
-    @Published var lastAppliedCorpEnemyModifier: Int = 0
-    @Published var lastAppliedGangAmbushRadius: Int = 999
-    @Published var didApplyAttentionRecoveryLastMission: Bool = false
-    @Published var didApplyHighTraceEscalationBonusLastMission: Bool = false
-    @Published var lastRewardTier: RewardTier = .low
-    @Published var lastRewardMultiplier: Double = 1.0
-    @Published var missionTypeBonusMultiplier: Double = 0.0
+    var lastAppliedCorpEnemyModifier: Int {
+        get { sessionState.lastAppliedCorpEnemyModifier }
+        set {
+            objectWillChange.send()
+            sessionState.lastAppliedCorpEnemyModifier = newValue
+        }
+    }
+    var lastAppliedGangAmbushRadius: Int {
+        get { sessionState.lastAppliedGangAmbushRadius }
+        set {
+            objectWillChange.send()
+            sessionState.lastAppliedGangAmbushRadius = newValue
+        }
+    }
+    var didApplyAttentionRecoveryLastMission: Bool {
+        get { sessionState.didApplyAttentionRecoveryLastMission }
+        set {
+            objectWillChange.send()
+            sessionState.didApplyAttentionRecoveryLastMission = newValue
+        }
+    }
+    var didApplyHighTraceEscalationBonusLastMission: Bool {
+        get { sessionState.didApplyHighTraceEscalationBonusLastMission }
+        set {
+            objectWillChange.send()
+            sessionState.didApplyHighTraceEscalationBonusLastMission = newValue
+        }
+    }
+    var lastRewardTier: RewardTier {
+        get { sessionState.lastRewardTier }
+        set {
+            objectWillChange.send()
+            sessionState.lastRewardTier = newValue
+        }
+    }
+    var lastRewardMultiplier: Double {
+        get { sessionState.lastRewardMultiplier }
+        set {
+            objectWillChange.send()
+            sessionState.lastRewardMultiplier = newValue
+        }
+    }
+    var missionTypeBonusMultiplier: Double {
+        get { sessionState.missionTypeBonusMultiplier }
+        set {
+            objectWillChange.send()
+            sessionState.missionTypeBonusMultiplier = newValue
+        }
+    }
     @Published var baseMissionPayout: Int = 100
-    @Published var missionTargetTurns: Int = 6
-    @Published var currentTurnCount: Int = 0
-    var missionLoadIndex: Int = 0
+    var missionTargetTurns: Int {
+        get { sessionState.missionTargetTurns }
+        set {
+            objectWillChange.send()
+            sessionState.missionTargetTurns = newValue
+        }
+    }
+    var currentTurnCount: Int {
+        get { sessionState.currentTurnCount }
+        set {
+            objectWillChange.send()
+            sessionState.currentTurnCount = newValue
+        }
+    }
+    var missionLoadIndex: Int {
+        get { sessionState.missionLoadIndex }
+        set { sessionState.missionLoadIndex = newValue }
+    }
     var activeCharacter: Character? {
         guard let id = activeCharacterId else { return currentCharacter }
         return playerTeam.first(where: { $0.id == id && $0.isAlive })
@@ -512,10 +569,19 @@ final class GameState: ObservableObject {
     // MARK: - Actions
 
     @Published var isDefending: Bool = false
-    @Published var isItemMenuVisible: Bool = false
+    var isItemMenuVisible: Bool {
+        get { sessionState.isItemMenuVisible }
+        set {
+            objectWillChange.send()
+            sessionState.isItemMenuVisible = newValue
+        }
+    }
 
     /// Which character is currently defending (for turn-scoped defense bonus)
-    var defendingCharacterId: UUID?
+    var defendingCharacterId: UUID? {
+        get { sessionState.defendingCharacterId }
+        set { sessionState.defendingCharacterId = newValue }
+    }
 
     // MARK: - Computed
 
@@ -779,177 +845,23 @@ final class GameState: ObservableObject {
     // MARK: - Actions
 
     func performAttack() {
-        let attacker: Character?
-        if let selected = selectedCharacterId, let char = playerTeam.first(where: { $0.id == selected && $0.isAlive }) {
-            attacker = char
-        } else {
-            attacker = currentCharacter
-        }
-        guard let a = attacker else { addLog("No character available."); return }
-        guard let targetId = targetCharacterId else { addLog("No target selected — tap an enemy first."); return }
-        guard let targetEnemy = enemies.first(where: { $0.id == targetId }) else {
-            addLog("Invalid target."); return
-        }
-
-        if isLineBlockedByWall(
-            fromX: a.positionX, fromY: a.positionY,
-            toX: targetEnemy.positionX, toY: targetEnemy.positionY
-        ) {
-            addLog("⛔ Line of sight blocked by wall!")
-            HapticsManager.shared.buttonTap()
-            return
-        }
-
-        let weapon = a.equippedWeapon ?? Weapon(name: "Fists", type: .unarmed, damage: 3, accuracy: 3, armorPiercing: 0)
-
-        // Determine attack skill from weapon type
-        let skill: SkillKey = (weapon.type == .blade || weapon.type == .unarmed) ? .blades : .firearms
-
-        // Attack pool: AGI + skill
-        let attackPool = a.attackPool(skill: skill)
-
-        switch actionMode {
-        case .street: applyStreetAction()
-        case .signal: applySignalAction()
-        }
-
-        // Cover bonus: count cover tiles between attacker and target
-        let coverCount = CombatMechanics.coverBetween(
-            tiles: currentMissionTiles,
-            fromX: a.positionX, fromY: a.positionY,
-            toX: targetEnemy.positionX, toY: targetEnemy.positionY
-        )
-        let coverBonus = CombatMechanics.coverDefenseBonus(count: coverCount)
-
-        // Defense pool: REA + AGI + cover bonus
-        let defensePool = targetEnemy.attributes.rea + targetEnemy.attributes.agi + coverBonus
-
-        // Roll attack
-        let attackRoll = DiceEngine.roll(pool: attackPool)
-
-        // Critical glitch: attacker fumbles, takes self-damage
-        if attackRoll.criticalGlitch {
-            let selfDmg = 2
-            a.takeDamage(amount: selfDmg)
-            addLog("💥 CRITICAL GLITCH! \(a.name) fumbles — \(selfDmg) self-damage!")
-            HapticsManager.shared.playerDamaged()
-            NotificationCenter.default.post(name: .characterHit, object: nil, userInfo: ["characterId": a.id.uuidString, "damage": selfDmg])
-            completeAction(for: a)
-            return
-        }
-
-        if attackRoll.glitch {
-            addLog("⚠️ GLITCH! \(a.name)'s \(weapon.name) misfires!")
-            completeAction(for: a)
-            return
-        }
-
-        // Defense roll
-        let defenseRoll = DiceEngine.roll(pool: defensePool)
-        let netHits = max(0, attackRoll.hits - defenseRoll.hits)
-
-        addLog("⚔️ \(a.name) attacks with \(weapon.name)! [\(attackPool)d6→\(attackRoll.hits)] vs [\(defensePool)d6→\(defenseRoll.hits)\(coverBonus > 0 ? " +\(coverBonus)cov" : "")]")
-
-        if netHits == 0 {
-            addLog("  → MISS! \(targetEnemy.name) dodges!")
-            NotificationCenter.default.post(name: .enemyHit, object: nil, userInfo: ["enemyId": targetId.uuidString, "damage": 0])
-            completeAction(for: a)
-            return
-        }
-
-        // Damage = weapon base + net hits
-        let baseDamage = weapon.damage + netHits
-        let ap = weapon.armorPiercing
-
-        // Soak: enemy BOD + armor - AP (minimum 0)
-        let soakPool = max(0, targetEnemy.computeDerived().soak - ap)
-        let soakRoll = DiceEngine.roll(pool: soakPool)
-        let finalDamage = max(0, baseDamage - soakRoll.hits)
-
-        HapticsManager.shared.attackHit()
-        let isStunDmg = weapon.isStunDamage
-        targetEnemy.takeDamage(amount: finalDamage, isStun: isStunDmg)
-        let dmgType = isStunDmg ? "S" : "P"
-
-        if finalDamage > 0 {
-            addLog("  → \(netHits) net hits! \(baseDamage)\(dmgType) - \(soakRoll.hits) soak = \(finalDamage) dmg! (\(targetEnemy.currentHP)/\(targetEnemy.maxHP) HP | Stun \(targetEnemy.currentStun)/\(targetEnemy.maxStun))")
-        } else {
-            addLog("  → Hit but \(targetEnemy.name) soaks ALL damage!")
-        }
-
-        NotificationCenter.default.post(name: .enemyHit, object: nil, userInfo: ["enemyId": targetId.uuidString, "damage": finalDamage])
-
-        if !targetEnemy.isAlive {
-            HapticsManager.shared.enemyKilled()
-            addLog("☠️ \(targetEnemy.name) DOWN! +\(targetEnemy.maxHP / 2) XP")
-            generateLoot()
-            if let char = playerTeam.first(where: { $0.id == a.id }) {
-                let leveledUp = char.gainXP(targetEnemy.maxHP / 2)
-                if leveledUp {
-                    HapticsManager.shared.levelUp()
-                    addLog("🎖️ LEVEL UP! \(char.name) → Level \(char.level)!")
-                    NotificationCenter.default.post(name: .characterLevelUp, object: nil, userInfo: ["characterId": char.id.uuidString])
-                }
-            }
-            NotificationCenter.default.post(name: .enemyDied, object: nil, userInfo: ["enemyId": targetId.uuidString])
-            if livingEnemies.isEmpty { onRoomCleared() }
-        }
-
-        completeAction(for: a)
+        CombatFlowController.performAttack(gameState: self)
     }
 
     func performLayLow() {
-        let actor: Character?
-        if let selected = selectedCharacterId, let char = playerTeam.first(where: { $0.id == selected && $0.isAlive }) {
-            actor = char
-        } else {
-            actor = currentCharacter
-        }
-        guard let character = actor else {
-            addLog("No character available.")
-            return
-        }
-        applyTraceRecovery()
-        completeAction(for: character) // Cost: consumes full turn
+        CombatFlowController.performLayLow(gameState: self)
     }
 
     // MARK: - Spell Casting
 
     /// Entry point called from SpellPickerSheet. Validates mage & mana, then dispatches.
     func performSpell(type: SpellType, targetId: UUID? = nil) {
-        // Resolve caster
-        let char: Character?
-        if let selected = selectedCharacterId, let c = playerTeam.first(where: { $0.id == selected && $0.isAlive }) {
-            char = c
-        } else {
-            char = currentCharacter
-        }
-        guard let mage = char, mage.archetype == CharacterArchetype.mage else {
-            addLog("Only mages can cast spells.")
-            return
-        }
-        guard mage.currentMana >= type.manaCost else {
-            addLog("Not enough mana for \(type.displayName)! Need \(type.manaCost), have \(mage.currentMana).")
-            HapticsManager.shared.buttonTap()
-            return
-        }
-
-        // Dispatch by spell type
-        switch type {
-        case .fireball:
-            castFireball(by: mage)
-        case .manaBolt:
-            castSingleTarget(type: type, targetId: targetId ?? targetCharacterId, by: mage)
-        case .shock:
-            castSingleTarget(type: type, targetId: targetId ?? targetCharacterId, by: mage)
-        case .heal:
-            castHeal(by: mage)
-        }
+        CombatFlowController.performSpell(gameState: self, type: type, targetId: targetId)
     }
 
     // MARK: Fireball — AoE Physical
 
-    private func castFireball(by mage: Character) {
+    func castFireball(by mage: Character) {
         let targets = livingEnemies
         guard !targets.isEmpty else { addLog("No targets."); return }
 
@@ -994,7 +906,7 @@ final class GameState: ObservableObject {
 
     // MARK: Mana Bolt & Shock — Single-target
 
-    private func castSingleTarget(type: SpellType, targetId: UUID?, by mage: Character) {
+    func castSingleTarget(type: SpellType, targetId: UUID?, by mage: Character) {
         // Resolve target: use provided id or nearest enemy
         let target: Enemy
         if let tid = targetId, let e = enemies.first(where: { $0.id == tid && $0.isAlive }) {
@@ -1053,7 +965,7 @@ final class GameState: ObservableObject {
 
     // MARK: Heal
 
-    private func castHeal(by mage: Character) {
+    func castHeal(by mage: Character) {
         let spellPool = mage.attributes.log + mage.skills.spellcasting
         let spellRoll = DiceEngine.roll(pool: spellPool)
         mage.currentMana -= SpellType.heal.manaCost
@@ -1083,7 +995,7 @@ final class GameState: ObservableObject {
 
     // MARK: Shared helper — award XP / loot when enemy killed by spell
 
-    private func handleEnemyKilled(_ enemy: Enemy, by mage: Character) {
+    func handleEnemyKilled(_ enemy: Enemy, by mage: Character) {
         HapticsManager.shared.enemyKilled()
         addLog("☠️ \(enemy.name) DOWN! +\(enemy.maxHP / 2) XP")
         generateLoot()
@@ -1097,55 +1009,16 @@ final class GameState: ObservableObject {
     }
 
     func performDefend() {
-        let char: Character
-        if let selected = selectedCharacterId, let c = playerTeam.first(where: { $0.id == selected && $0.isAlive }) {
-            char = c
-        } else if let current = currentCharacter {
-            char = current
-        } else { return }
-        HapticsManager.shared.buttonTap()
-        isDefending = true
-        defendingCharacterId = char.id
-        addLog("\(char.name) takes a defensive stance. (+2 DEF)")
-        NotificationCenter.default.post(
-            name: .characterDefend,
-            object: nil,
-            userInfo: ["characterId": char.id.uuidString]
-        )
-        completeAction(for: char)
+        CombatFlowController.performDefend(gameState: self)
     }
 
     /// Decker HACK: Disables target enemy for 1 round (0 attack dice, can't move).
     /// Uses LOG + spellcasting (hacking is logic-based in Shadowrun).
     func performHack() {
-        let char: Character?
-        if let selected = selectedCharacterId, let c = playerTeam.first(where: { $0.id == selected && $0.isAlive }) {
-            char = c
-        } else {
-            char = currentCharacter
-        }
-        guard let decker = char, decker.archetype == CharacterArchetype.decker else {
-            addLog("Only Deckers can hack.")
-            return
-        }
-        guard decker.currentMana >= 2 else {
-            addLog("Not enough matrix energy! Need 2, have \(decker.currentMana).")
-            HapticsManager.shared.buttonTap()
-            return
-        }
-        guard let targetId = targetCharacterId,
-              let target = enemies.first(where: { $0.id == targetId && $0.isAlive }) else {
-            guard let nearest = livingEnemies.first else {
-                addLog("No targets in range."); return
-            }
-            targetCharacterId = nearest.id
-            performHackOnTarget(nearest, by: decker)
-            return
-        }
-        performHackOnTarget(target, by: decker)
+        CombatFlowController.performHack(gameState: self)
     }
 
-    private func performHackOnTarget(_ target: Enemy, by decker: Character) {
+    func performHackOnTarget(_ target: Enemy, by decker: Character) {
         // Hack pool: LOG + INT (matrix intrusion)
         let hackPool = decker.attributes.log + decker.attributes.int
         let hackRoll = DiceEngine.roll(pool: hackPool)
@@ -1178,62 +1051,16 @@ final class GameState: ObservableObject {
     /// Face INTIMIDATE: Reduce all living enemies' effective attack this round.
     /// Uses CHA + skills. All enemies get -2 dice to their next attack.
     func performIntimidate() {
-        let char: Character?
-        if let selected = selectedCharacterId, let c = playerTeam.first(where: { $0.id == selected && $0.isAlive }) {
-            char = c
-        } else {
-            char = currentCharacter
-        }
-        guard let face = char, face.archetype == CharacterArchetype.face else {
-            addLog("Only the Face can intimidate.")
-            return
-        }
-        // Social pool: CHA + (LOG / 2)
-        let socialPool = face.attributes.cha + face.attributes.log / 2
-        let socialRoll = DiceEngine.roll(pool: socialPool)
-        HapticsManager.shared.attackHit()
-
-        if socialRoll.hits == 0 {
-            addLog("🎭 \(face.name) tries to intimidate but the guards laugh it off.")
-            completeAction(for: face)
-            return
-        }
-
-        // Apply intimidation to all living enemies: reduce their attack pool by hits (min 1)
-        for enemy in livingEnemies {
-            let penalty = min(socialRoll.hits, enemy.attributes.agi - 1)
-            enemy.attributes.agi = max(1, enemy.attributes.agi - penalty)
-        }
-        addLog("🎭 \(face.name) INTIMIDATES! [\(socialPool)d6→\(socialRoll.hits)] — Enemies rattled! (-\(socialRoll.hits) ATK this round)")
-        completeAction(for: face)
+        CombatFlowController.performIntimidate(gameState: self)
     }
 
     /// Street Sam BLITZ: High-damage melee charge attack. Uses BOD+STR.
     /// More powerful than normal attack but costs extra (BOD damage risk).
     func performBlitz() {
-        let char: Character?
-        if let selected = selectedCharacterId, let c = playerTeam.first(where: { $0.id == selected && $0.isAlive }) {
-            char = c
-        } else {
-            char = currentCharacter
-        }
-        guard let sam = char, sam.archetype == CharacterArchetype.streetSam else {
-            addLog("Only the Street Samurai can Blitz.")
-            return
-        }
-        guard let targetId = targetCharacterId,
-              let target = enemies.first(where: { $0.id == targetId && $0.isAlive }) else {
-            guard let nearest = livingEnemies.first else {
-                addLog("No targets in range."); return
-            }
-            targetCharacterId = nearest.id
-            performBlitzOnTarget(nearest, by: sam)
-            return
-        }
-        performBlitzOnTarget(target, by: sam)
+        CombatFlowController.performBlitz(gameState: self)
     }
 
-    private func performBlitzOnTarget(_ target: Enemy, by sam: Character) {
+    func performBlitzOnTarget(_ target: Enemy, by sam: Character) {
         // Blitz pool: BOD + STR + blades skill (raw power charge)
         let blitzPool = sam.attributes.bod + sam.attributes.str + sam.skills.blades
         let attackRoll = DiceEngine.roll(pool: blitzPool)
@@ -1284,111 +1111,24 @@ final class GameState: ObservableObject {
     /// Movement is a FREE action — does NOT consume the turn.
     /// The player can still act (attack, defend, spell, item) after moving.
     func moveCharacter(id: UUID, toTileX tileX: Int, toTileY tileY: Int) {
-        guard let char = playerTeam.first(where: { $0.id == id && $0.isAlive }) else { return }
-        char.positionX = tileX
-        char.positionY = tileY
-        addLog("\(char.name) moves to (\(tileX),\(tileY))")
-        NotificationCenter.default.post(
-            name: .tileTapped,
-            object: nil,
-            userInfo: ["tileX": tileX, "tileY": tileY, "characterId": id.uuidString]
-        )
-        // Movement is a FREE action — does NOT consume the turn.
-        // Do NOT set hasActedThisRound or call endTurn() here.
+        CombatFlowController.moveCharacter(gameState: self, id: id, toTileX: tileX, toTileY: tileY)
     }
 
     func showItemMenu() {
-        isItemMenuVisible = true
+        CombatFlowController.showItemMenu(gameState: self)
     }
 
     func completeAction(for character: Character) {
-        // Set active to this character so endTurn() marks the right one
-        activeCharacterId = character.id
-        endTurn()
+        CombatFlowController.completeAction(gameState: self, for: character)
     }
 
     func endTurn() {
-        // NOTE: Do NOT set isPlayerTurn=false or block input here unless we're actually
-        // transitioning to the enemy phase. Doing so prematurely disables action buttons
-        // for the next player character in the round.
-        isItemMenuVisible = false
-        targetCharacterId = nil
-
-        // Mark current active character as having acted this round.
-        // ALWAYS remove from playersWhoHaveNotActed regardless of hasActedThisRound flag —
-        // guards against the race condition where the flag was already set but the Set
-        // removal was missed (e.g. character died mid-action or endTurn fired twice).
-        if let activeId = activeCharacterId {
-            if let char = playerTeam.first(where: { $0.id == activeId }) {
-                char.hasActedThisRound = true
-            }
-            playersWhoHaveNotActed.remove(activeId)
-        }
-
-        currentTurnCount += 1
-        if currentMissionType == .stealth && !missionComplete && currentTurnCount >= missionTargetTurns {
-            finalizeCombat(
-                won: true,
-                missionLog: "MISSION COMPLETE — STEALTH WINDOW HELD FOR \(missionTargetTurns) TURNS"
-            )
-            return
-        }
-
-        let living = playerTeam.filter { $0.isAlive }
-        guard !living.isEmpty else {
-            isPlayerInputBlocked = false
-            isPlayerTurn = true
-            return
-        }
-
-        // Find next living character who hasn't acted this round
-        let nextCharId = playersWhoHaveNotActed.first { id in
-            living.contains { $0.id == id }
-        }
-        let nextChar = nextCharId.flatMap { id in living.first { $0.id == id } }
-
-        if let char = nextChar {
-            // More players still need to act — advance to next player without blocking input.
-            activeCharacterId = char.id
-            selectedCharacterId = char.id
-            currentTurnIndex = playerTeam.firstIndex(where: { $0.id == char.id }) ?? 0
-            isPlayerInputBlocked = false
-            isPlayerTurn = true      // Stay in player phase — buttons must remain enabled
-            isDefending = false
-            defendingCharacterId = nil
-            NotificationCenter.default.post(
-                name: .turnChanged,
-                object: nil,
-                userInfo: ["characterId": char.id.uuidString]
-            )
-        } else {
-            // All living players have acted — NOW lock input and start enemy phase.
-            isPlayerTurn = false
-            isPlayerInputBlocked = true
-            currentTurnIndex = 0
-            enemyPhaseCount += 1
-            roundNumber += 1
-            addLog("═══ ROUND \(roundNumber) ═══")
-            HapticsManager.shared.roundStart()
-            NotificationCenter.default.post(name: .roundStarted, object: nil, userInfo: ["round": roundNumber])
-            enemyPhase()
-        }
+        CombatFlowController.endTurn(gameState: self)
     }
 
     /// Check if combat is over
     func checkCombatEnd() {
-        if currentMissionType == .assault && livingEnemies.isEmpty && pendingSpawns.isEmpty {
-            finalizeCombat(won: true, missionLog: "MISSION COMPLETE — ASSAULT TARGET ELIMINATED")
-            return
-        }
-
-        if livingPlayers.isEmpty {
-            finalizeCombat(
-                won: false,
-                missionLog: "MISSION FAILED — ALL UNITS DOWN",
-                terminalLog: "=== DEFEAT ==="
-            )
-        }
+        CombatFlowController.checkCombatEnd(gameState: self)
     }
 
     /// Check if any living player is standing on the extraction tile with no enemies alive.
@@ -1420,9 +1160,19 @@ final class GameState: ObservableObject {
         )
     }
 
+    func finalizeCombatFromCombatFlow(won: Bool, missionLog: String, terminalLog: String? = nil) {
+        finalizeCombat(won: won, missionLog: missionLog, terminalLog: terminalLog)
+    }
+
     /// Mission's extraction point — set by setupMission from the mission JSON.
-    var extractionX: Int = 8
-    var extractionY: Int = 1
+    var extractionX: Int {
+        get { sessionState.extractionX }
+        set { sessionState.extractionX = newValue }
+    }
+    var extractionY: Int {
+        get { sessionState.extractionY }
+        set { sessionState.extractionY = newValue }
+    }
 
 
     /// MULTI-ROOM PROGRESSION: called when livingEnemies becomes empty.
@@ -1436,84 +1186,13 @@ final class GameState: ObservableObject {
     /// Posts .enemyPhaseCompleted notification ONLY after all animations have finished,
     /// so BattleScene can unblock player input at the right moment.
     func enemyPhase() {
-        guard !isEnemyPhaseRunning else { return }
-        isEnemyPhaseRunning = true
-
-        // Post .enemyPhaseBegan so CombatUI can update ("Enemy Turn" UI)
-        NotificationCenter.default.post(name: .enemyPhaseBegan, object: nil)
-
-        let livingEnemies = enemies.filter { $0.isAlive }
-        let livingPlayers = playerTeam.filter { $0.isAlive }
-        // Skip enemy phase if no enemies alive — post .enemyPhaseCompleted so player input unlocks.
-        guard !livingEnemies.isEmpty else {
-            isEnemyPhaseRunning = false
-            beginRound()
-            NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
-            return
-        }
-        // If no players left, combat will end via checkCombatEnd() in the notify block.
-        guard !livingPlayers.isEmpty else {
-            isEnemyPhaseRunning = false
-            beginRound()
-            NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
-            return
-        }
-
-        let group = DispatchGroup()
-        let staggerDelay: TimeInterval = 0.18  // delay between enemy turns
-
-        for (i, enemy) in livingEnemies.enumerated() {
-            let delay = Double(i) * staggerDelay
-
-            group.enter()
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-                guard let self = self else { group.leave(); return }
-                self.runEnemyAI(enemy: enemy, livingEnemies: livingEnemies)
-                // Leave group only after the enemy's animations would have finished playing.
-                // animateEnemyMove = 0.35s, playerHitEffect = 0.25s. Use 0.5s buffer.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    group.leave()
-                }
-            }
-        }
-
-        // When ALL enemies have finished their turns + animation windows, finalize.
-        group.notify(queue: .main) { [weak self] in
-            guard let self = self else { return }
-            self.processDelayedSpawns(enemyPhaseIndex: self.enemyPhaseCount)
-            self.checkExtraction()
-            self.checkCombatEnd()
-            if self.combatEnded {
-                self.isEnemyPhaseRunning = false
-                NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
-                return
-            }
-            self.isEnemyPhaseRunning = false
-            // CRITICAL: reset hasActedThisRound for all players so they can act next round
-            self.beginRound()
-            // Signal BattleScene to unblock player input
-            NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
-            print("[GameState] enemyPhase: all enemies done, beginRound() called, .enemyPhaseCompleted posted")
-
-            // Safety timeout: if .enemyPhaseCompleted notification fails to unblock input
-            // (rare but possible if BattleScene observer is not registered), force-unblock
-            // after 3 seconds so the player is never permanently locked out.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
-                guard let self = self else { return }
-                if self.isPlayerInputBlocked && !self.combatEnded {
-                    print("[GameState] Safety timeout: force-unblocking player input")
-                    self.isPlayerInputBlocked = false
-                    self.isPlayerTurn = true
-                    NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
-                }
-            }
-        }
+        CombatFlowController.enemyPhase(gameState: self)
     }
 
     /// Execute a single enemy's full AI turn synchronously (move + attack).
     /// All notifications are posted synchronously here — animations are scheduled
     /// by BattleScene's observers and played by the SpriteKit run loop.
-    private func runEnemyAI(enemy: Enemy, livingEnemies: [Enemy]) {
+    func runEnemyAI(enemy: Enemy, livingEnemies: [Enemy]) {
         let livingPlayers = playerTeam.filter { $0.isAlive }
         guard !livingPlayers.isEmpty else { return }
 
@@ -1895,7 +1574,7 @@ final class GameState: ObservableObject {
 
     /// Expose isDefending for enemyPhase damage check.
     func isCharacterDefending(_ charId: UUID) -> Bool {
-        return isDefending && defendingCharacterId == charId
+        CombatFlowController.isCharacterDefending(gameState: self, charId)
     }
 
     /// FIX 2: Check if any wall tile intersects the straight line between two tiles.
@@ -1932,86 +1611,22 @@ final class GameState: ObservableObject {
     }
 
     func showMoveMenu() {
-        let char: Character
-        if let selected = selectedCharacterId, let c = playerTeam.first(where: { $0.id == selected && $0.isAlive }) {
-            char = c
-        } else if let current = currentCharacter {
-            char = current
-        } else { return }
-        addLog("\(char.name): tap a tile to move.")
+        CombatFlowController.showMoveMenu(gameState: self)
     }
 
     /// Use first available consumable on the active character.
     func performUseItem() {
-        let char: Character
-        if let selected = selectedCharacterId, let c = playerTeam.first(where: { $0.id == selected && $0.isAlive }) {
-            char = c
-        } else if let current = currentCharacter {
-            char = current
-        } else { addLog("No character to heal."); return }
-
-        // Find a consumable item
-        guard let idx = loot.firstIndex(where: { $0.type == .consumable }) else {
-            addLog("No medkits available.")
-            HapticsManager.shared.buttonTap()
-            return
-        }
-        HapticsManager.shared.attackHit()
-        let item = loot.remove(at: idx)
-        char.currentHP = min(char.maxHP, char.currentHP + item.bonus)
-        // Medkits also clear some stun damage (First Aid = treat stun & physical)
-        char.recoverStun(amount: item.bonus / 2)
-        addLog("\(char.name) uses \(item.name)! +\(item.bonus) HP, -\(item.bonus / 2) Stun. (HP \(char.currentHP)/\(char.maxHP) | Stun \(char.currentStun)/\(char.maxStun))")
-        completeAction(for: char)
+        CombatFlowController.performUseItem(gameState: self)
     }
 
     /// Select a character by UUID and update active character.
     func selectCharacter(id: UUID) {
-        if let char = playerTeam.first(where: { $0.id == id }) {
-            selectedCharacterId = char.id
-            activeCharacterId = char.id
-            targetCharacterId = nil
-            addLog("Selected: \(char.name)")
-        }
+        CombatFlowController.selectCharacter(gameState: self, id: id)
     }
 
     /// Handle a tap on a tile from BattleScene.
     func handleTileTap(tileX: Int, tileY: Int) {
-        if let char = playerTeam.first(where: { $0.positionX == tileX && $0.positionY == tileY && $0.isAlive }) {
-            selectedCharacterId = char.id
-            targetCharacterId = nil
-            addLog("Selected: \(char.name)")
-            NotificationCenter.default.post(name: .characterSelected, object: nil, userInfo: ["characterId": char.id.uuidString])
-            return
-        }
-
-        if let enemy = enemies.first(where: { $0.positionX == tileX && $0.positionY == tileY && $0.isAlive }) {
-            if selectedCharacterId == nil { addLog("Select a character first."); return }
-            targetCharacterId = enemy.id
-            addLog("Targeting: \(enemy.name)")
-            return
-        }
-
-        if let selectedId = selectedCharacterId,
-           let char = playerTeam.first(where: { $0.id == selectedId }) {
-            let isHexAdj = hexAdjacent(x1: tileX, y1: tileY, x2: char.positionX, y2: char.positionY)
-            if isHexAdj {
-                char.positionX = tileX
-                char.positionY = tileY
-                addLog("\(char.name) moves to (\(tileX),\(tileY))")
-                NotificationCenter.default.post(
-                    name: .tileTapped,
-                    object: nil,
-                    userInfo: ["tileX": tileX, "tileY": tileY, "characterId": char.id.uuidString]
-                )
-                // Movement is a free action — does NOT consume the turn.
-            } else {
-                addLog("Too far. Choose an adjacent hex.")
-            }
-            return
-        }
-
-        addLog("Empty tile: (\(tileX),\(tileY))")
+        CombatFlowController.handleTileTap(gameState: self, tileX: tileX, tileY: tileY)
     }
 
     // MARK: - Log
@@ -2060,6 +1675,11 @@ enum StateTransition {
 
 // MARK: - Game State Manager
 
+/// Legacy compatibility phase manager retained for older references.
+/// Not the primary phase-flow authority; `PhaseManager` is canonical.
+/// Future transition rule edits must be made in
+/// `docs/architecture/PhaseFlowAuthorityMatrix.md` and mirrored here only
+/// for compatibility parity.
 @MainActor
 final class GameStateManager: ObservableObject {
 
@@ -2100,13 +1720,16 @@ final class GameStateManager: ObservableObject {
 
     // MARK: - Private
 
+    /// Compatibility mirror of the canonical matrix for active transitions.
     private func computeNext(from state: GamePhase, event: StateTransition) -> GamePhase {
         switch (state, event) {
         case (.title, .startGame):         return .missionSelect
         case (.missionSelect, .selectMission): return .briefing
         case (.briefing, .beginMission):    return .combat
         case (.combat, .endCombat):        return .debrief
+        case (.combat, .returnToTitle):    return .title
         case (.debrief, .returnToTitle):   return .title
+        case (_, .returnToTitle):          return .title
         default:                            return state
         }
     }
