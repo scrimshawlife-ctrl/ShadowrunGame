@@ -924,17 +924,24 @@ struct BattleSceneView: UIViewRepresentable {
         // With scaleMode = .aspectFit the full scene (map + letterboxing) fills the SKView.
         let missionToLoad = missionId ?? "Mission001"
         let missionTileMap: TileMap?
+        let tileMapFromGameState: () -> TileMap? = {
+            let rawTiles = gameState.currentMissionTilesSnapshot
+            guard !rawTiles.isEmpty else { return nil }
+            let typedTiles = rawTiles.map { row in
+                row.map { TileType(rawValue: $0) ?? .floor }
+            }
+            return TileMap(tiles: typedTiles)
+        }
         if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionToLoad) {
             RoomManager.shared.loadMission(named: missionToLoad)
-            let room = multiMission.rooms.first!
-            missionTileMap = TileMap(tiles: room.tileMap)
             gameState.setupMultiRoomMission(multiMission)
+            missionTileMap = tileMapFromGameState()
         } else if let mission = MissionLoader.shared.loadMission(named: missionToLoad) {
-            missionTileMap = MissionLoader.shared.buildTileMap(from: mission)
             gameState.setupMission(mission)
+            missionTileMap = tileMapFromGameState() ?? MissionLoader.shared.buildTileMap(from: mission)
         } else if let mission = MissionLoader.shared.loadMission(named: "Mission001") {
-            missionTileMap = MissionLoader.shared.buildTileMap(from: mission)
             gameState.setupMission(mission)
+            missionTileMap = tileMapFromGameState() ?? MissionLoader.shared.buildTileMap(from: mission)
         } else {
             missionTileMap = nil
         }
@@ -969,10 +976,9 @@ struct BattleSceneView: UIViewRepresentable {
         // before presentScene was racey (view nil → fitSceneToView was a no-op →
         // wrong scene.size → wrong mapOrigin → characters off-camera).
         if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionToLoad) {
-            let room = multiMission.rooms.first!
             scene.scheduleInitialLoad(
-                tileMap: TileMap(tiles: room.tileMap),
-                roomId: room.id,
+                tileMap: missionTileMap ?? TileMap(tiles: multiMission.rooms.first!.tileMap),
+                roomId: multiMission.rooms.first!.id,
                 characters: gameState.playerTeam,
                 enemies: GameState.shared.enemies
             )

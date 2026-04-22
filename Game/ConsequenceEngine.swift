@@ -1,5 +1,11 @@
 import Foundation
 
+enum RewardTier {
+    case low
+    case medium
+    case high
+}
+
 struct ConsequenceEngine {
     struct FactionAttentionResult {
         let increment: Int
@@ -176,6 +182,30 @@ struct ConsequenceEngine {
             return 1
         default:
             return 0
+        }
+    }
+
+    static func rewardTier(heatTier: Int, corpAttention: Int, gangAttention: Int) -> RewardTier {
+        if heatTier >= 2 || corpAttention >= 4 || gangAttention >= 4 {
+            return .high
+        }
+        if heatTier == 1 || (2...3).contains(corpAttention) {
+            return .medium
+        }
+        if heatTier == 0 && corpAttention < 2 {
+            return .low
+        }
+        return .medium
+    }
+
+    static func rewardMultiplier(for tier: RewardTier) -> Double {
+        switch tier {
+        case .low:
+            return 1.0
+        case .medium:
+            return 1.25
+        case .high:
+            return 1.5
         }
     }
 }
