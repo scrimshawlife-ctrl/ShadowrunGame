@@ -224,9 +224,7 @@ final class GameState: ObservableObject {
     /// Tier 0: below threshold (low), Tier 1: triggered (medium), Tier 2: high pressure.
     /// Deterministic and fully derived from existing trace values.
     var traceTier: Int {
-        if traceLevel >= traceThreshold * 2 { return 2 }
-        if traceLevel >= traceThreshold { return 1 }
-        return 0
+        ConsequenceEngine.traceTier(traceLevel: traceLevel, traceThreshold: traceThreshold)
     }
 
     var traceTierLabel: String {
@@ -473,6 +471,9 @@ final class GameState: ObservableObject {
         .unknown: 0
     ]
     @Published var lastAppliedCorpEnemyModifier: Int = 0
+    @Published var lastAppliedGangAmbushRadius: Int = 999
+    @Published var didApplyAttentionRecoveryLastMission: Bool = false
+    @Published var didApplyHighTraceEscalationBonusLastMission: Bool = false
     @Published var missionTargetTurns: Int = 6
     @Published var currentTurnCount: Int = 0
     var activeCharacter: Character? {
@@ -522,51 +523,45 @@ final class GameState: ObservableObject {
     }
 
     var heatTierLabel: String {
-        switch missionHeatTier {
-        case .low: return "LOW"
-        case .medium: return "MEDIUM"
-        case .high: return "HIGH"
-        }
+        ConsequenceEngine.heatTierLabel(for: missionHeatTier)
     }
 
     func generateWorldReactionMessage() -> String {
         let corpAttention = factionAttention[.corp, default: 0]
-        if corpAttention >= 3 {
-            return "Persistent attention detected. Future operations may be compromised."
-        }
-
-        switch missionHeatTier {
-        case .low:
-            return "Run completed clean. No significant attention."
-        case .medium:
-            return "Corporate systems flagged unusual activity."
-        case .high:
-            return "High alert triggered. Surveillance and response risk increased."
-        }
+        return ConsequenceEngine.worldReactionMessage(
+            missionHeatTier: missionHeatTier,
+            corpAttention: corpAttention
+        )
     }
 
     func generateMissionModifierPreview() -> String {
         let corpAttention = factionAttention[.corp, default: 0]
-        switch corpAttention {
-        case 0:
-            return "No increased security detected."
-        case 1...2:
-            return "Moderate surveillance expected next mission."
-        default:
-            return "High security expected: increased enemy presence likely."
-        }
+        return ConsequenceEngine.missionModifierPreview(corpAttention: corpAttention)
+    }
+
+    func generateGangReactionMessage() -> String {
+        let gangAttention = factionAttention[.gang, default: 0]
+        return ConsequenceEngine.gangReactionMessage(
+            missionHeatTier: missionHeatTier,
+            gangAttention: gangAttention
+        )
+    }
+
+    func generateGangMissionPreview() -> String {
+        let gangAttention = factionAttention[.gang, default: 0]
+        return ConsequenceEngine.gangMissionPreview(gangAttention: gangAttention)
+    }
+
+    func generateCombinedPressurePreview() -> String {
+        ConsequenceEngine.combinedPressurePreview(
+            corpModifier: lastAppliedCorpEnemyModifier,
+            gangRadius: lastAppliedGangAmbushRadius
+        )
     }
 
     func corpAttentionEnemyModifier() -> Int {
         let corpAttention = factionAttention[.corp, default: 0]
-        switch corpAttention {
-        case 0:
-            return 0
-        case 1...2:
-            return 1
-        default:
-            return 2
-        }
+        return ConsequenceEngine.corpEnemyModifier(corpAttention: corpAttention)
     }
 
     /// Live hit-preview for the currently selected attacker → target pair.
@@ -661,6 +656,76 @@ final class GameState: ObservableObject {
         }
     }
 
+    func distanceToNearestPlayer(x: Int, y: Int) -> Int {
+        let living = playerTeam.filter(\.isAlive)
+        guard !living.isEmpty else { return Int.max }
+        var best = Int.max
+        for player in living {
+            let distance = abs(player.positionX - x) + abs(player.positionY - y)
+            if distance < best {
+                best = distance
+            }
+        }
+        return best
+    }
+
+    private func applyGangAmbushBias(map: [[Int]]) {
+        let gangAttention = factionAttention[.gang, default: 0]
+        let baseRadius = ConsequenceEngine.gangAmbushRadius(gangAttention: gangAttention)
+        lastAppliedGangAmbushRadius = baseRadius
+
+        guard baseRadius < 999 else {
+            addLog("No ambush bias applied.")
+            return
+        }
+
+        addLog("Gang ambush bias applied: radius \(baseRadius)")
+
+        let width = map.first?.count ?? TileMap.mapWidth
+        let height = map.count
+        let maxRadius = max(width, height) * 2
+
+        var occupied = Set(playerTeam.filter(\.isAlive).map { "\($0.positionX),\($0.positionY)" })
+        var didLogRelaxation = false
+
+        let allSpawnedEnemies = enemies + pendingSpawns.map(\.enemy)
+        for enemy in allSpawnedEnemies where enemy.isAlive {
+            var effectiveRadius = baseRadius
+            var placed = false
+
+            while effectiveRadius <= maxRadius && !placed {
+                for y in 0..<height {
+                    for x in 0..<width {
+                        guard y < map.count, x < map[y].count else { continue }
+                        guard map[y][x] != 1 else { continue }
+                        guard distanceToNearestPlayer(x: x, y: y) <= effectiveRadius else { continue }
+                        let key = "\(x),\(y)"
+                        guard !occupied.contains(key) else { continue }
+                        enemy.positionX = x
+                        enemy.positionY = y
+                        occupied.insert(key)
+                        placed = true
+                        break
+                    }
+                    if placed { break }
+                }
+
+                if !placed {
+                    effectiveRadius += 1
+                    if !didLogRelaxation {
+                        addLog("Ambush bias relaxed due to no valid positions.")
+                        didLogRelaxation = true
+                    }
+                }
+            }
+
+            if !placed {
+                let key = "\(enemy.positionX),\(enemy.positionY)"
+                occupied.insert(key)
+            }
+        }
+    }
+
     func setupMission(_ mission: Mission) {
         print("[GameState] setupMission: \(mission.title)")
         playerTeam = Character.allRunners
@@ -698,6 +763,8 @@ final class GameState: ObservableObject {
         hasLoggedTraceTriggerForCurrentRun = false
         actionMode = .street
         missionComplete = false
+        didApplyAttentionRecoveryLastMission = false
+        didApplyHighTraceEscalationBonusLastMission = false
         missionHeat = 0
         missionHeatTier = .low
         currentTurnCount = 0
@@ -708,6 +775,8 @@ final class GameState: ObservableObject {
             spawnTemplates: mission.enemies.map { ($0.type, $0.x, $0.y) },
             map: mission.map
         )
+        applyGangAmbushBias(map: mission.map)
+        addLog(generateCombinedPressurePreview())
         addLog("Reach extraction at (\(mission.extractionPoint.x), \(mission.extractionPoint.y))")
         // Spawn immediate enemies (delay=0) before combat starts
         processDelayedSpawns(enemyPhaseIndex: 0)
@@ -769,6 +838,8 @@ final class GameState: ObservableObject {
         hasLoggedTraceTriggerForCurrentRun = false
         actionMode = .street
         missionComplete = false
+        didApplyAttentionRecoveryLastMission = false
+        didApplyHighTraceEscalationBonusLastMission = false
         missionHeat = 0
         missionHeatTier = .low
         currentTurnCount = 0
@@ -777,6 +848,8 @@ final class GameState: ObservableObject {
             spawnTemplates: firstRoom.enemies.map { ($0.type, $0.x, $0.y) },
             map: firstRoom.map
         )
+        applyGangAmbushBias(map: firstRoom.map)
+        addLog(generateCombinedPressurePreview())
 
         if let ext = firstRoom.extractionPoint {
             extractionX = ext.x
@@ -1468,7 +1541,9 @@ final class GameState: ObservableObject {
         }
         addLog(missionLog)
         finalizeMissionHeat()
-        applyFactionAttention()
+        applyFactionAttention(traceTier: traceTier)
+        applyGangAttention()
+        applyAttentionDecay(traceTier: traceTier)
         addLog(generateWorldReactionMessage())
         addLog(generateMissionModifierPreview())
         if let terminalLog {
@@ -1488,46 +1563,45 @@ final class GameState: ObservableObject {
     /// v0.1 intentionally has no gameplay effect.
     private func finalizeMissionHeat() {
         let sourceTraceTier = traceTier
-        var derivedTier = sourceTraceTier
-
-        // Optional scaffold modifier: if mission ends at high trace, apply +1 tier (clamped).
-        if sourceTraceTier >= 2 {
-            derivedTier = min(2, derivedTier + 1)
-        }
-
+        let derivedTier = ConsequenceEngine.heatValue(fromTraceTier: sourceTraceTier)
         missionHeat = derivedTier
-        switch derivedTier {
-        case 2:
-            missionHeatTier = .high
-        case 1:
-            missionHeatTier = .medium
-        default:
-            missionHeatTier = .low
-        }
+        missionHeatTier = ConsequenceEngine.heatTier(fromHeatValue: derivedTier)
 
         addLog("Mission complete: Heat level \(heatTierLabel) (derived from trace \(traceTierLabel))")
     }
 
     /// Heat -> world awareness scaffold.
     /// v0.1 only records/logs attention; it does not affect gameplay.
-    private func applyFactionAttention() {
-        let increment: Int
-        let reactionLog: String
-        switch missionHeatTier {
-        case .low:
-            increment = 0
-            reactionLog = "No significant attention detected."
-        case .medium:
-            increment = 1
-            reactionLog = "Corporate systems flagged unusual activity."
-        case .high:
-            increment = 2
-            reactionLog = "High alert: corporate surveillance increased."
+    private func applyFactionAttention(traceTier: Int) {
+        let attentionResult = ConsequenceEngine.factionAttentionIncrement(for: missionHeatTier)
+        let highTraceBonus = ConsequenceEngine.highTraceCorpEscalationBonus(traceTier: traceTier)
+        factionAttention[.corp, default: 0] += attentionResult.increment + highTraceBonus
+        didApplyHighTraceEscalationBonusLastMission = highTraceBonus > 0
+        addLog(attentionResult.reactionLog)
+        if highTraceBonus > 0 {
+            addLog("High-profile operation increased corporate escalation risk.")
+        }
+        addLog("CORP ATTENTION: \(factionAttention[.corp, default: 0])")
+    }
+
+    private func applyGangAttention() {
+        let increment = ConsequenceEngine.gangAttentionIncrement(for: missionHeatTier)
+        factionAttention[.gang, default: 0] += increment
+        addLog(generateGangReactionMessage())
+        addLog("GANG ATTENTION: \(factionAttention[.gang, default: 0])")
+    }
+
+    private func applyAttentionDecay(traceTier: Int) {
+        let decayAmount = ConsequenceEngine.attentionDecayAmount(for: traceTier)
+        guard decayAmount > 0 else {
+            didApplyAttentionRecoveryLastMission = false
+            return
         }
 
-        factionAttention[.corp, default: 0] += increment
-        addLog(reactionLog)
-        addLog("CORP ATTENTION: \(factionAttention[.corp, default: 0])")
+        factionAttention[.corp, default: 0] = max(0, factionAttention[.corp, default: 0] - decayAmount)
+        factionAttention[.gang, default: 0] = max(0, factionAttention[.gang, default: 0] - decayAmount)
+        didApplyAttentionRecoveryLastMission = true
+        addLog("Attention reduced due to low-profile mission.")
     }
 
     /// Mission's extraction point — set by setupMission from the mission JSON.
