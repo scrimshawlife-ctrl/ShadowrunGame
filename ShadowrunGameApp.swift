@@ -945,7 +945,7 @@ struct BattleSceneView: UIViewRepresentable {
             }
             return TileMap(tiles: typedTiles)
         }
-        let hasStrictPreparedMatch = gameState.preparedMissionId == missionToLoad
+        var hasStrictPreparedMatch = gameState.preparedMissionId == missionToLoad
         if let preloaded = tileMapFromGameState(), !gameState.playerTeam.isEmpty, hasStrictPreparedMatch {
             missionTileMap = preloaded
         } else if tileMapFromGameState() != nil, gameState.preparedMissionId != nil, !hasStrictPreparedMatch {
@@ -954,9 +954,11 @@ struct BattleSceneView: UIViewRepresentable {
                 RoomManager.shared.loadMission(named: missionToLoad)
                 gameState.setupMultiRoomMission(multiMission)
                 missionTileMap = tileMapFromGameState()
+                hasStrictPreparedMatch = gameState.preparedMissionId == missionToLoad
             } else if let mission = MissionLoader.shared.loadMission(named: missionToLoad) {
                 gameState.setupMission(mission)
                 missionTileMap = tileMapFromGameState() ?? MissionLoader.shared.buildTileMap(from: mission)
+                hasStrictPreparedMatch = gameState.preparedMissionId == missionToLoad
             } else {
                 gameState.addLog("Mission load failed: \(missionToLoad)")
                 return
@@ -965,9 +967,11 @@ struct BattleSceneView: UIViewRepresentable {
             RoomManager.shared.loadMission(named: missionToLoad)
             gameState.setupMultiRoomMission(multiMission)
             missionTileMap = tileMapFromGameState()
+            hasStrictPreparedMatch = gameState.preparedMissionId == missionToLoad
         } else if let mission = MissionLoader.shared.loadMission(named: missionToLoad) {
             gameState.setupMission(mission)
             missionTileMap = tileMapFromGameState() ?? MissionLoader.shared.buildTileMap(from: mission)
+            hasStrictPreparedMatch = gameState.preparedMissionId == missionToLoad
         } else {
             gameState.addLog("Mission load failed: \(missionToLoad)")
             return

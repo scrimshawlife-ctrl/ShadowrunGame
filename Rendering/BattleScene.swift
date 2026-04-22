@@ -266,6 +266,23 @@ final class BattleScene: SKScene {
         // Update tiles for enemy pathfinding
         GameState.shared.updateTilesForCurrentRoom(targetRoom.map)
 
+        // Keep extraction objective synced to the ACTIVE room so extraction checks
+        // never use stale coordinates from a previous room.
+        if let extractionY = targetRoom.map.firstIndex(where: { row in row.contains(TileType.extraction.rawValue) }),
+           let extractionX = targetRoom.map[extractionY].firstIndex(of: TileType.extraction.rawValue) {
+            GameState.shared.extractionX = extractionX
+            GameState.shared.extractionY = extractionY
+            GameState.shared.addLog("Reach extraction at (\(extractionX), \(extractionY))")
+        } else if let ext = targetRoom.extractionPoint {
+            GameState.shared.extractionX = ext.x
+            GameState.shared.extractionY = ext.y
+            GameState.shared.addLog("Reach extraction at (\(ext.x), \(ext.y))")
+        } else if let firstConn = targetRoom.connections.first {
+            GameState.shared.extractionX = firstConn.triggerTileX
+            GameState.shared.extractionY = firstConn.triggerTileY
+            GameState.shared.addLog("Find a way through to: \(firstConn.targetRoomId)")
+        }
+
         // Clear stale door-open state from previous room
         openedDoorKeys.removeAll()
 
