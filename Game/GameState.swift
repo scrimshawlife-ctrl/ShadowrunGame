@@ -73,6 +73,28 @@ enum SpellType: String, CaseIterable, Codable {
     var needsEnemyTarget: Bool { self == .manaBolt || self == .shock }
 }
 
+enum ActionMode: String, CaseIterable {
+    case street
+    case signal
+}
+
+enum MissionPreset: String, CaseIterable {
+    case lowPressure
+    case standard
+    case highPressure
+}
+
+enum PlayerRole: String, CaseIterable {
+    case normal
+    case hacker
+    case street
+}
+
+enum MissionType {
+    case survive
+    case eliminate
+}
+
 // MARK: - Singleton combat/game runtime state
 
 /// Singleton combat/game runtime state — accessible across all layers.
@@ -82,6 +104,25 @@ final class GameState: ObservableObject {
     static let shared = GameState()
 
     private init() {}
+
+    private enum TraceCadence {
+        static let gainPerSignal = 1
+        static let recoveryPerLayLow = 1
+        static func threshold(for preset: MissionPreset) -> Int {
+            switch preset {
+            case .lowPressure: return 5
+            case .standard: return 4
+            case .highPressure: return 3
+            }
+        }
+        static func escalationDamageBonus(for preset: MissionPreset) -> Int {
+            switch preset {
+            case .lowPressure: return 1
+            case .standard: return 1
+            case .highPressure: return 1
+            }
+        }
+    }
 
     // MARK: - Team
 
@@ -131,6 +172,16 @@ final class GameState: ObservableObject {
     @Published var isPlayerInputBlocked: Bool = false
     /// Guards against double-triggering enemyPhase() within the same frame/turn.
     private var isEnemyPhaseRunning: Bool = false
+    @Published var actionMode: ActionMode = .street
+    @Published var playerRole: PlayerRole = .normal
+    @Published var selectedMissionPreset: MissionPreset = .standard
+    @Published var traceLevel: Int = 0
+    var traceThreshold: Int { TraceCadence.threshold(for: selectedMissionPreset) }
+    var traceGainPerSignal: Int { TraceCadence.gainPerSignal }
+    var traceRecoveryPerLayLow: Int { TraceCadence.recoveryPerLayLow }
+    var escalationDamageBonus: Int { TraceCadence.escalationDamageBonus(for: selectedMissionPreset) }
+    @Published var traceEscalationLevel: Int = 0
+    private var hasLoggedTraceTriggerForCurrentRun: Bool = false
 
     // MARK: - Turn Structure (Issue 1 fix)
     // Track which players have NOT yet acted this round. Empty = all acted = enemy phase.
@@ -152,6 +203,124 @@ final class GameState: ObservableObject {
                 char.hasActedThisRound = true
             }
         }
+    }
+
+    var isTraceTriggered: Bool {
+        traceLevel >= traceThreshold
+    }
+
+    func applyStreetAction() {
+        // Explicitly no trace mutation.
+    }
+
+    func applySignalAction() {
+        addLog("TRACE +\(traceGainPerSignal) (Signal)")
+        traceLevel += traceGainPerSignal
+        if !isTraceTriggered && traceLevel == traceThreshold - 1 {
+            addLog("TRACE WARNING — near escalation")
+        }
+        if isTraceTriggered && !hasLoggedTraceTriggerForCurrentRun {
+            hasLoggedTraceTriggerForCurrentRun = true
+            addLog("⚠️ TRACE TRIGGERED — hostile network awareness increased.")
+        }
+        if isTraceTriggered && traceEscalationLevel == 0 {
+            traceEscalationLevel = 1
+            addLog("⚠️ TRACE ESCALATION — enemies adapting")
+        }
+    }
+
+    private func escalatedIncomingDamage(_ baseDamage: Int) -> Int {
+        guard baseDamage > 0 else { return baseDamage }
+        guard traceEscalationLevel >= 1 else { return baseDamage }
+        let escalatedDamage = baseDamage + escalationDamageBonus
+        if playerRole == .street {
+            addLog("STREET — bracing against escalation")
+            let reducedDamage = max(0, escalatedDamage - 1)
+            addLog("STREET — reduced incoming damage")
+            return reducedDamage
+        }
+        return escalatedDamage
+    }
+
+    func applyTraceRecovery() {
+        let recoveryAmount: Int
+        if playerRole == .hacker {
+            recoveryAmount = traceRecoveryPerLayLow + 1
+            addLog("HACKER — enhanced trace recovery")
+        } else {
+            recoveryAmount = traceRecoveryPerLayLow
+        }
+        let previous = traceLevel
+        traceLevel = max(0, traceLevel - recoveryAmount)
+        if traceLevel < previous {
+            addLog("TRACE -\(previous - traceLevel) (Lay Low)")
+        } else {
+            addLog("TRACE -0 (Lay Low)")
+        }
+    }
+
+    func traceTelemetrySummary() -> String {
+        "trace=\(traceLevel)/\(traceThreshold) escalated=\(traceEscalationLevel >= 1) mode=\(actionMode.rawValue) role=\(playerRole.rawValue)"
+    }
+
+    var playerRoleLabel: String {
+        switch playerRole {
+        case .normal: return "NORMAL"
+        case .hacker: return "HACKER"
+        case .street: return "STREET"
+        }
+    }
+
+    var missionPresetLabel: String {
+        switch selectedMissionPreset {
+        case .lowPressure: return "LOW"
+        case .standard: return "STANDARD"
+        case .highPressure: return "HIGH"
+        }
+    }
+
+    var missionTypeLabel: String {
+        switch missionType {
+        case .survive: return "SURVIVE"
+        case .eliminate: return "ELIMINATE"
+        }
+    }
+
+    func cyclePlayerRole() {
+        switch playerRole {
+        case .normal:
+            playerRole = .hacker
+        case .hacker:
+            playerRole = .street
+        case .street:
+            playerRole = .normal
+        }
+
+        addLog("ROLE SET — \(playerRoleLabel)")
+    }
+
+    func cycleMissionPreset() {
+        switch selectedMissionPreset {
+        case .lowPressure:
+            selectedMissionPreset = .standard
+        case .standard:
+            selectedMissionPreset = .highPressure
+        case .highPressure:
+            selectedMissionPreset = .lowPressure
+        }
+
+        addLog("PRESET SET — \(missionPresetLabel)")
+    }
+
+    func cycleMissionType() {
+        switch missionType {
+        case .survive:
+            missionType = .eliminate
+        case .eliminate:
+            missionType = .survive
+        }
+
+        addLog("MISSION TYPE — \(missionTypeLabel)")
     }
 
     /// Call at the START of each round (before first player acts).
@@ -244,6 +413,10 @@ final class GameState: ObservableObject {
     @Published var targetCharacterId: UUID?
     @Published var combatWon: Bool?
     @Published var combatEnded: Bool = false
+    @Published var missionType: MissionType = .survive
+    @Published var missionComplete: Bool = false
+    @Published var missionTargetTurns: Int = 6
+    @Published var currentTurnCount: Int = 0
     var activeCharacter: Character? {
         guard let id = activeCharacterId else { return currentCharacter }
         return playerTeam.first(where: { $0.id == id && $0.isAlive })
@@ -281,6 +454,13 @@ final class GameState: ObservableObject {
 
     var playerTeamWon: Bool {
         isCombatOver && !livingPlayers.isEmpty && livingEnemies.isEmpty
+    }
+
+    /// Read-only diagnostics summary for turn authority mapping.
+    /// Non-authoritative: intended for UI/debug overlays and documentation only.
+    var turnAuthoritySummary: String {
+        let activeId = (activeCharacter ?? currentCharacter)?.id.uuidString.prefix(8) ?? "n/a"
+        return "owner=GameState idx=\(currentTurnIndex) round=\(roundNumber) playerTurn=\(isPlayerTurn) inputBlocked=\(isPlayerInputBlocked) active=\(activeId)"
     }
 
     /// Live hit-preview for the currently selected attacker → target pair.
@@ -341,6 +521,12 @@ final class GameState: ObservableObject {
         currentTurnIndex = 0
         roundNumber = 1
         enemyPhaseCount = 0
+        traceLevel = 0
+        traceEscalationLevel = 0
+        hasLoggedTraceTriggerForCurrentRun = false
+        actionMode = .street
+        missionComplete = false
+        currentTurnCount = 0
         combatLog = ["Mission started: \(mission.title)"]
         extractionX = mission.extractionPoint.x
         extractionY = mission.extractionPoint.y
@@ -408,6 +594,12 @@ final class GameState: ObservableObject {
         currentTurnIndex = 0
         roundNumber = 1
         enemyPhaseCount = 0
+        traceLevel = 0
+        traceEscalationLevel = 0
+        hasLoggedTraceTriggerForCurrentRun = false
+        actionMode = .street
+        missionComplete = false
+        currentTurnCount = 0
         combatLog = ["Mission started: \(mission.title)", "Entering: \(firstRoom.title)"]
 
         if let ext = firstRoom.extractionPoint {
@@ -460,6 +652,11 @@ final class GameState: ObservableObject {
 
         // Attack pool: AGI + skill
         let attackPool = a.attackPool(skill: skill)
+
+        switch actionMode {
+        case .street: applyStreetAction()
+        case .signal: applySignalAction()
+        }
 
         // Cover bonus: count cover tiles between attacker and target
         let coverCount = CombatMechanics.coverBetween(
@@ -544,6 +741,21 @@ final class GameState: ObservableObject {
         }
 
         completeAction(for: a)
+    }
+
+    func performLayLow() {
+        let actor: Character?
+        if let selected = selectedCharacterId, let char = playerTeam.first(where: { $0.id == selected && $0.isAlive }) {
+            actor = char
+        } else {
+            actor = currentCharacter
+        }
+        guard let character = actor else {
+            addLog("No character available.")
+            return
+        }
+        applyTraceRecovery()
+        completeAction(for: character) // Cost: consumes full turn
     }
 
     // MARK: - Spell Casting
@@ -958,6 +1170,15 @@ final class GameState: ObservableObject {
             playersWhoHaveNotActed.remove(activeId)
         }
 
+        currentTurnCount += 1
+        if missionType == .survive && !missionComplete && currentTurnCount >= missionTargetTurns {
+            addLog("MISSION COMPLETE — SURVIVED \(missionTargetTurns) TURNS")
+            missionComplete = true
+            combatWon = true
+            combatEnded = true
+            return
+        }
+
         let living = playerTeam.filter { $0.isAlive }
         guard !living.isEmpty else {
             isPlayerInputBlocked = false
@@ -1001,9 +1222,19 @@ final class GameState: ObservableObject {
 
     /// Check if combat is over
     func checkCombatEnd() {
+        if missionType == .eliminate && livingEnemies.isEmpty && pendingSpawns.isEmpty {
+            addLog("MISSION COMPLETE — TARGET ELIMINATED")
+            missionComplete = true
+            combatWon = true
+            combatEnded = true
+            return
+        }
+
         if livingPlayers.isEmpty {
             HapticsManager.shared.defeat()
+            addLog("MISSION FAILED — ALL UNITS DOWN")
             addLog("=== DEFEAT ===")
+            missionComplete = true
             combatWon = false
             combatEnded = true
         }
@@ -1088,6 +1319,11 @@ final class GameState: ObservableObject {
             self.processDelayedSpawns(enemyPhaseIndex: self.enemyPhaseCount)
             self.checkExtraction()
             self.checkCombatEnd()
+            if self.combatEnded {
+                self.isEnemyPhaseRunning = false
+                NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
+                return
+            }
             self.isEnemyPhaseRunning = false
             // CRITICAL: reset hasActedThisRound for all players so they can act next round
             self.beginRound()
@@ -1160,7 +1396,7 @@ final class GameState: ObservableObject {
                     let ap = enemy.equippedWeapon?.armorPiercing ?? 0
                     let soakPool = max(0, closestPlayer.computeDerived().soak - ap)
                     let soakRoll = DiceEngine.roll(pool: soakPool)
-                    let dmg = max(0, baseDmg - soakRoll.hits)
+                    let dmg = escalatedIncomingDamage(max(0, baseDmg - soakRoll.hits))
 
                     if dmg > 0 {
                         let isStun = enemy.equippedWeapon?.isStunDamage ?? false
@@ -1219,7 +1455,7 @@ final class GameState: ObservableObject {
                         let ap = enemy.equippedWeapon?.armorPiercing ?? 0
                         let soakPool = max(0, closestPlayer.computeDerived().soak - ap)
                         let soakRoll = DiceEngine.roll(pool: soakPool)
-                        let dmg = max(0, baseDmg - soakRoll.hits)
+                        let dmg = escalatedIncomingDamage(max(0, baseDmg - soakRoll.hits))
 
                         if dmg > 0 {
                             let isStun = enemy.equippedWeapon?.isStunDamage ?? false
@@ -1301,7 +1537,7 @@ final class GameState: ObservableObject {
                 let netHits = max(0, attackRoll.hits - defenseRoll.hits)
                 if netHits > 0 {
                     let weaponDmg = enemy.equippedWeapon?.damage ?? 3
-                    let dmg = max(0, weaponDmg + netHits - DiceEngine.roll(pool: target.computeDerived().soak).hits)
+                    let dmg = escalatedIncomingDamage(max(0, weaponDmg + netHits - DiceEngine.roll(pool: target.computeDerived().soak).hits))
                     if dmg > 0 {
                         target.takeDamage(amount: dmg)
                         addLog("⚠️ \(enemy.name) attacks \(target.name) → \(dmg)P dmg")
@@ -1360,7 +1596,7 @@ final class GameState: ObservableObject {
                 let ap = enemy.equippedWeapon?.armorPiercing ?? 0
                 let soakPool = max(0, closestPlayer.computeDerived().soak - ap)
                 let soakRoll = DiceEngine.roll(pool: soakPool)
-                let dmg = max(0, baseDmg - soakRoll.hits)
+                let dmg = escalatedIncomingDamage(max(0, baseDmg - soakRoll.hits))
 
                 if dmg > 0 {
                     let isStun = enemy.equippedWeapon?.isStunDamage ?? false
@@ -1408,7 +1644,7 @@ final class GameState: ObservableObject {
                     let baseDamage = 6 + spellRoll.hits
                     let soakPool = target.attributes.wil + (target.equippedArmor?.armorValue ?? 0) / 2
                     let soakRoll = DiceEngine.roll(pool: max(0, soakPool))
-                    let dmg = max(1, baseDamage - soakRoll.hits)
+                    let dmg = escalatedIncomingDamage(max(1, baseDamage - soakRoll.hits))
 
                     if dmg > 0 {
                         target.takeDamage(amount: dmg, isStun: false)  // enemy mage spells deal physical
@@ -1446,7 +1682,7 @@ final class GameState: ObservableObject {
                     let ap = enemy.equippedWeapon?.armorPiercing ?? 0
                     let soakPool = max(0, target.computeDerived().soak - ap)
                     let soakRoll = DiceEngine.roll(pool: soakPool)
-                    let dmg = max(0, baseDmg - soakRoll.hits)
+                    let dmg = escalatedIncomingDamage(max(0, baseDmg - soakRoll.hits))
 
                     if dmg > 0 {
                         let isStun = enemy.equippedWeapon?.isStunDamage ?? false
