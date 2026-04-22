@@ -91,8 +91,21 @@ enum PlayerRole: String, CaseIterable {
 }
 
 enum MissionType {
-    case survive
-    case eliminate
+    case stealth
+    case assault
+    case extraction
+}
+
+enum EnemyArchetype {
+    case watcher
+    case enforcer
+    case interceptor
+}
+
+enum MapSituation {
+    case corridor
+    case openZone
+    case chokepoint
 }
 
 enum HeatTier {
@@ -328,9 +341,26 @@ final class GameState: ObservableObject {
     }
 
     var missionTypeLabel: String {
-        switch missionType {
-        case .survive: return "SURVIVE"
-        case .eliminate: return "ELIMINATE"
+        switch currentMissionType {
+        case .stealth: return "STEALTH"
+        case .assault: return "ASSAULT"
+        case .extraction: return "EXTRACTION"
+        }
+    }
+
+    var missionTypeHint: String {
+        switch currentMissionType {
+        case .stealth: return "Stay low profile for bonus"
+        case .assault: return "High intensity yields bonus"
+        case .extraction: return "Balanced approach rewarded"
+        }
+    }
+
+    var mapSituationLabel: String {
+        switch currentMapSituation {
+        case .corridor: return "CORRIDOR"
+        case .openZone: return "OPEN ZONE"
+        case .chokepoint: return "CHOKEPOINT"
         }
     }
 
@@ -361,11 +391,13 @@ final class GameState: ObservableObject {
     }
 
     func cycleMissionType() {
-        switch missionType {
-        case .survive:
-            missionType = .eliminate
-        case .eliminate:
-            missionType = .survive
+        switch currentMissionType {
+        case .stealth:
+            currentMissionType = .assault
+        case .assault:
+            currentMissionType = .extraction
+        case .extraction:
+            currentMissionType = .stealth
         }
 
         addLog("MISSION TYPE — \(missionTypeLabel)")
@@ -461,7 +493,8 @@ final class GameState: ObservableObject {
     @Published var targetCharacterId: UUID?
     @Published var combatWon: Bool?
     @Published var combatEnded: Bool = false
-    @Published var missionType: MissionType = .survive
+    @Published var currentMissionType: MissionType = .stealth
+    @Published var currentMapSituation: MapSituation = .corridor
     @Published var missionComplete: Bool = false
     @Published var missionHeat: Int = 0
     @Published var missionHeatTier: HeatTier = .low
@@ -474,8 +507,13 @@ final class GameState: ObservableObject {
     @Published var lastAppliedGangAmbushRadius: Int = 999
     @Published var didApplyAttentionRecoveryLastMission: Bool = false
     @Published var didApplyHighTraceEscalationBonusLastMission: Bool = false
+    @Published var lastRewardTier: RewardTier = .low
+    @Published var lastRewardMultiplier: Double = 1.0
+    @Published var missionTypeBonusMultiplier: Double = 0.0
+    @Published var baseMissionPayout: Int = 100
     @Published var missionTargetTurns: Int = 6
     @Published var currentTurnCount: Int = 0
+    private var missionLoadIndex: Int = 0
     var activeCharacter: Character? {
         guard let id = activeCharacterId else { return currentCharacter }
         return playerTeam.first(where: { $0.id == id && $0.isAlive })
@@ -559,6 +597,286 @@ final class GameState: ObservableObject {
         )
     }
 
+    func rewardTierLabel(_ tier: RewardTier) -> String {
+        switch tier {
+        case .low: return "LOW"
+        case .medium: return "MED"
+        case .high: return "HIGH"
+        }
+    }
+
+    func generateRewardPreview() -> String {
+        switch lastRewardTier {
+        case .low:
+            return "Low risk operation. Standard payout."
+        case .medium:
+            return "Moderate risk. Increased payout expected."
+        case .high:
+            return "High risk operation. Significant rewards expected."
+        }
+    }
+
+    var finalMissionPayout: Int {
+        Int(Double(baseMissionPayout) * finalRewardMultiplier)
+    }
+
+    var finalRewardMultiplier: Double {
+        lastRewardMultiplier + missionTypeBonusMultiplier
+    }
+
+    var riskBonus: Int {
+        finalMissionPayout - baseMissionPayout
+    }
+
+    func generateRewardPayoutSummary() -> String {
+        let emphasis: String
+        switch lastRewardTier {
+        case .high:
+            emphasis = "HIGH RISK BONUS\n"
+        case .medium:
+            emphasis = "INCREASED PAYOUT\n"
+        case .low:
+            emphasis = ""
+        }
+
+        return """
+        \(emphasis)MISSION PAYOUT:
+        Base: \(baseMissionPayout)
+        Risk Bonus: +\(riskBonus)
+        Total: \(finalMissionPayout)
+        """
+    }
+
+    private func assignMissionTypeForCurrentLoad() {
+        let assignedType: MissionType
+        switch missionLoadIndex % 3 {
+        case 1:
+            assignedType = .assault
+        case 2:
+            assignedType = .extraction
+        default:
+            assignedType = .stealth
+        }
+        currentMissionType = assignedType
+        switch currentMissionType {
+        case .stealth:
+            currentMapSituation = .corridor
+        case .assault:
+            currentMapSituation = .openZone
+        case .extraction:
+            currentMapSituation = .chokepoint
+        }
+        missionLoadIndex += 1
+        addLog("MISSION TYPE — \(missionTypeLabel)")
+        addLog("MISSION TYPE HINT — \(missionTypeHint)")
+        addLog("Map situation: \(mapSituationLabel)")
+    }
+
+    private func tileKey(x: Int, y: Int) -> String { "\(x),\(y)" }
+
+    private func applyMapSituation(
+        to originalMap: [[Int]],
+        extractionPoint: (x: Int, y: Int),
+        protectedTiles: Set<String>
+    ) -> ([[Int]], (x: Int, y: Int)) {
+        guard !originalMap.isEmpty else { return (originalMap, extractionPoint) }
+
+        var map = originalMap
+        let height = map.count
+        let width = map.first?.count ?? TileMap.mapWidth
+        let laneX = width / 2
+        var updatedExtraction = extractionPoint
+
+        func isProtected(_ x: Int, _ y: Int) -> Bool {
+            protectedTiles.contains(tileKey(x: x, y: y))
+        }
+
+        func canRewrite(_ x: Int, _ y: Int) -> Bool {
+            guard y >= 0, y < height, x >= 0, x < map[y].count else { return false }
+            if isProtected(x, y) { return false }
+            let tile = map[y][x]
+            return tile != TileType.door.rawValue && tile != TileType.extraction.rawValue
+        }
+
+        switch currentMapSituation {
+        case .corridor:
+            for y in 0..<height {
+                if canRewrite(laneX, y) { map[y][laneX] = TileType.floor.rawValue }
+                if laneX - 1 >= 0, canRewrite(laneX - 1, y), y % 2 == 0 {
+                    map[y][laneX - 1] = TileType.cover.rawValue
+                }
+                if laneX + 1 < width, canRewrite(laneX + 1, y), y % 2 == 1 {
+                    map[y][laneX + 1] = TileType.cover.rawValue
+                }
+            }
+        case .openZone:
+            let xStart = max(1, width / 2 - 2)
+            let xEnd = min(width - 2, width / 2 + 2)
+            let yStart = max(1, height / 2 - 2)
+            let yEnd = min(height - 2, height / 2 + 2)
+            if xStart <= xEnd && yStart <= yEnd {
+                for y in yStart...yEnd {
+                    for x in xStart...xEnd where canRewrite(x, y) {
+                        map[y][x] = TileType.floor.rawValue
+                    }
+                }
+            }
+            if height > 2 && width > 2 {
+                for y in 1..<(height - 1) {
+                    for x in 1..<(width - 1) where canRewrite(x, y) {
+                        if map[y][x] == TileType.wall.rawValue && (x + y) % 2 == 0 {
+                            map[y][x] = TileType.floor.rawValue
+                        }
+                    }
+                }
+            }
+        case .chokepoint:
+            let targetY = extractionPoint.y < height / 2 ? 1 : max(1, height - 2)
+            let targetX = max(0, width - 1)
+            if extractionPoint.y >= 0, extractionPoint.y < height, extractionPoint.x >= 0, extractionPoint.x < map[extractionPoint.y].count,
+               map[extractionPoint.y][extractionPoint.x] == TileType.extraction.rawValue {
+                map[extractionPoint.y][extractionPoint.x] = TileType.floor.rawValue
+            }
+            if targetY >= 0, targetY < height, targetX >= 0, targetX < map[targetY].count {
+                map[targetY][targetX] = TileType.extraction.rawValue
+                updatedExtraction = (targetX, targetY)
+            }
+
+            let laneY = targetY
+            for x in min(laneX, targetX)...max(laneX, targetX) where canRewrite(x, laneY) {
+                map[laneY][x] = TileType.floor.rawValue
+            }
+            for y in min(height / 2, laneY)...max(height / 2, laneY) where canRewrite(laneX, y) {
+                map[y][laneX] = TileType.floor.rawValue
+            }
+
+            for y in 0..<height {
+                for x in 0..<min(width, map[y].count) where canRewrite(x, y) {
+                    let isLane = (x == laneX) || (y == laneY && x >= min(laneX, targetX) && x <= max(laneX, targetX))
+                    if !isLane && (x <= 1 || x >= width - 2 || abs(x - laneX) >= 3) {
+                        map[y][x] = TileType.wall.rawValue
+                    }
+                }
+            }
+        }
+
+        return (map, updatedExtraction)
+    }
+
+    var currentMissionTilesSnapshot: [[Int]] {
+        currentMissionTiles
+    }
+
+    func generateMissionEndSummary() -> String {
+        let corpAttention = factionAttention[.corp, default: 0]
+        let gangAttention = factionAttention[.gang, default: 0]
+
+        return """
+        ------------------------
+
+        MISSION COMPLETE
+
+        Mission Type: \(missionTypeLabel)
+        Pressure: \(traceTierLabel) (+\(escalationDamageBonusForCurrentTrace) dmg)
+        Heat: \(heatTierLabel)
+        Corp Attention: \(corpAttention)
+        Gang Attention: \(gangAttention)
+
+        COMBINED PRESSURE:
+        \(generateCombinedPressurePreview())
+
+        REWARD:
+        Base: \(baseMissionPayout)
+        Risk Bonus: +\(riskBonus)
+        Total: \(finalMissionPayout)
+
+        WORLD REACTION:
+        \(generateWorldReactionMessage())
+
+        NEXT MISSION:
+        Corp: \(generateMissionModifierPreview())
+        Gang: \(generateGangMissionPreview())
+
+        ------------------------
+        """
+    }
+
+    func generateMissionBriefing() -> String {
+        let corpAttention = factionAttention[.corp, default: 0]
+        let gangAttention = factionAttention[.gang, default: 0]
+
+        let objectiveText: String
+        switch currentMissionType {
+        case .stealth:
+            objectiveText = "Avoid detection and complete the run cleanly."
+        case .assault:
+            objectiveText = "Push through resistance and secure the objective."
+        case .extraction:
+            objectiveText = "Maintain momentum and reach extraction safely."
+        }
+
+        let expectedThreats: String
+        switch currentMissionType {
+        case .stealth:
+            expectedThreats = "Watchers present. Detection risk high."
+        case .assault:
+            expectedThreats = "Enforcers present. Direct combat expected."
+        case .extraction:
+            expectedThreats = "Interceptors present. Movement pressure expected."
+        }
+
+        let attentionTotal = corpAttention + gangAttention
+        let pressureProfile: String
+        switch attentionTotal {
+        case 0...2:
+            pressureProfile = "Low pressure expected."
+        case 3...5:
+            pressureProfile = "Moderate escalation likely."
+        default:
+            pressureProfile = "High escalation risk."
+        }
+
+        let rewardProfile: String
+        switch currentMissionType {
+        case .stealth:
+            rewardProfile = "Low trace yields bonus."
+        case .assault:
+            rewardProfile = "High intensity yields bonus."
+        case .extraction:
+            rewardProfile = "Balanced approach yields bonus."
+        }
+
+        return """
+        ------------------------
+
+        MISSION BRIEFING
+
+        TYPE:
+        \(missionTypeLabel)
+
+        OBJECTIVE:
+        \(objectiveText)
+        \(missionTypeHint)
+
+        EXPECTED THREATS:
+        \(expectedThreats)
+
+        PRESSURE PROFILE:
+        \(pressureProfile)
+
+        REWARD PROFILE:
+        \(rewardProfile)
+        \(generateRewardPreview())
+
+        WORLD STATE:
+        Corp Attention: \(corpAttention)
+        Gang Attention: \(gangAttention)
+        \(generateCombinedPressurePreview())
+
+        ------------------------
+        """
+    }
+
     func corpAttentionEnemyModifier() -> Int {
         let corpAttention = factionAttention[.corp, default: 0]
         return ConsequenceEngine.corpEnemyModifier(corpAttention: corpAttention)
@@ -582,15 +900,83 @@ final class GameState: ObservableObject {
 
     // MARK: - Setup
 
-    private func makeEnemy(for type: String) -> Enemy {
-        switch type {
-        case "guard": return Enemy.corpGuard()
-        case "drone": return Enemy.securityDrone()
-        case "elite": return Enemy.eliteGuard()
-        case "mage": return Enemy.corpMage()
-        case "healer": return Enemy.medic()
-        default: return Enemy.corpGuard()
+    private func archetypeLabel(_ archetype: EnemyArchetype) -> String {
+        switch archetype {
+        case .watcher: return "Watcher"
+        case .enforcer: return "Enforcer"
+        case .interceptor: return "Interceptor"
         }
+    }
+
+    private func archetypeForSpawnIndex(_ spawnIndex: Int) -> EnemyArchetype {
+        switch currentMissionType {
+        case .stealth:
+            let pattern: [EnemyArchetype] = [.watcher, .watcher, .interceptor, .watcher, .enforcer]
+            return pattern[spawnIndex % pattern.count]
+        case .assault:
+            let pattern: [EnemyArchetype] = [.enforcer, .enforcer, .interceptor, .enforcer, .watcher]
+            return pattern[spawnIndex % pattern.count]
+        case .extraction:
+            let pattern: [EnemyArchetype] = [.interceptor, .watcher, .interceptor, .enforcer, .interceptor]
+            return pattern[spawnIndex % pattern.count]
+        }
+    }
+
+    private func applyEnemyArchetype(_ archetype: EnemyArchetype, to enemy: Enemy) {
+        enemy.name = "\(enemy.name) (\(archetypeLabel(archetype)))"
+        switch archetype {
+        case .watcher:
+            enemy.currentHP = max(1, enemy.currentHP - 2) // slightly lower HP
+        case .enforcer:
+            if var weapon = enemy.equippedWeapon {
+                weapon.damage += 1 // higher damage using existing weapon scaling
+                enemy.equippedWeapon = weapon
+            }
+        case .interceptor:
+            enemy.attributes.rea += 1 // more mobile feel via existing attributes
+            enemy.attributes.agi += 1
+        }
+    }
+
+    private func makeEnemy(for type: String, archetype: EnemyArchetype) -> Enemy {
+        let enemy: Enemy
+        switch type {
+        case "guard": enemy = Enemy.corpGuard()
+        case "drone": enemy = Enemy.securityDrone()
+        case "elite": enemy = Enemy.eliteGuard()
+        case "mage": enemy = Enemy.corpMage()
+        case "healer": enemy = Enemy.medic()
+        default: enemy = Enemy.corpGuard()
+        }
+        applyEnemyArchetype(archetype, to: enemy)
+        return enemy
+    }
+
+    private func logEnemyComposition(totalSpawnCount: Int) {
+        guard totalSpawnCount > 0 else { return }
+        var watcherCount = 0
+        var enforcerCount = 0
+        var interceptorCount = 0
+
+        for index in 0..<totalSpawnCount {
+            switch archetypeForSpawnIndex(index) {
+            case .watcher: watcherCount += 1
+            case .enforcer: enforcerCount += 1
+            case .interceptor: interceptorCount += 1
+            }
+        }
+
+        let dominant: String
+        if watcherCount >= enforcerCount && watcherCount >= interceptorCount {
+            dominant = "WATCHERS"
+        } else if enforcerCount >= watcherCount && enforcerCount >= interceptorCount {
+            dominant = "ENFORCERS"
+        } else {
+            dominant = "INTERCEPTORS"
+        }
+
+        addLog("Enemy composition: \(dominant)")
+        addLog("Archetypes — Watcher: \(watcherCount), Enforcer: \(enforcerCount), Interceptor: \(interceptorCount)")
     }
 
     private func applyCorpAttentionEnemyInfluence(spawnTemplates: [(type: String, x: Int, y: Int)], map: [[Int]]) {
@@ -621,7 +1007,8 @@ final class GameState: ObservableObject {
         var applied = 0
         for i in 0..<modifier {
             let template = spawnTemplates[i % spawnTemplates.count]
-            let enemy = makeEnemy(for: template.type)
+            let archetype = archetypeForSpawnIndex(enemies.count + pendingSpawns.count + applied)
+            let enemy = makeEnemy(for: template.type, archetype: archetype)
 
             var placed = false
             for probe in 0..<offsets.count {
@@ -637,6 +1024,7 @@ final class GameState: ObservableObject {
                 enemies.append(enemy)
                 occupied.insert(key)
                 applied += 1
+                addLog("\(archetypeLabel(archetype)) deployed")
                 placed = true
                 break
             }
@@ -738,22 +1126,34 @@ final class GameState: ObservableObject {
 
         enemies = []
         pendingSpawns = []
+        assignMissionTypeForCurrentLoad()
 
-        for spawn in mission.enemies {
-            let enemy = makeEnemy(for: spawn.type)
+        for (spawnIndex, spawn) in mission.enemies.enumerated() {
+            let archetype = archetypeForSpawnIndex(spawnIndex)
+            let enemy = makeEnemy(for: spawn.type, archetype: archetype)
             enemy.positionX = spawn.x
             enemy.positionY = spawn.y
 
             if spawn.delay == 0 {
                 enemies.append(enemy)
+                addLog("\(archetypeLabel(archetype)) deployed")
             } else {
                 // Store as pending spawn: delay is in turns, we count enemy phases
                 pendingSpawns.append(PendingSpawn(enemy: enemy, delayRounds: spawn.delay))
             }
         }
 
-        // Store mission tiles for enemy pathfinding
-        currentMissionTiles = mission.map
+        // Store mission tiles for enemy pathfinding, then apply deterministic map situation emphasis.
+        let protectedTiles = Set(
+            mission.enemies.map { tileKey(x: $0.x, y: $0.y) } +
+            [tileKey(x: mission.playerSpawn.x, y: mission.playerSpawn.y)]
+        )
+        let adjustedMissionMap = applyMapSituation(
+            to: mission.map,
+            extractionPoint: (mission.extractionPoint.x, mission.extractionPoint.y),
+            protectedTiles: protectedTiles
+        )
+        currentMissionTiles = adjustedMissionMap.0
 
         currentTurnIndex = 0
         roundNumber = 1
@@ -762,22 +1162,27 @@ final class GameState: ObservableObject {
         traceEscalationLevel = 0
         hasLoggedTraceTriggerForCurrentRun = false
         actionMode = .street
+        logEnemyComposition(totalSpawnCount: mission.enemies.count)
         missionComplete = false
         didApplyAttentionRecoveryLastMission = false
         didApplyHighTraceEscalationBonusLastMission = false
+        lastRewardTier = .low
+        lastRewardMultiplier = 1.0
+        missionTypeBonusMultiplier = 0.0
         missionHeat = 0
         missionHeatTier = .low
         currentTurnCount = 0
         combatLog = ["Mission started: \(mission.title)"]
-        extractionX = mission.extractionPoint.x
-        extractionY = mission.extractionPoint.y
+        extractionX = adjustedMissionMap.1.x
+        extractionY = adjustedMissionMap.1.y
         applyCorpAttentionEnemyInfluence(
             spawnTemplates: mission.enemies.map { ($0.type, $0.x, $0.y) },
-            map: mission.map
+            map: currentMissionTiles
         )
-        applyGangAmbushBias(map: mission.map)
+        applyGangAmbushBias(map: currentMissionTiles)
         addLog(generateCombinedPressurePreview())
-        addLog("Reach extraction at (\(mission.extractionPoint.x), \(mission.extractionPoint.y))")
+        addLog(generateMissionBriefing())
+        addLog("Reach extraction at (\(extractionX), \(extractionY))")
         // Spawn immediate enemies (delay=0) before combat starts
         processDelayedSpawns(enemyPhaseIndex: 0)
         activeCharacterId = playerTeam.first?.id
@@ -810,22 +1215,35 @@ final class GameState: ObservableObject {
 
         enemies = []
         pendingSpawns = []
+        assignMissionTypeForCurrentLoad()
 
         // Only load enemies from the first room (others spawn when entered)
-        for spawn in firstRoom.enemies {
-            let enemy = makeEnemy(for: spawn.type)
+        for (spawnIndex, spawn) in firstRoom.enemies.enumerated() {
+            let archetype = archetypeForSpawnIndex(spawnIndex)
+            let enemy = makeEnemy(for: spawn.type, archetype: archetype)
             enemy.positionX = spawn.x
             enemy.positionY = spawn.y
 
             if spawn.delay == 0 {
                 enemies.append(enemy)
+                addLog("\(archetypeLabel(archetype)) deployed")
             } else {
                 pendingSpawns.append(PendingSpawn(enemy: enemy, delayRounds: spawn.delay))
             }
         }
 
-        // Store first room's tiles for pathfinding
-        currentMissionTiles = firstRoom.map
+        // Store first room's tiles for pathfinding, then apply deterministic map situation emphasis.
+        let firstRoomExtraction = firstRoom.extractionPoint ?? SpawnPoint(x: firstRoom.playerSpawn.x, y: firstRoom.playerSpawn.y)
+        let protectedTiles = Set(
+            firstRoom.enemies.map { tileKey(x: $0.x, y: $0.y) } +
+            [tileKey(x: firstRoom.playerSpawn.x, y: firstRoom.playerSpawn.y)]
+        )
+        let adjustedFirstRoomMap = applyMapSituation(
+            to: firstRoom.map,
+            extractionPoint: (firstRoomExtraction.x, firstRoomExtraction.y),
+            protectedTiles: protectedTiles
+        )
+        currentMissionTiles = adjustedFirstRoomMap.0
 
         // Set current room ID
         currentRoomId = firstRoom.id
@@ -837,24 +1255,29 @@ final class GameState: ObservableObject {
         traceEscalationLevel = 0
         hasLoggedTraceTriggerForCurrentRun = false
         actionMode = .street
+        logEnemyComposition(totalSpawnCount: firstRoom.enemies.count)
         missionComplete = false
         didApplyAttentionRecoveryLastMission = false
         didApplyHighTraceEscalationBonusLastMission = false
+        lastRewardTier = .low
+        lastRewardMultiplier = 1.0
+        missionTypeBonusMultiplier = 0.0
         missionHeat = 0
         missionHeatTier = .low
         currentTurnCount = 0
         combatLog = ["Mission started: \(mission.title)", "Entering: \(firstRoom.title)"]
         applyCorpAttentionEnemyInfluence(
             spawnTemplates: firstRoom.enemies.map { ($0.type, $0.x, $0.y) },
-            map: firstRoom.map
+            map: currentMissionTiles
         )
-        applyGangAmbushBias(map: firstRoom.map)
+        applyGangAmbushBias(map: currentMissionTiles)
         addLog(generateCombinedPressurePreview())
+        addLog(generateMissionBriefing())
 
         if let ext = firstRoom.extractionPoint {
-            extractionX = ext.x
-            extractionY = ext.y
-            addLog("Reach extraction at (\(ext.x), \(ext.y))")
+            extractionX = adjustedFirstRoomMap.1.x
+            extractionY = adjustedFirstRoomMap.1.y
+            addLog("Reach extraction at (\(extractionX), \(extractionY))")
         } else {
             // Use the first door connection as the "exit" of the first room
             if let firstConn = firstRoom.connections.first {
@@ -1420,10 +1843,10 @@ final class GameState: ObservableObject {
         }
 
         currentTurnCount += 1
-        if missionType == .survive && !missionComplete && currentTurnCount >= missionTargetTurns {
+        if currentMissionType == .stealth && !missionComplete && currentTurnCount >= missionTargetTurns {
             finalizeCombat(
                 won: true,
-                missionLog: "MISSION COMPLETE — SURVIVED \(missionTargetTurns) TURNS"
+                missionLog: "MISSION COMPLETE — STEALTH WINDOW HELD FOR \(missionTargetTurns) TURNS"
             )
             return
         }
@@ -1471,8 +1894,8 @@ final class GameState: ObservableObject {
 
     /// Check if combat is over
     func checkCombatEnd() {
-        if missionType == .eliminate && livingEnemies.isEmpty && pendingSpawns.isEmpty {
-            finalizeCombat(won: true, missionLog: "MISSION COMPLETE — TARGET ELIMINATED")
+        if currentMissionType == .assault && livingEnemies.isEmpty && pendingSpawns.isEmpty {
+            finalizeCombat(won: true, missionLog: "MISSION COMPLETE — ASSAULT TARGET ELIMINATED")
             return
         }
 
@@ -1488,6 +1911,7 @@ final class GameState: ObservableObject {
     /// Check if any living player is standing on the extraction tile with no enemies alive.
     /// If so, trigger extraction win immediately.
     func checkExtraction() {
+        guard currentMissionType == .extraction else { return }
         // Both livingEnemies AND pendingSpawns must be empty before extraction is allowed.
         // This prevents premature victory when delayed reinforcements are still pending.
         guard livingEnemies.isEmpty && pendingSpawns.isEmpty else { return }
@@ -1545,10 +1969,13 @@ final class GameState: ObservableObject {
         applyGangAttention()
         applyAttentionDecay(traceTier: traceTier)
         addLog(generateWorldReactionMessage())
+        addLog(generateCombinedPressurePreview())
+        finalizeRewardLayer()
         addLog(generateMissionModifierPreview())
         if let terminalLog {
             addLog(terminalLog)
         }
+        addLog(generateMissionEndSummary())
         missionComplete = true
         combatWon = won
         combatEnded = true
@@ -1602,6 +2029,56 @@ final class GameState: ObservableObject {
         factionAttention[.gang, default: 0] = max(0, factionAttention[.gang, default: 0] - decayAmount)
         didApplyAttentionRecoveryLastMission = true
         addLog("Attention reduced due to low-profile mission.")
+    }
+
+    private func finalizeRewardLayer() {
+        let corpAttention = factionAttention[.corp, default: 0]
+        let gangAttention = factionAttention[.gang, default: 0]
+        let tier = ConsequenceEngine.rewardTier(
+            heatTier: missionHeat,
+            corpAttention: corpAttention,
+            gangAttention: gangAttention
+        )
+        let multiplier = ConsequenceEngine.rewardMultiplier(for: tier)
+        lastRewardTier = tier
+        lastRewardMultiplier = multiplier
+        let bonus: Double
+        let bonusReason: String
+        switch currentMissionType {
+        case .stealth:
+            if traceTier == 0 {
+                bonus = 0.25
+                bonusReason = "stealth success"
+            } else {
+                bonus = 0.0
+                bonusReason = "no stealth bonus"
+            }
+        case .assault:
+            if traceTier == 2 {
+                bonus = 0.25
+                bonusReason = "assault intensity"
+            } else {
+                bonus = 0.0
+                bonusReason = "no assault bonus"
+            }
+        case .extraction:
+            if traceTier == 1 {
+                bonus = 0.15
+                bonusReason = "balanced extraction"
+            } else {
+                bonus = 0.0
+                bonusReason = "no extraction bonus"
+            }
+        }
+        missionTypeBonusMultiplier = bonus
+
+        addLog("Mission Type: \(missionTypeLabel)")
+        addLog("Reward tier: \(rewardTierLabel(tier)) (x\(String(format: "%.2f", multiplier)) payout)")
+        if bonus > 0 {
+            addLog("Mission bonus: +\(String(format: "%.2f", bonus)) (\(bonusReason))")
+        }
+        addLog("Final reward multiplier: x\(String(format: "%.2f", finalRewardMultiplier))")
+        addLog(generateRewardPayoutSummary())
     }
 
     /// Mission's extraction point — set by setupMission from the mission JSON.
