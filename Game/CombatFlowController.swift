@@ -126,7 +126,7 @@ struct CombatFlowController {
         let defenseRoll = DiceEngine.roll(pool: defensePool)
         let netHits = max(0, attackRoll.hits - defenseRoll.hits)
 
-        gameState.addLog("⚔️ \(a.name) attacks with \(weapon.name)! [\(attackPool)d6→\(attackRoll.hits)] vs [\(defensePool)d6→\(defenseRoll.hits)\(coverBonus > 0 ? \" +\(coverBonus)cov\" : \"\")]")
+        gameState.addLog("⚔️ \(a.name) attacks with \(weapon.name)! [\(attackPool)d6→\(attackRoll.hits)] vs [\(defensePool)d6→\(defenseRoll.hits)\(coverBonus > 0 ? " +\(coverBonus)cov" : "")]")
 
         if netHits == 0 {
             gameState.addLog("  → MISS! \(targetEnemy.name) dodges!")

@@ -29,6 +29,7 @@ targets:
           - "*.xcworkspace"
           - "project.yml"
           - "*.md"
+          - "**/*.md"
           - "*.yml"
           - "*.backup"
           - "**/*.backup"
@@ -38,6 +39,17 @@ targets:
           - "*.txt"
           - "Tools"
           - ".DS_Store"
+          - "**/.DS_Store"
+          - ".git"
+          - ".github"
+          - ".gitignore"
+          - "build"
+          - "docs"
+          - "scripts"
+          - "tests"
+          - "screenshots"
+          - "*.xcuserstate"
+          - "**/*.xcuserstate"
       - path: Sprites
         type: folder
     settings:
