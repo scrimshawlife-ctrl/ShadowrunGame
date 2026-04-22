@@ -191,12 +191,12 @@ final class GameState: ObservableObject {
 
     @Published var currentTurnIndex: Int = 0
     @Published var roundNumber: Int = 1
-    private var enemyPhaseCount: Int = 0  // how many enemy phases have completed (for delayed spawns)
+    var enemyPhaseCount: Int = 0  // how many enemy phases have completed (for delayed spawns)
     @Published var isPlayerTurn: Bool = true
     /// When true, blocks player input in BattleScene while enemy phase is running.
     @Published var isPlayerInputBlocked: Bool = false
     /// Guards against double-triggering enemyPhase() within the same frame/turn.
-    private var isEnemyPhaseRunning: Bool = false
+    var isEnemyPhaseRunning: Bool = false
     @Published var actionMode: ActionMode = .street
     @Published var playerRole: PlayerRole = .normal
     @Published var selectedMissionPreset: MissionPreset = .standard
@@ -206,7 +206,7 @@ final class GameState: ObservableObject {
     var traceRecoveryPerLayLow: Int { TraceCadence.recoveryPerLayLow }
     var escalationDamageBonus: Int { TraceCadence.escalationDamageBonus(for: selectedMissionPreset) }
     @Published var traceEscalationLevel: Int = 0
-    private var hasLoggedTraceTriggerForCurrentRun: Bool = false
+    var hasLoggedTraceTriggerForCurrentRun: Bool = false
 
     // MARK: - Turn Structure (Issue 1 fix)
     // Track which players have NOT yet acted this round. Empty = all acted = enemy phase.
@@ -446,12 +446,12 @@ final class GameState: ObservableObject {
 
     // MARK: - Current Mission Tiles (for enemy pathfinding)
 
-    private var currentMissionTiles: [[Int]] = []
+    var currentMissionTiles: [[Int]] = []
 
     // MARK: - Pending Enemy Spawns
 
     /// Enemies not yet on the map (waiting for their delay timer)
-    private var pendingSpawns: [PendingSpawn] = []
+    var pendingSpawns: [PendingSpawn] = []
 
     struct PendingSpawn: Identifiable {
         let id = UUID()
@@ -462,17 +462,7 @@ final class GameState: ObservableObject {
     /// Called after each enemy phase to check if any delayed enemies should spawn.
     /// enemyPhaseIndex = how many enemy phases have completed (0 = first enemy phase just ran).
     func processDelayedSpawns(enemyPhaseIndex: Int) {
-        let due = pendingSpawns.filter { $0.delayRounds <= enemyPhaseIndex }
-        for spawn in due {
-            enemies.append(spawn.enemy)
-            addLog("⚠️ \(spawn.enemy.name) reinforcements arrive!")
-            NotificationCenter.default.post(
-                name: .enemySpawned,
-                object: nil,
-                userInfo: ["enemyId": spawn.enemy.id.uuidString]
-            )
-        }
-        pendingSpawns.removeAll { $0.delayRounds <= enemyPhaseIndex }
+        MissionSetupService.processDelayedSpawns(gameState: self, enemyPhaseIndex: enemyPhaseIndex)
     }
 
     // MARK: - Combat Log
@@ -513,7 +503,7 @@ final class GameState: ObservableObject {
     @Published var baseMissionPayout: Int = 100
     @Published var missionTargetTurns: Int = 6
     @Published var currentTurnCount: Int = 0
-    private var missionLoadIndex: Int = 0
+    var missionLoadIndex: Int = 0
     var activeCharacter: Character? {
         guard let id = activeCharacterId else { return currentCharacter }
         return playerTeam.first(where: { $0.id == id && $0.isAlive })
@@ -565,55 +555,31 @@ final class GameState: ObservableObject {
     }
 
     func generateWorldReactionMessage() -> String {
-        let corpAttention = factionAttention[.corp, default: 0]
-        return ConsequenceEngine.worldReactionMessage(
-            missionHeatTier: missionHeatTier,
-            corpAttention: corpAttention
-        )
+        OutcomePipeline.generateWorldReactionMessage(gameState: self)
     }
 
     func generateMissionModifierPreview() -> String {
-        let corpAttention = factionAttention[.corp, default: 0]
-        return ConsequenceEngine.missionModifierPreview(corpAttention: corpAttention)
+        OutcomePipeline.generateMissionModifierPreview(gameState: self)
     }
 
     func generateGangReactionMessage() -> String {
-        let gangAttention = factionAttention[.gang, default: 0]
-        return ConsequenceEngine.gangReactionMessage(
-            missionHeatTier: missionHeatTier,
-            gangAttention: gangAttention
-        )
+        OutcomePipeline.generateGangReactionMessage(gameState: self)
     }
 
     func generateGangMissionPreview() -> String {
-        let gangAttention = factionAttention[.gang, default: 0]
-        return ConsequenceEngine.gangMissionPreview(gangAttention: gangAttention)
+        OutcomePipeline.generateGangMissionPreview(gameState: self)
     }
 
     func generateCombinedPressurePreview() -> String {
-        ConsequenceEngine.combinedPressurePreview(
-            corpModifier: lastAppliedCorpEnemyModifier,
-            gangRadius: lastAppliedGangAmbushRadius
-        )
+        OutcomePipeline.generateCombinedPressurePreview(gameState: self)
     }
 
     func rewardTierLabel(_ tier: RewardTier) -> String {
-        switch tier {
-        case .low: return "LOW"
-        case .medium: return "MED"
-        case .high: return "HIGH"
-        }
+        OutcomePipeline.rewardTierLabel(tier)
     }
 
     func generateRewardPreview() -> String {
-        switch lastRewardTier {
-        case .low:
-            return "Low risk operation. Standard payout."
-        case .medium:
-            return "Moderate risk. Increased payout expected."
-        case .high:
-            return "High risk operation. Significant rewards expected."
-        }
+        OutcomePipeline.generateRewardPreview(gameState: self)
     }
 
     var finalMissionPayout: Int {
@@ -629,138 +595,28 @@ final class GameState: ObservableObject {
     }
 
     func generateRewardPayoutSummary() -> String {
-        let emphasis: String
-        switch lastRewardTier {
-        case .high:
-            emphasis = "HIGH RISK BONUS\n"
-        case .medium:
-            emphasis = "INCREASED PAYOUT\n"
-        case .low:
-            emphasis = ""
-        }
-
-        return """
-        \(emphasis)MISSION PAYOUT:
-        Base: \(baseMissionPayout)
-        Risk Bonus: +\(riskBonus)
-        Total: \(finalMissionPayout)
-        """
+        OutcomePipeline.generateRewardPayoutSummary(gameState: self)
     }
 
-    private func assignMissionTypeForCurrentLoad() {
-        let assignedType: MissionType
-        switch missionLoadIndex % 3 {
-        case 1:
-            assignedType = .assault
-        case 2:
-            assignedType = .extraction
-        default:
-            assignedType = .stealth
-        }
-        currentMissionType = assignedType
-        switch currentMissionType {
-        case .stealth:
-            currentMapSituation = .corridor
-        case .assault:
-            currentMapSituation = .openZone
-        case .extraction:
-            currentMapSituation = .chokepoint
-        }
-        missionLoadIndex += 1
-        addLog("MISSION TYPE — \(missionTypeLabel)")
-        addLog("MISSION TYPE HINT — \(missionTypeHint)")
-        addLog("Map situation: \(mapSituationLabel)")
+    func assignMissionTypeForCurrentLoad() {
+        MissionSetupService.assignMissionTypeForCurrentLoad(gameState: self)
     }
 
-    private func tileKey(x: Int, y: Int) -> String { "\(x),\(y)" }
+    func tileKey(x: Int, y: Int) -> String {
+        MissionSetupService.tileKey(gameState: self, x: x, y: y)
+    }
 
-    private func applyMapSituation(
+    func applyMapSituation(
         to originalMap: [[Int]],
         extractionPoint: (x: Int, y: Int),
         protectedTiles: Set<String>
     ) -> ([[Int]], (x: Int, y: Int)) {
-        guard !originalMap.isEmpty else { return (originalMap, extractionPoint) }
-
-        var map = originalMap
-        let height = map.count
-        let width = map.first?.count ?? TileMap.mapWidth
-        let laneX = width / 2
-        var updatedExtraction = extractionPoint
-
-        func isProtected(_ x: Int, _ y: Int) -> Bool {
-            protectedTiles.contains(tileKey(x: x, y: y))
-        }
-
-        func canRewrite(_ x: Int, _ y: Int) -> Bool {
-            guard y >= 0, y < height, x >= 0, x < map[y].count else { return false }
-            if isProtected(x, y) { return false }
-            let tile = map[y][x]
-            return tile != TileType.door.rawValue && tile != TileType.extraction.rawValue
-        }
-
-        switch currentMapSituation {
-        case .corridor:
-            for y in 0..<height {
-                if canRewrite(laneX, y) { map[y][laneX] = TileType.floor.rawValue }
-                if laneX - 1 >= 0, canRewrite(laneX - 1, y), y % 2 == 0 {
-                    map[y][laneX - 1] = TileType.cover.rawValue
-                }
-                if laneX + 1 < width, canRewrite(laneX + 1, y), y % 2 == 1 {
-                    map[y][laneX + 1] = TileType.cover.rawValue
-                }
-            }
-        case .openZone:
-            let xStart = max(1, width / 2 - 2)
-            let xEnd = min(width - 2, width / 2 + 2)
-            let yStart = max(1, height / 2 - 2)
-            let yEnd = min(height - 2, height / 2 + 2)
-            if xStart <= xEnd && yStart <= yEnd {
-                for y in yStart...yEnd {
-                    for x in xStart...xEnd where canRewrite(x, y) {
-                        map[y][x] = TileType.floor.rawValue
-                    }
-                }
-            }
-            if height > 2 && width > 2 {
-                for y in 1..<(height - 1) {
-                    for x in 1..<(width - 1) where canRewrite(x, y) {
-                        if map[y][x] == TileType.wall.rawValue && (x + y) % 2 == 0 {
-                            map[y][x] = TileType.floor.rawValue
-                        }
-                    }
-                }
-            }
-        case .chokepoint:
-            let targetY = extractionPoint.y < height / 2 ? 1 : max(1, height - 2)
-            let targetX = max(0, width - 1)
-            if extractionPoint.y >= 0, extractionPoint.y < height, extractionPoint.x >= 0, extractionPoint.x < map[extractionPoint.y].count,
-               map[extractionPoint.y][extractionPoint.x] == TileType.extraction.rawValue {
-                map[extractionPoint.y][extractionPoint.x] = TileType.floor.rawValue
-            }
-            if targetY >= 0, targetY < height, targetX >= 0, targetX < map[targetY].count {
-                map[targetY][targetX] = TileType.extraction.rawValue
-                updatedExtraction = (targetX, targetY)
-            }
-
-            let laneY = targetY
-            for x in min(laneX, targetX)...max(laneX, targetX) where canRewrite(x, laneY) {
-                map[laneY][x] = TileType.floor.rawValue
-            }
-            for y in min(height / 2, laneY)...max(height / 2, laneY) where canRewrite(laneX, y) {
-                map[y][laneX] = TileType.floor.rawValue
-            }
-
-            for y in 0..<height {
-                for x in 0..<min(width, map[y].count) where canRewrite(x, y) {
-                    let isLane = (x == laneX) || (y == laneY && x >= min(laneX, targetX) && x <= max(laneX, targetX))
-                    if !isLane && (x <= 1 || x >= width - 2 || abs(x - laneX) >= 3) {
-                        map[y][x] = TileType.wall.rawValue
-                    }
-                }
-            }
-        }
-
-        return (map, updatedExtraction)
+        MissionSetupService.applyMapSituation(
+            gameState: self,
+            to: originalMap,
+            extractionPoint: extractionPoint,
+            protectedTiles: protectedTiles
+        )
     }
 
     var currentMissionTilesSnapshot: [[Int]] {
@@ -768,37 +624,7 @@ final class GameState: ObservableObject {
     }
 
     func generateMissionEndSummary() -> String {
-        let corpAttention = factionAttention[.corp, default: 0]
-        let gangAttention = factionAttention[.gang, default: 0]
-
-        return """
-        ------------------------
-
-        MISSION COMPLETE
-
-        Mission Type: \(missionTypeLabel)
-        Pressure: \(traceTierLabel) (+\(escalationDamageBonusForCurrentTrace) dmg)
-        Heat: \(heatTierLabel)
-        Corp Attention: \(corpAttention)
-        Gang Attention: \(gangAttention)
-
-        COMBINED PRESSURE:
-        \(generateCombinedPressurePreview())
-
-        REWARD:
-        Base: \(baseMissionPayout)
-        Risk Bonus: +\(riskBonus)
-        Total: \(finalMissionPayout)
-
-        WORLD REACTION:
-        \(generateWorldReactionMessage())
-
-        NEXT MISSION:
-        Corp: \(generateMissionModifierPreview())
-        Gang: \(generateGangMissionPreview())
-
-        ------------------------
-        """
+        OutcomePipeline.generateMissionEndSummary(gameState: self)
     }
 
     func generateMissionBriefing() -> String {
@@ -908,389 +734,46 @@ final class GameState: ObservableObject {
         }
     }
 
-    private func archetypeForSpawnIndex(_ spawnIndex: Int) -> EnemyArchetype {
-        switch currentMissionType {
-        case .stealth:
-            let pattern: [EnemyArchetype] = [.watcher, .watcher, .interceptor, .watcher, .enforcer]
-            return pattern[spawnIndex % pattern.count]
-        case .assault:
-            let pattern: [EnemyArchetype] = [.enforcer, .enforcer, .interceptor, .enforcer, .watcher]
-            return pattern[spawnIndex % pattern.count]
-        case .extraction:
-            let pattern: [EnemyArchetype] = [.interceptor, .watcher, .interceptor, .enforcer, .interceptor]
-            return pattern[spawnIndex % pattern.count]
-        }
+    func archetypeForSpawnIndex(_ spawnIndex: Int) -> EnemyArchetype {
+        MissionSetupService.archetypeForSpawnIndex(gameState: self, spawnIndex: spawnIndex)
     }
 
-    private func applyEnemyArchetype(_ archetype: EnemyArchetype, to enemy: Enemy) {
-        enemy.name = "\(enemy.name) (\(archetypeLabel(archetype)))"
-        switch archetype {
-        case .watcher:
-            enemy.currentHP = max(1, enemy.currentHP - 2) // slightly lower HP
-        case .enforcer:
-            if var weapon = enemy.equippedWeapon {
-                weapon.damage += 1 // higher damage using existing weapon scaling
-                enemy.equippedWeapon = weapon
-            }
-        case .interceptor:
-            enemy.attributes.rea += 1 // more mobile feel via existing attributes
-            enemy.attributes.agi += 1
-        }
+    func applyEnemyArchetype(_ archetype: EnemyArchetype, to enemy: Enemy) {
+        MissionSetupService.applyEnemyArchetype(gameState: self, archetype: archetype, to: enemy)
     }
 
-    private func makeEnemy(for type: String, archetype: EnemyArchetype) -> Enemy {
-        let enemy: Enemy
-        switch type {
-        case "guard": enemy = Enemy.corpGuard()
-        case "drone": enemy = Enemy.securityDrone()
-        case "elite": enemy = Enemy.eliteGuard()
-        case "mage": enemy = Enemy.corpMage()
-        case "healer": enemy = Enemy.medic()
-        default: enemy = Enemy.corpGuard()
-        }
-        applyEnemyArchetype(archetype, to: enemy)
-        return enemy
+    func makeEnemy(for type: String, archetype: EnemyArchetype) -> Enemy {
+        MissionSetupService.makeEnemy(gameState: self, for: type, archetype: archetype)
     }
 
-    private func logEnemyComposition(totalSpawnCount: Int) {
-        guard totalSpawnCount > 0 else { return }
-        var watcherCount = 0
-        var enforcerCount = 0
-        var interceptorCount = 0
-
-        for index in 0..<totalSpawnCount {
-            switch archetypeForSpawnIndex(index) {
-            case .watcher: watcherCount += 1
-            case .enforcer: enforcerCount += 1
-            case .interceptor: interceptorCount += 1
-            }
-        }
-
-        let dominant: String
-        if watcherCount >= enforcerCount && watcherCount >= interceptorCount {
-            dominant = "WATCHERS"
-        } else if enforcerCount >= watcherCount && enforcerCount >= interceptorCount {
-            dominant = "ENFORCERS"
-        } else {
-            dominant = "INTERCEPTORS"
-        }
-
-        addLog("Enemy composition: \(dominant)")
-        addLog("Archetypes — Watcher: \(watcherCount), Enforcer: \(enforcerCount), Interceptor: \(interceptorCount)")
+    func logEnemyComposition(totalSpawnCount: Int) {
+        MissionSetupService.logEnemyComposition(gameState: self, totalSpawnCount: totalSpawnCount)
     }
 
-    private func applyCorpAttentionEnemyInfluence(spawnTemplates: [(type: String, x: Int, y: Int)], map: [[Int]]) {
-        let modifier = corpAttentionEnemyModifier()
-        lastAppliedCorpEnemyModifier = 0
-
-        guard modifier > 0 else {
-            addLog("No enemy presence increase from corp attention.")
-            return
-        }
-        guard !spawnTemplates.isEmpty else {
-            addLog("Corp attention modifier available (+\(modifier)), but no spawn templates found.")
-            return
-        }
-
-        let width = map.first?.count ?? TileMap.mapWidth
-        let height = map.count
-        let offsets: [(Int, Int)] = [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1)]
-
-        var occupied = Set(playerTeam.filter(\.isAlive).map { "\($0.positionX),\($0.positionY)" })
-        for enemy in enemies where enemy.isAlive {
-            occupied.insert("\(enemy.positionX),\(enemy.positionY)")
-        }
-        for pending in pendingSpawns where pending.enemy.isAlive {
-            occupied.insert("\(pending.enemy.positionX),\(pending.enemy.positionY)")
-        }
-
-        var applied = 0
-        for i in 0..<modifier {
-            let template = spawnTemplates[i % spawnTemplates.count]
-            let archetype = archetypeForSpawnIndex(enemies.count + pendingSpawns.count + applied)
-            let enemy = makeEnemy(for: template.type, archetype: archetype)
-
-            var placed = false
-            for probe in 0..<offsets.count {
-                let offset = offsets[(probe + i) % offsets.count]
-                let x = max(0, min(width - 1, template.x + offset.0))
-                let y = max(0, min(height - 1, template.y + offset.1))
-                guard y >= 0, y < map.count, x >= 0, x < map[y].count else { continue }
-                guard map[y][x] != 1 else { continue }
-                let key = "\(x),\(y)"
-                guard !occupied.contains(key) else { continue }
-                enemy.positionX = x
-                enemy.positionY = y
-                enemies.append(enemy)
-                occupied.insert(key)
-                applied += 1
-                addLog("\(archetypeLabel(archetype)) deployed")
-                placed = true
-                break
-            }
-
-            if !placed {
-                addLog("Corp attention spawn skipped: no safe tile for extra enemy \(i + 1)/\(modifier).")
-            }
-        }
-
-        lastAppliedCorpEnemyModifier = applied
-        if applied == 0 {
-            addLog("Corp attention increased threat profile, but no extra enemies could be placed.")
-        } else if applied < modifier {
-            addLog("Corp attention increased enemy presence by +\(applied) (requested +\(modifier)).")
-        } else {
-            addLog("Corp attention increased enemy presence by +\(applied).")
-        }
+    func applyCorpAttentionEnemyInfluence(spawnTemplates: [(type: String, x: Int, y: Int)], map: [[Int]]) {
+        MissionSetupService.applyCorpAttentionEnemyInfluence(gameState: self, spawnTemplates: spawnTemplates, map: map)
     }
 
     func distanceToNearestPlayer(x: Int, y: Int) -> Int {
-        let living = playerTeam.filter(\.isAlive)
-        guard !living.isEmpty else { return Int.max }
-        var best = Int.max
-        for player in living {
-            let distance = abs(player.positionX - x) + abs(player.positionY - y)
-            if distance < best {
-                best = distance
-            }
-        }
-        return best
+        PathingAndAIHelpers.distanceToNearestPlayer(gameState: self, x: x, y: y)
     }
 
-    private func applyGangAmbushBias(map: [[Int]]) {
-        let gangAttention = factionAttention[.gang, default: 0]
-        let baseRadius = ConsequenceEngine.gangAmbushRadius(gangAttention: gangAttention)
-        lastAppliedGangAmbushRadius = baseRadius
-
-        guard baseRadius < 999 else {
-            addLog("No ambush bias applied.")
-            return
-        }
-
-        addLog("Gang ambush bias applied: radius \(baseRadius)")
-
-        let width = map.first?.count ?? TileMap.mapWidth
-        let height = map.count
-        let maxRadius = max(width, height) * 2
-
-        var occupied = Set(playerTeam.filter(\.isAlive).map { "\($0.positionX),\($0.positionY)" })
-        var didLogRelaxation = false
-
-        let allSpawnedEnemies = enemies + pendingSpawns.map(\.enemy)
-        for enemy in allSpawnedEnemies where enemy.isAlive {
-            var effectiveRadius = baseRadius
-            var placed = false
-
-            while effectiveRadius <= maxRadius && !placed {
-                for y in 0..<height {
-                    for x in 0..<width {
-                        guard y < map.count, x < map[y].count else { continue }
-                        guard map[y][x] != 1 else { continue }
-                        guard distanceToNearestPlayer(x: x, y: y) <= effectiveRadius else { continue }
-                        let key = "\(x),\(y)"
-                        guard !occupied.contains(key) else { continue }
-                        enemy.positionX = x
-                        enemy.positionY = y
-                        occupied.insert(key)
-                        placed = true
-                        break
-                    }
-                    if placed { break }
-                }
-
-                if !placed {
-                    effectiveRadius += 1
-                    if !didLogRelaxation {
-                        addLog("Ambush bias relaxed due to no valid positions.")
-                        didLogRelaxation = true
-                    }
-                }
-            }
-
-            if !placed {
-                let key = "\(enemy.positionX),\(enemy.positionY)"
-                occupied.insert(key)
-            }
-        }
+    func applyGangAmbushBias(map: [[Int]]) {
+        MissionSetupService.applyGangAmbushBias(gameState: self, map: map)
     }
 
     func setupMission(_ mission: Mission) {
-        print("[GameState] setupMission: \(mission.title)")
-        playerTeam = Character.allRunners
-        if let spawn = Optional(mission.playerSpawn) {
-            for (i, char) in playerTeam.enumerated() {
-                char.positionX = spawn.x + i
-                char.positionY = spawn.y
-            }
-        }
-
-        enemies = []
-        pendingSpawns = []
-        assignMissionTypeForCurrentLoad()
-
-        for (spawnIndex, spawn) in mission.enemies.enumerated() {
-            let archetype = archetypeForSpawnIndex(spawnIndex)
-            let enemy = makeEnemy(for: spawn.type, archetype: archetype)
-            enemy.positionX = spawn.x
-            enemy.positionY = spawn.y
-
-            if spawn.delay == 0 {
-                enemies.append(enemy)
-                addLog("\(archetypeLabel(archetype)) deployed")
-            } else {
-                // Store as pending spawn: delay is in turns, we count enemy phases
-                pendingSpawns.append(PendingSpawn(enemy: enemy, delayRounds: spawn.delay))
-            }
-        }
-
-        // Store mission tiles for enemy pathfinding, then apply deterministic map situation emphasis.
-        let protectedTiles = Set(
-            mission.enemies.map { tileKey(x: $0.x, y: $0.y) } +
-            [tileKey(x: mission.playerSpawn.x, y: mission.playerSpawn.y)]
-        )
-        let adjustedMissionMap = applyMapSituation(
-            to: mission.map,
-            extractionPoint: (mission.extractionPoint.x, mission.extractionPoint.y),
-            protectedTiles: protectedTiles
-        )
-        currentMissionTiles = adjustedMissionMap.0
-
-        currentTurnIndex = 0
-        roundNumber = 1
-        enemyPhaseCount = 0
-        traceLevel = 0
-        traceEscalationLevel = 0
-        hasLoggedTraceTriggerForCurrentRun = false
-        actionMode = .street
-        logEnemyComposition(totalSpawnCount: mission.enemies.count)
-        missionComplete = false
-        didApplyAttentionRecoveryLastMission = false
-        didApplyHighTraceEscalationBonusLastMission = false
-        lastRewardTier = .low
-        lastRewardMultiplier = 1.0
-        missionTypeBonusMultiplier = 0.0
-        missionHeat = 0
-        missionHeatTier = .low
-        currentTurnCount = 0
-        combatLog = ["Mission started: \(mission.title)"]
-        extractionX = adjustedMissionMap.1.x
-        extractionY = adjustedMissionMap.1.y
-        applyCorpAttentionEnemyInfluence(
-            spawnTemplates: mission.enemies.map { ($0.type, $0.x, $0.y) },
-            map: currentMissionTiles
-        )
-        applyGangAmbushBias(map: currentMissionTiles)
-        addLog(generateCombinedPressurePreview())
-        addLog(generateMissionBriefing())
-        addLog("Reach extraction at (\(extractionX), \(extractionY))")
-        // Spawn immediate enemies (delay=0) before combat starts
-        processDelayedSpawns(enemyPhaseIndex: 0)
-        activeCharacterId = playerTeam.first?.id
-        selectedCharacterId = playerTeam.first?.id
-        beginRound()
-        // CRITICAL: Reset player input block so game isn't locked at mission start
-        isPlayerInputBlocked = false
-        isPlayerTurn = true
-        isEnemyPhaseRunning = false
+        MissionSetupService.setupMission(gameState: self, mission: mission)
     }
 
     /// Setup a multi-room mission.
     /// Update tiles for enemy pathfinding (called when a room transition completes).
     func updateTilesForCurrentRoom(_ tiles: [[Int]]) {
-        currentMissionTiles = tiles
+        MissionSetupService.updateTilesForCurrentRoom(gameState: self, tiles: tiles)
     }
 
     func setupMultiRoomMission(_ mission: MultiRoomMission) {
-        print("[GameState] setupMultiRoomMission: \(mission.title)")
-        playerTeam = Character.allRunners
-
-        let firstRoom = mission.rooms.first!
-        // Mark first room as entered so back-navigation preserves positions correctly.
-        RoomManager.shared.markRoomEntered(firstRoom.id)
-        let spawn = firstRoom.playerSpawn
-        for (i, char) in playerTeam.enumerated() {
-            char.positionX = spawn.x + i
-            char.positionY = spawn.y
-        }
-
-        enemies = []
-        pendingSpawns = []
-        assignMissionTypeForCurrentLoad()
-
-        // Only load enemies from the first room (others spawn when entered)
-        for (spawnIndex, spawn) in firstRoom.enemies.enumerated() {
-            let archetype = archetypeForSpawnIndex(spawnIndex)
-            let enemy = makeEnemy(for: spawn.type, archetype: archetype)
-            enemy.positionX = spawn.x
-            enemy.positionY = spawn.y
-
-            if spawn.delay == 0 {
-                enemies.append(enemy)
-                addLog("\(archetypeLabel(archetype)) deployed")
-            } else {
-                pendingSpawns.append(PendingSpawn(enemy: enemy, delayRounds: spawn.delay))
-            }
-        }
-
-        // Store first room's tiles for pathfinding, then apply deterministic map situation emphasis.
-        let firstRoomExtraction = firstRoom.extractionPoint ?? SpawnPoint(x: firstRoom.playerSpawn.x, y: firstRoom.playerSpawn.y)
-        let protectedTiles = Set(
-            firstRoom.enemies.map { tileKey(x: $0.x, y: $0.y) } +
-            [tileKey(x: firstRoom.playerSpawn.x, y: firstRoom.playerSpawn.y)]
-        )
-        let adjustedFirstRoomMap = applyMapSituation(
-            to: firstRoom.map,
-            extractionPoint: (firstRoomExtraction.x, firstRoomExtraction.y),
-            protectedTiles: protectedTiles
-        )
-        currentMissionTiles = adjustedFirstRoomMap.0
-
-        // Set current room ID
-        currentRoomId = firstRoom.id
-
-        currentTurnIndex = 0
-        roundNumber = 1
-        enemyPhaseCount = 0
-        traceLevel = 0
-        traceEscalationLevel = 0
-        hasLoggedTraceTriggerForCurrentRun = false
-        actionMode = .street
-        logEnemyComposition(totalSpawnCount: firstRoom.enemies.count)
-        missionComplete = false
-        didApplyAttentionRecoveryLastMission = false
-        didApplyHighTraceEscalationBonusLastMission = false
-        lastRewardTier = .low
-        lastRewardMultiplier = 1.0
-        missionTypeBonusMultiplier = 0.0
-        missionHeat = 0
-        missionHeatTier = .low
-        currentTurnCount = 0
-        combatLog = ["Mission started: \(mission.title)", "Entering: \(firstRoom.title)"]
-        applyCorpAttentionEnemyInfluence(
-            spawnTemplates: firstRoom.enemies.map { ($0.type, $0.x, $0.y) },
-            map: currentMissionTiles
-        )
-        applyGangAmbushBias(map: currentMissionTiles)
-        addLog(generateCombinedPressurePreview())
-        addLog(generateMissionBriefing())
-
-        if let ext = firstRoom.extractionPoint {
-            extractionX = adjustedFirstRoomMap.1.x
-            extractionY = adjustedFirstRoomMap.1.y
-            addLog("Reach extraction at (\(extractionX), \(extractionY))")
-        } else {
-            // Use the first door connection as the "exit" of the first room
-            if let firstConn = firstRoom.connections.first {
-                extractionX = firstConn.triggerTileX
-                extractionY = firstConn.triggerTileY
-                addLog("Find a way through to: \(firstConn.targetRoomId)")
-            }
-        }
-
-        processDelayedSpawns(enemyPhaseIndex: 0)
-        activeCharacterId = playerTeam.first?.id
-        selectedCharacterId = playerTeam.first?.id
-        beginRound()
+        MissionSetupService.setupMultiRoomMission(gameState: self, mission: mission)
     }
 
     // MARK: - Actions
@@ -1911,174 +1394,30 @@ final class GameState: ObservableObject {
     /// Check if any living player is standing on the extraction tile with no enemies alive.
     /// If so, trigger extraction win immediately.
     func checkExtraction() {
-        guard currentMissionType == .extraction else { return }
-        // Both livingEnemies AND pendingSpawns must be empty before extraction is allowed.
-        // This prevents premature victory when delayed reinforcements are still pending.
-        guard livingEnemies.isEmpty && pendingSpawns.isEmpty else { return }
-        let onExtraction = livingPlayers.contains { $0.positionX == extractionX && $0.positionY == extractionY }
-        if onExtraction {
-            finalizeCombat(
-                won: true,
-                missionLog: "🚁 EXTRACTION SUCCESS — Runners are out!",
-                terminalLog: "=== VICTORY ==="
-            )
-        }
+        ExtractionController.checkExtraction(gameState: self)
     }
 
     /// Request extraction resolution through GameState authority.
     /// Callers should pass the selected living character id (if available) and tapped tile.
     /// GameState validates extraction tile, updates model position, and finalizes mission state.
-    func requestExtraction(characterId: UUID?, tileX: Int, tileY: Int) {
-        guard !combatEnded else { return }
-
-        guard tileX == extractionX && tileY == extractionY else {
-            addLog("That is not the extraction point.")
-            return
-        }
-
-        guard let id = characterId,
-              let char = playerTeam.first(where: { $0.id == id && $0.isAlive }) else {
-            addLog("Select a character, then step onto extraction.")
-            return
-        }
-
-        // Authority write: synchronize model-space position with the tile the player tapped.
-        char.positionX = tileX
-        char.positionY = tileY
-
-        if !(livingEnemies.isEmpty && pendingSpawns.isEmpty) {
-            addLog("Clear all enemies before extraction!")
-            return
-        }
-
-        checkExtraction()
+    func requestExtraction(characterId: UUID?, tileX: Int, tileY: Int) -> Bool {
+        ExtractionController.requestExtraction(
+            gameState: self,
+            characterId: characterId,
+            tileX: tileX,
+            tileY: tileY
+        )
     }
 
     /// Centralized mission outcome finalization.
     /// Ensures all victory/defeat paths mutate through GameState and emit one shared completion signal.
     private func finalizeCombat(won: Bool, missionLog: String, terminalLog: String? = nil) {
-        guard !combatEnded else { return }
-        if won {
-            HapticsManager.shared.victory()
-        } else {
-            HapticsManager.shared.defeat()
-        }
-        addLog(missionLog)
-        finalizeMissionHeat()
-        applyFactionAttention(traceTier: traceTier)
-        applyGangAttention()
-        applyAttentionDecay(traceTier: traceTier)
-        addLog(generateWorldReactionMessage())
-        addLog(generateCombinedPressurePreview())
-        finalizeRewardLayer()
-        addLog(generateMissionModifierPreview())
-        if let terminalLog {
-            addLog(terminalLog)
-        }
-        addLog(generateMissionEndSummary())
-        missionComplete = true
-        combatWon = won
-        combatEnded = true
-        NotificationCenter.default.post(
-            name: .combatAction,
-            object: nil,
-            userInfo: ["result": won ? "victory" : "defeat"]
+        OutcomePipeline.execute(
+            gameState: self,
+            won: won,
+            missionLog: missionLog,
+            terminalLog: terminalLog
         )
-    }
-
-    /// Heat is mission-boundary consequence state.
-    /// v0.1 intentionally has no gameplay effect.
-    private func finalizeMissionHeat() {
-        let sourceTraceTier = traceTier
-        let derivedTier = ConsequenceEngine.heatValue(fromTraceTier: sourceTraceTier)
-        missionHeat = derivedTier
-        missionHeatTier = ConsequenceEngine.heatTier(fromHeatValue: derivedTier)
-
-        addLog("Mission complete: Heat level \(heatTierLabel) (derived from trace \(traceTierLabel))")
-    }
-
-    /// Heat -> world awareness scaffold.
-    /// v0.1 only records/logs attention; it does not affect gameplay.
-    private func applyFactionAttention(traceTier: Int) {
-        let attentionResult = ConsequenceEngine.factionAttentionIncrement(for: missionHeatTier)
-        let highTraceBonus = ConsequenceEngine.highTraceCorpEscalationBonus(traceTier: traceTier)
-        factionAttention[.corp, default: 0] += attentionResult.increment + highTraceBonus
-        didApplyHighTraceEscalationBonusLastMission = highTraceBonus > 0
-        addLog(attentionResult.reactionLog)
-        if highTraceBonus > 0 {
-            addLog("High-profile operation increased corporate escalation risk.")
-        }
-        addLog("CORP ATTENTION: \(factionAttention[.corp, default: 0])")
-    }
-
-    private func applyGangAttention() {
-        let increment = ConsequenceEngine.gangAttentionIncrement(for: missionHeatTier)
-        factionAttention[.gang, default: 0] += increment
-        addLog(generateGangReactionMessage())
-        addLog("GANG ATTENTION: \(factionAttention[.gang, default: 0])")
-    }
-
-    private func applyAttentionDecay(traceTier: Int) {
-        let decayAmount = ConsequenceEngine.attentionDecayAmount(for: traceTier)
-        guard decayAmount > 0 else {
-            didApplyAttentionRecoveryLastMission = false
-            return
-        }
-
-        factionAttention[.corp, default: 0] = max(0, factionAttention[.corp, default: 0] - decayAmount)
-        factionAttention[.gang, default: 0] = max(0, factionAttention[.gang, default: 0] - decayAmount)
-        didApplyAttentionRecoveryLastMission = true
-        addLog("Attention reduced due to low-profile mission.")
-    }
-
-    private func finalizeRewardLayer() {
-        let corpAttention = factionAttention[.corp, default: 0]
-        let gangAttention = factionAttention[.gang, default: 0]
-        let tier = ConsequenceEngine.rewardTier(
-            heatTier: missionHeat,
-            corpAttention: corpAttention,
-            gangAttention: gangAttention
-        )
-        let multiplier = ConsequenceEngine.rewardMultiplier(for: tier)
-        lastRewardTier = tier
-        lastRewardMultiplier = multiplier
-        let bonus: Double
-        let bonusReason: String
-        switch currentMissionType {
-        case .stealth:
-            if traceTier == 0 {
-                bonus = 0.25
-                bonusReason = "stealth success"
-            } else {
-                bonus = 0.0
-                bonusReason = "no stealth bonus"
-            }
-        case .assault:
-            if traceTier == 2 {
-                bonus = 0.25
-                bonusReason = "assault intensity"
-            } else {
-                bonus = 0.0
-                bonusReason = "no assault bonus"
-            }
-        case .extraction:
-            if traceTier == 1 {
-                bonus = 0.15
-                bonusReason = "balanced extraction"
-            } else {
-                bonus = 0.0
-                bonusReason = "no extraction bonus"
-            }
-        }
-        missionTypeBonusMultiplier = bonus
-
-        addLog("Mission Type: \(missionTypeLabel)")
-        addLog("Reward tier: \(rewardTierLabel(tier)) (x\(String(format: "%.2f", multiplier)) payout)")
-        if bonus > 0 {
-            addLog("Mission bonus: +\(String(format: "%.2f", bonus)) (\(bonusReason))")
-        }
-        addLog("Final reward multiplier: x\(String(format: "%.2f", finalRewardMultiplier))")
-        addLog(generateRewardPayoutSummary())
     }
 
     /// Mission's extraction point — set by setupMission from the mission JSON.
@@ -2527,127 +1866,31 @@ final class GameState: ObservableObject {
 
     /// Find the best retreat tile for a drone — step AWAY from the target (hex-aware).
     func bestRetreatTile(for enemy: Enemy, awayFrom target: Character) -> (Int, Int) {
-        var candidates: [(Int, Int, Int)] = [] // (x, y, score=hex distance from target)
-
-        for (nx, ny) in hexNeighbors(x: enemy.positionX, y: enemy.positionY) {
-            if tileWalkable(x: nx, y: ny, excluding: enemy.id) {
-                let newDist = hexDistance(x1: nx, y1: ny, x2: target.positionX, y2: target.positionY)
-                candidates.append((nx, ny, newDist))
-            }
-        }
-
-        if let best = candidates.max(by: { $0.2 < $1.2 }) {
-            return (best.0, best.1)
-        }
-        return (enemy.positionX, enemy.positionY)
+        PathingAndAIHelpers.bestRetreatTile(gameState: self, for: enemy, awayFrom: target)
     }
 
     /// BFS pathfinding for drone (hex-aware).
     func bfsPathfindDrone(from enemy: Enemy, towardX gx: Int, y gy: Int) -> (Int, Int)? {
-        let sx = enemy.positionX, sy = enemy.positionY
-        if hexAdjacent(x1: sx, y1: sy, x2: gx, y2: gy) { return nil }
-
-        struct Node { let x: Int; let y: Int }
-        var queue: [Node] = [Node(x: sx, y: sy)]
-        var visited: Set<String> = ["\(sx),\(sy)"]
-        var i = 0
-
-        while i < queue.count {
-            let cur = queue[i]; i += 1
-            for (nx, ny) in hexNeighbors(x: cur.x, y: cur.y) {
-                let k = "\(nx),\(ny)"
-                guard !visited.contains(k), tileWalkable(x: nx, y: ny, excluding: enemy.id) else { continue }
-                visited.insert(k)
-                if hexAdjacent(x1: nx, y1: ny, x2: gx, y2: gy) || (nx == gx && ny == gy) { return (nx, ny) }
-                queue.append(Node(x: nx, y: ny))
-            }
-        }
-        // Fallback: greedy step toward goal using first walkable hex neighbor
-        let neighbors = hexNeighbors(x: sx, y: sy)
-        let sorted = neighbors.filter { tileWalkable(x: $0.0, y: $0.1, excluding: enemy.id) }
-            .sorted { hexDistance(x1: $0.0, y1: $0.1, x2: gx, y2: gy) < hexDistance(x1: $1.0, y1: $1.1, x2: gx, y2: gy) }
-        return sorted.first
+        PathingAndAIHelpers.bfsPathfindDrone(gameState: self, from: enemy, towardX: gx, y: gy)
     }
     /// BFS pathfinding — returns best hex-adjacent tile to move toward target.
     func bfsPathfind(from enemy: Enemy, toward target: Character) -> (Int, Int)? {
-        let sx = enemy.positionX, sy = enemy.positionY
-        let gx = target.positionX, gy = target.positionY
-        if hexAdjacent(x1: sx, y1: sy, x2: gx, y2: gy) { return nil }
-
-        struct Node { let x: Int; let y: Int }
-        var queue: [Node] = [Node(x: sx, y: sy)]
-        var visited: Set<String> = ["\(sx),\(sy)"]
-        var i = 0
-
-        while i < queue.count {
-            let cur = queue[i]; i += 1
-            for (nx, ny) in hexNeighbors(x: cur.x, y: cur.y) {
-                let k = "\(nx),\(ny)"
-                guard !visited.contains(k), tileWalkable(x: nx, y: ny, excluding: enemy.id) else { continue }
-                visited.insert(k)
-                if hexAdjacent(x1: nx, y1: ny, x2: gx, y2: gy) || (nx == gx && ny == gy) { return (nx, ny) }
-                queue.append(Node(x: nx, y: ny))
-            }
-        }
-        // Fallback: greedy step toward target using best hex neighbor
-        let neighbors = hexNeighbors(x: sx, y: sy)
-        let sorted = neighbors.filter { tileWalkable(x: $0.0, y: $0.1, excluding: enemy.id) }
-            .sorted { hexDistance(x1: $0.0, y1: $0.1, x2: gx, y2: gy) < hexDistance(x1: $1.0, y1: $1.1, x2: gx, y2: gy) }
-        return sorted.first
+        PathingAndAIHelpers.bfsPathfind(gameState: self, from: enemy, toward: target)
     }
 
     /// Find a wounded ally (enemy) within 5 hex tiles to heal.
     func findWoundedAlly(for enemy: Enemy) -> Enemy? {
-        let wounded = enemies.filter { ally in
-            guard ally.id != enemy.id, ally.isAlive else { return false }
-            let dist = hexDistance(x1: ally.positionX, y1: ally.positionY, x2: enemy.positionX, y2: enemy.positionY)
-            let isWounded = Double(ally.currentHP) / Double(ally.maxHP) < 0.75  // below 75% HP = wounded
-            return dist <= 5 && isWounded
-        }
-        // Return most wounded ally
-        return wounded.min { a, b in
-            Double(a.currentHP) / Double(a.maxHP) < Double(b.currentHP) / Double(b.maxHP)
-        }
+        PathingAndAIHelpers.findWoundedAlly(gameState: self, for: enemy)
     }
 
     /// BFS pathfinding to a wounded ally (hex-aware, healer can pass through other enemies).
     func bfsPathfindToWounded(from enemy: Enemy, toward target: Enemy) -> (Int, Int)? {
-        let sx = enemy.positionX, sy = enemy.positionY
-        let gx = target.positionX, gy = target.positionY
-        if hexAdjacent(x1: sx, y1: sy, x2: gx, y2: gy) { return nil }
-
-        struct Node { let x: Int; let y: Int }
-        var queue: [Node] = [Node(x: sx, y: sy)]
-        var visited: Set<String> = ["\(sx),\(sy)"]
-        var i = 0
-
-        while i < queue.count {
-            let cur = queue[i]; i += 1
-            for (nx, ny) in hexNeighbors(x: cur.x, y: cur.y) {
-                let k = "\(nx),\(ny)"
-                guard !visited.contains(k), tileWalkableForHealer(x: nx, y: ny, excluding: enemy.id) else { continue }
-                visited.insert(k)
-                if hexAdjacent(x1: nx, y1: ny, x2: gx, y2: gy) || (nx == gx && ny == gy) { return (nx, ny) }
-                queue.append(Node(x: nx, y: ny))
-            }
-        }
-        // Fallback greedy step using best hex neighbor
-        let neighbors = hexNeighbors(x: sx, y: sy)
-        let sorted = neighbors.filter { tileWalkableForHealer(x: $0.0, y: $0.1, excluding: enemy.id) }
-            .sorted { hexDistance(x1: $0.0, y1: $0.1, x2: gx, y2: gy) < hexDistance(x1: $1.0, y1: $1.1, x2: gx, y2: gy) }
-        return sorted.first
+        PathingAndAIHelpers.bfsPathfindToWounded(gameState: self, from: enemy, toward: target)
     }
 
     /// Check if a tile is walkable for the healer (medic can walk through other enemies).
     func tileWalkableForHealer(x: Int, y: Int, excluding enemyId: UUID) -> Bool {
-        let h = currentMissionTiles.isEmpty ? 14 : currentMissionTiles.count
-        guard x >= 0, x < TileMap.mapWidth, y >= 0, y < h else { return false }
-        // Healer can walk through other enemies (unlike regular pathfinding)
-        let playerBlocking = playerTeam.contains { $0.isAlive && $0.positionX == x && $0.positionY == y }
-        if playerBlocking { return false }
-        guard !currentMissionTiles.isEmpty, y < currentMissionTiles.count, x < currentMissionTiles[y].count else { return true }
-        let tileType = currentMissionTiles[y][x]
-        return tileType != 1  // walls(1) block; doors(3) are walkable
+        PathingAndAIHelpers.tileWalkableForHealer(gameState: self, x: x, y: y, excluding: enemyId)
     }
 
     /// Expose isDefending for enemyPhase damage check.
@@ -2659,94 +1902,33 @@ final class GameState: ObservableObject {
     /// Uses Bresenham's line algorithm to check each tile along the path.
     /// Returns true if a wall blocks the attack.
     func isLineBlockedByWall(fromX sx: Int, fromY sy: Int, toX dx: Int, toY dy: Int) -> Bool {
-        // Bresenham's line algorithm — checks all tiles on the attack path
-        var x0 = sx, y0 = sy
-        let x1 = dx, y1 = dy
-
-        let dx = abs(x1 - x0)
-        let dy = abs(y1 - y0)
-        let sx_ = x0 < x1 ? 1 : -1
-        let sy_ = y0 < y1 ? 1 : -1
-        var err = dx - dy
-
-        while true {
-            // Skip the starting tile (attacker's position) and target tile
-            if !(x0 == sx && y0 == sy) && !(x0 == x1 && y0 == y1) {
-                guard x0 >= 0, x0 < TileMap.mapWidth, y0 >= 0 else { break }
-                let h = currentMissionTiles.isEmpty ? 14 : currentMissionTiles.count
-                guard y0 < h, x0 < currentMissionTiles[y0].count else { break }
-                let tileType = currentMissionTiles[y0][x0]
-                if tileType == 1 {  // wall tile
-                    return true
-                }
-            }
-
-            if x0 == x1 && y0 == y1 { break }
-            let e2 = 2 * err
-            if e2 > -dy {
-                err -= dy
-                x0 += sx_
-            }
-            if e2 < dx {
-                err += dx
-                y0 += sy_
-            }
-        }
-        return false
+        PathingAndAIHelpers.isLineBlockedByWall(gameState: self, fromX: sx, fromY: sy, toX: dx, toY: dy)
     }
 
     func findNextLivingCharacter(after index: Int) -> Character? {
-        for i in index..<playerTeam.count {
-            if playerTeam[i].isAlive { return playerTeam[i] }
-        }
-        for i in 0..<index {
-            if playerTeam[i].isAlive { return playerTeam[i] }
-        }
-        return nil
+        PathingAndAIHelpers.findNextLivingCharacter(gameState: self, after: index)
     }
 
     // MARK: - Hex Grid Helpers
 
     /// Returns the 6 valid hex neighbors for a flat-top odd-q offset coordinate.
     func hexNeighbors(x: Int, y: Int) -> [(Int, Int)] {
-        if x % 2 == 0 {
-            return [(x,y-1),(x,y+1),(x-1,y-1),(x-1,y),(x+1,y-1),(x+1,y)]
-        } else {
-            return [(x,y-1),(x,y+1),(x-1,y),(x-1,y+1),(x+1,y),(x+1,y+1)]
-        }
+        PathingAndAIHelpers.hexNeighbors(gameState: self, x: x, y: y)
     }
 
     /// True if (x2,y2) is one of the 6 hex neighbors of (x1,y1).
     func hexAdjacent(x1: Int, y1: Int, x2: Int, y2: Int) -> Bool {
-        hexNeighbors(x: x1, y: y1).contains { $0.0 == x2 && $0.1 == y2 }
+        PathingAndAIHelpers.hexAdjacent(gameState: self, x1: x1, y1: y1, x2: x2, y2: y2)
     }
 
     /// Hex distance between two tiles using cube coordinate conversion (flat-top odd-q offset).
     func hexDistance(x1: Int, y1: Int, x2: Int, y2: Int) -> Int {
-        // flat-top odd-q → cube: cx = x;  cz = y - (x - (x&1))/2;  cy = -cx - cz
-        let cx1 = x1
-        let cz1 = y1 - (x1 - (x1 & 1)) / 2
-        let cy1 = -cx1 - cz1
-        let cx2 = x2
-        let cz2 = y2 - (x2 - (x2 & 1)) / 2
-        let cy2 = -cx2 - cz2
-        return max(abs(cx1 - cx2), abs(cy1 - cy2), abs(cz1 - cz2))
+        PathingAndAIHelpers.hexDistance(gameState: self, x1: x1, y1: y1, x2: x2, y2: y2)
     }
 
     /// Check if a tile is walkable for enemies (not wall/door, not occupied by player or other enemy)
     func tileWalkable(x: Int, y: Int, excluding enemyId: UUID) -> Bool {
-        let h = currentMissionTiles.isEmpty ? 14 : currentMissionTiles.count
-        guard x >= 0, x < TileMap.mapWidth, y >= 0, y < h else { return false }
-        // Check if any player occupies this tile
-        let playerBlocking = playerTeam.contains { $0.isAlive && $0.positionX == x && $0.positionY == y }
-        if playerBlocking { return false }
-        // Check if any OTHER enemy occupies this tile
-        let enemyBlocking = enemies.contains { $0.isAlive && $0.id != enemyId && $0.positionX == x && $0.positionY == y }
-        if enemyBlocking { return false }
-        // Tile type check: walls and doors are impassable; extraction tile (4) is walkable
-        guard !currentMissionTiles.isEmpty, y < currentMissionTiles.count, x < currentMissionTiles[y].count else { return true }
-        let tileType = currentMissionTiles[y][x]
-        return tileType != 1  // walls(1) block movement; doors(3) and extraction(4) are walkable
+        PathingAndAIHelpers.tileWalkable(gameState: self, x: x, y: y, excluding: enemyId)
     }
 
     func showMoveMenu() {

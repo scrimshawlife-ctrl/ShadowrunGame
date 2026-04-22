@@ -263,6 +263,25 @@ final class BattleScene: SKScene {
         // Sync GameState's current room ID
         GameState.shared.currentRoomId = targetRoom.id
 
+        // Recompute extraction objective for the room we just entered.
+        // Priority:
+        // 1) explicit room extractionPoint
+        // 2) extraction tile embedded in map
+        // 3) first room connection trigger tile (fallback objective)
+        if let extraction = targetRoom.extractionPoint {
+            GameState.shared.extractionX = extraction.x
+            GameState.shared.extractionY = extraction.y
+            GameState.shared.addLog("Reach extraction at (\(extraction.x), \(extraction.y))")
+        } else if let mapExtraction = firstExtractionTile(in: targetRoom.map) {
+            GameState.shared.extractionX = mapExtraction.x
+            GameState.shared.extractionY = mapExtraction.y
+            GameState.shared.addLog("Reach extraction at (\(mapExtraction.x), \(mapExtraction.y))")
+        } else if let firstConn = targetRoom.connections.first {
+            GameState.shared.extractionX = firstConn.triggerTileX
+            GameState.shared.extractionY = firstConn.triggerTileY
+            GameState.shared.addLog("Find a way through to: \(firstConn.targetRoomId)")
+        }
+
         // Update tiles for enemy pathfinding
         GameState.shared.updateTilesForCurrentRoom(targetRoom.map)
 
@@ -282,6 +301,15 @@ final class BattleScene: SKScene {
         fadeOutFromTransition()
 
         GameState.shared.addLog("Arrived at: \(targetRoom.title)")
+    }
+
+    private func firstExtractionTile(in map: [[Int]]) -> (x: Int, y: Int)? {
+        for (y, row) in map.enumerated() {
+            if let x = row.firstIndex(of: TileType.extraction.rawValue) {
+                return (x: x, y: y)
+            }
+        }
+        return nil
     }
 
     private func setupEnemyNotifications() {
