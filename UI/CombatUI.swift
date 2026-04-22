@@ -1380,10 +1380,25 @@ struct CombatUI: View {
                         Text("TRACE: \(gameState.traceLevel)/\(gameState.traceThreshold)   TIER:\(gameState.traceTierLabel)   DMG:+\(gameState.escalationDamageBonusForCurrentTrace)   ROLE: \(gameState.playerRoleLabel)   PRESET: \(gameState.missionPresetLabel)   TYPE: \(gameState.missionTypeLabel)")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundColor(gameState.traceTier >= 2 ? CombatTheme.enemyColor : (gameState.traceTier == 1 ? Color.orange : CombatTheme.accent))
+                        Text("MISSION TYPE: \(gameState.missionTypeLabel)")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
+                        Text(gameState.missionTypeHint)
+                            .font(.system(size: 8, weight: .regular, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
                         Text("MISSION INTEL")
                             .font(.system(size: 8, weight: .black, design: .monospaced))
                             .foregroundColor(CombatTheme.textWhite.opacity(0.82))
                         Text(gameState.generateCombinedPressurePreview())
+                            .font(.system(size: 8, weight: .regular, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
+                        Text("SITUATION: \(gameState.situationIntelLine)")
+                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
+                        Text("SITUATION EFFECT: \(gameState.situationEffectDescription)")
                             .font(.system(size: 8, weight: .regular, design: .monospaced))
                             .foregroundColor(CombatTheme.textMuted)
                             .multilineTextAlignment(.trailing)
@@ -1430,6 +1445,45 @@ struct CombatUI: View {
                             .font(.system(size: 8, weight: .regular, design: .monospaced))
                             .foregroundColor(CombatTheme.textMuted)
                             .multilineTextAlignment(.trailing)
+                        Text("REWARD")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
+                        Text("Tier: \(gameState.rewardTierLabel(gameState.lastRewardTier))")
+                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
+                        Text("Multiplier: x\(String(format: "%.2f", gameState.lastRewardMultiplier))")
+                            .font(.system(size: 8, weight: .regular, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
+                        Text("PAYOUT:")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundColor(CombatTheme.textWhite.opacity(0.82))
+                        Text("Base: \(gameState.baseMissionPayout)")
+                            .font(.system(size: 8, weight: .regular, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
+                        if gameState.lastRewardTier == .high {
+                            Text("HIGH RISK BONUS")
+                                .font(.system(size: 8, weight: .black, design: .monospaced))
+                                .foregroundColor(CombatTheme.enemyColor)
+                        } else if gameState.lastRewardTier == .medium {
+                            Text("INCREASED PAYOUT")
+                                .font(.system(size: 8, weight: .black, design: .monospaced))
+                                .foregroundColor(Color.orange)
+                        }
+                        Text("Risk Bonus: +\(gameState.riskBonus)")
+                            .font(.system(size: 8, weight: .regular, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
+                        Text("Total: \(gameState.finalMissionPayout)")
+                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
+                        Text(gameState.generateRewardPreview())
+                            .font(.system(size: 8, weight: .regular, design: .monospaced))
+                            .foregroundColor(CombatTheme.textMuted)
+                            .multilineTextAlignment(.trailing)
                         if gameState.didApplyHighTraceEscalationBonusLastMission {
                             Text("ESCALATION:")
                                 .font(.system(size: 8, weight: .black, design: .monospaced))
@@ -1448,12 +1502,19 @@ struct CombatUI: View {
                                 .foregroundColor(CombatTheme.textMuted)
                                 .multilineTextAlignment(.trailing)
                         }
-                        Text(gameState.missionType == .eliminate
-                             ? "OBJECTIVE: ELIMINATE TARGET"
-                             : "OBJECTIVE: SURVIVE \(gameState.missionTargetTurns) TURNS")
+                        Text({
+                            switch gameState.currentMissionType {
+                            case .stealth:
+                                return "OBJECTIVE: STAY LOW FOR \(gameState.missionTargetTurns) TURNS"
+                            case .assault:
+                                return "OBJECTIVE: ELIMINATE TARGET"
+                            case .extraction:
+                                return "OBJECTIVE: REACH EXTRACTION"
+                            }
+                        }())
                             .font(.system(size: 8, weight: .bold, design: .monospaced))
                             .foregroundColor(CombatTheme.textWhite.opacity(0.88))
-                        if gameState.missionType == .survive {
+                        if gameState.currentMissionType == .stealth {
                             Text("PROGRESS: \(gameState.currentTurnCount)/\(gameState.missionTargetTurns)")
                                 .font(.system(size: 8, weight: .semibold, design: .monospaced))
                                 .foregroundColor(gameState.missionComplete ? Color(hex: "00FF88") : CombatTheme.textMuted)

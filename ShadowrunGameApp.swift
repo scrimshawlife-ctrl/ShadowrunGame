@@ -451,16 +451,10 @@ struct MissionCard: View {
 
 struct BriefingView: View {
     @ObservedObject var manager: PhaseManager
+    @ObservedObject private var gameState = GameState.shared
 
     @State private var loadedMission: Mission?
-
-    private var missionTitle: String {
-        loadedMission?.title ?? manager.selectedMissionId ?? "Unknown"
-    }
-
-    private var missionDesc: String {
-        loadedMission?.description ?? "No description available."
-    }
+    @State private var hasPreparedMission = false
 
     private var teamRoster: [Character] {
         let team = GameState.shared.playerTeam
@@ -527,11 +521,17 @@ struct BriefingView: View {
                 .background(Color(hex: "0F0F1E"))
                 .cornerRadius(12)
 
-                VStack(alignment: .leading, spacing: 16) {
-                    briefingRow("Mission:", missionTitle)
-                    briefingRow("Risk:", riskLevel)
-                    briefingRow("Pay:", reward)
-                    briefingRow("Briefing:", missionDesc)
+                VStack(alignment: .leading, spacing: 14) {
+                    briefingSection("TYPE", gameState.missionTypeLabel)
+                    briefingSection("OBJECTIVE", "\(gameState.missionObjectiveText)\n\(gameState.missionTypeHint)")
+                    briefingSection("EXPECTED THREATS", gameState.expectedThreatsText)
+                    briefingSection("PRESSURE PROFILE", gameState.pressureProfileText)
+                    briefingSection("REWARD PROFILE", "\(gameState.rewardProfileText)\n\(gameState.generateRewardPreview())")
+                    briefingSection(
+                        "WORLD STATE",
+                        "Corp Attention: \(gameState.factionAttention[.corp, default: 0])\nGang Attention: \(gameState.factionAttention[.gang, default: 0])\n\(gameState.generateCombinedPressurePreview())"
+                    )
+                    briefingSection("MAP SITUATION", "\(gameState.mapSituationLabel)\nTACTICAL NOTE\n\(gameState.situationTacticalHint())")
                 }
                 .padding(20)
                 .background(Color(hex: "0F0F1E"))
@@ -554,7 +554,7 @@ struct BriefingView: View {
                             .stroke(Color(hex: "00FF88"), lineWidth: 2)
                             .opacity(0.5)
 
-                        Text("ACCEPT CONTRACT")
+                        Text("BEGIN MISSION")
                             .font(.system(size: 16, weight: .black))
                             .foregroundColor(.black)
                     }
@@ -562,20 +562,22 @@ struct BriefingView: View {
                 }
             }
             .padding(24)
-            .onAppear { loadMission() }
-
-            // Full-screen mission briefing overlay — tap to dismiss
-            MissionBriefingOverlay(mission: loadedMission)
+            .onAppear {
+                loadMission()
+                prepareMissionForBriefing()
+            }
         }
     }
 
-    private func briefingRow(_ label: String, _ value: String) -> some View {
-        HStack(alignment: .top) {
-            Text(label)
-                .foregroundColor(Color(hex: "00FF88").opacity(0.7))
-                .frame(width: 80, alignment: .leading)
+    private func briefingSection(_ title: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.system(size: 10, weight: .black, design: .monospaced))
+                .foregroundColor(Color(hex: "00FF88").opacity(0.75))
+                .tracking(1.2)
             Text(value)
                 .foregroundColor(.white)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .font(.system(.callout, design: .monospaced))
     }
@@ -583,6 +585,17 @@ struct BriefingView: View {
     private func loadMission() {
         guard let id = manager.selectedMissionId else { return }
         loadedMission = MissionLoader.shared.loadMission(named: id)
+    }
+
+    private func prepareMissionForBriefing() {
+        guard !hasPreparedMission, let id = manager.selectedMissionId else { return }
+        if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: id) {
+            RoomManager.shared.loadMission(named: id)
+            gameState.setupMultiRoomMission(multiMission)
+        } else if let mission = MissionLoader.shared.loadMission(named: id) {
+            gameState.setupMission(mission)
+        }
+        hasPreparedMission = true
     }
 
     private func getTeamColor(_ index: Int) -> Color {
@@ -924,19 +937,40 @@ struct BattleSceneView: UIViewRepresentable {
         // With scaleMode = .aspectFit the full scene (map + letterboxing) fills the SKView.
         let missionToLoad = missionId ?? "Mission001"
         let missionTileMap: TileMap?
-        if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionToLoad) {
+        let tileMapFromGameState: () -> TileMap? = {
+            let rawTiles = gameState.currentMissionTilesSnapshot
+            guard !rawTiles.isEmpty else { return nil }
+            let typedTiles = rawTiles.map { row in
+                row.map { TileType(rawValue: $0) ?? .floor }
+            }
+            return TileMap(tiles: typedTiles)
+        }
+        let hasStrictPreparedMatch = gameState.preparedMissionId == missionToLoad
+        if let preloaded = tileMapFromGameState(), !gameState.playerTeam.isEmpty, hasStrictPreparedMatch {
+            missionTileMap = preloaded
+        } else if tileMapFromGameState() != nil, gameState.preparedMissionId != nil, !hasStrictPreparedMatch {
+            gameState.addLog("Preload mismatch: prepared \(gameState.preparedMissionId ?? "nil"), requested \(missionToLoad). Ignoring stale preload.")
+            if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionToLoad) {
+                RoomManager.shared.loadMission(named: missionToLoad)
+                gameState.setupMultiRoomMission(multiMission)
+                missionTileMap = tileMapFromGameState()
+            } else if let mission = MissionLoader.shared.loadMission(named: missionToLoad) {
+                gameState.setupMission(mission)
+                missionTileMap = tileMapFromGameState() ?? MissionLoader.shared.buildTileMap(from: mission)
+            } else {
+                gameState.addLog("Mission load failed: \(missionToLoad)")
+                return
+            }
+        } else if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionToLoad) {
             RoomManager.shared.loadMission(named: missionToLoad)
-            let room = multiMission.rooms.first!
-            missionTileMap = TileMap(tiles: room.tileMap)
             gameState.setupMultiRoomMission(multiMission)
+            missionTileMap = tileMapFromGameState()
         } else if let mission = MissionLoader.shared.loadMission(named: missionToLoad) {
-            missionTileMap = MissionLoader.shared.buildTileMap(from: mission)
             gameState.setupMission(mission)
-        } else if let mission = MissionLoader.shared.loadMission(named: "Mission001") {
-            missionTileMap = MissionLoader.shared.buildTileMap(from: mission)
-            gameState.setupMission(mission)
+            missionTileMap = tileMapFromGameState() ?? MissionLoader.shared.buildTileMap(from: mission)
         } else {
-            missionTileMap = nil
+            gameState.addLog("Mission load failed: \(missionToLoad)")
+            return
         }
 
         // Scene size = map pixel dimensions. With .aspectFit, SpriteKit scales to fit the view,
@@ -968,11 +1002,20 @@ struct BattleSceneView: UIViewRepresentable {
         // This is the single source of truth for the first frame — doing placement
         // before presentScene was racey (view nil → fitSceneToView was a no-op →
         // wrong scene.size → wrong mapOrigin → characters off-camera).
-        if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionToLoad) {
-            let room = multiMission.rooms.first!
+        if let preloaded = missionTileMap, !gameState.playerTeam.isEmpty, hasStrictPreparedMatch {
             scene.scheduleInitialLoad(
-                tileMap: TileMap(tiles: room.tileMap),
-                roomId: room.id,
+                tileMap: preloaded,
+                roomId: gameState.currentRoomId,
+                characters: gameState.playerTeam,
+                enemies: GameState.shared.enemies
+            )
+        } else if let preloaded = missionTileMap, !gameState.playerTeam.isEmpty, !hasStrictPreparedMatch {
+            gameState.addLog("Mission state identity check failed at scene start for \(missionToLoad).")
+            return
+        } else if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionToLoad) {
+            scene.scheduleInitialLoad(
+                tileMap: TileMap(tiles: multiMission.rooms.first!.tileMap),
+                roomId: multiMission.rooms.first!.id,
                 characters: gameState.playerTeam,
                 enemies: GameState.shared.enemies
             )
@@ -984,14 +1027,9 @@ struct BattleSceneView: UIViewRepresentable {
                 characters: gameState.playerTeam,
                 enemies: GameState.shared.enemies
             )
-        } else if let mission = MissionLoader.shared.loadMission(named: "Mission001") {
-            let tileMap = MissionLoader.shared.buildTileMap(from: mission)
-            scene.scheduleInitialLoad(
-                tileMap: tileMap,
-                roomId: "room_0",
-                characters: gameState.playerTeam,
-                enemies: GameState.shared.enemies
-            )
+        } else {
+            gameState.addLog("Mission load failed: \(missionToLoad)")
+            return
         }
 
         print("[BattleSceneView] Presenting scene size: \(scene.size), view.bounds: \(skView.bounds.size), playerTeam=\(gameState.playerTeam.count), enemies=\(GameState.shared.enemies.count)")
@@ -1134,7 +1172,13 @@ final class PhaseManager: ObservableObject {
         let nextState = computeNext(from: currentPhase, event: event)
         if nextState == currentPhase { return false }
 
-        if case .selectMission(let id) = event { selectedMissionId = id }
+        if case .selectMission(let id) = event {
+            if selectedMissionId != id {
+                GameState.shared.preparedMissionId = nil
+                GameState.shared.lastSetupTraceToken = nil
+            }
+            selectedMissionId = id
+        }
         if case .endCombat(let won) = event { combatWon = won }
 
         stateHistory.append(nextState)
