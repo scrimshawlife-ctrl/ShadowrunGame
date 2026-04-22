@@ -909,8 +909,14 @@ struct BattleSceneView: UIViewRepresentable {
             print("[BattleSceneView] Resized SKView to: \(availableSize)")
         }
 
-        // Scene already presented — nothing to do.
-        if skView.scene is BattleScene { return }
+        let missionToLoad = missionId ?? "Mission001"
+        let hasStrictPreparedMatch =
+            (context.coordinator.preparedMissionId == missionToLoad)
+            && (context.coordinator.scene != nil)
+            && (skView.scene === context.coordinator.scene)
+
+        // Scene already presented for this mission — nothing to do.
+        if hasStrictPreparedMatch { return }
 
         guard availableSize.width > 0, availableSize.height > 0 else {
             print("[BattleSceneView] No available size, skipping scene creation")
@@ -922,7 +928,6 @@ struct BattleSceneView: UIViewRepresentable {
         // This ensures the tile map is centered and the top/bottom rows are reachable.
         // fitSceneToView() is called BEFORE loadMap() so BattleScene.mapOrigin is correct.
         // With scaleMode = .aspectFit the full scene (map + letterboxing) fills the SKView.
-        let missionToLoad = missionId ?? "Mission001"
         let missionTileMap: TileMap?
         let tileMapFromGameState: () -> TileMap? = {
             let rawTiles = gameState.currentMissionTilesSnapshot
@@ -1003,6 +1008,7 @@ struct BattleSceneView: UIViewRepresentable {
         print("[BattleSceneView] Presenting scene size: \(scene.size), view.bounds: \(skView.bounds.size), playerTeam=\(gameState.playerTeam.count), enemies=\(GameState.shared.enemies.count)")
         skView.presentScene(scene)
         context.coordinator.scene = scene
+        context.coordinator.preparedMissionId = missionToLoad
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(gameState: gameState) }
@@ -1010,6 +1016,7 @@ struct BattleSceneView: UIViewRepresentable {
     class Coordinator {
         var scene: BattleScene?
         weak var skView: SKView?
+        var preparedMissionId: String?
         var gameState: GameState
 
         init(gameState: GameState) {
