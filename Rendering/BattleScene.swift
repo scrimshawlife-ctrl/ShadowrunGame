@@ -629,15 +629,15 @@ final class BattleScene: SKScene {
 
     // SwiftUI overlays cover the top objective banner and the bottom combat panel.
     // Reserve that space when framing the camera so combatants do not spawn under HUD chrome.
-    private let topHUDInset: CGFloat = 96
-    private let bottomHUDInset: CGFloat = 280
+    private let topHUDInset: CGFloat = 72
+    private let bottomHUDInset: CGFloat = 168
 
     private func applyCameraScale(_ cam: SKCameraNode) -> CGFloat {
         let visibleWidth = max(1, size.width)
         let visibleHeight = max(1, size.height - topHUDInset - bottomHUDInset)
         let requiredScaleX = mapPixelWidth / visibleWidth
         let requiredScaleY = mapPixelHeight / visibleHeight
-        let scale = max(1.0, max(requiredScaleX, requiredScaleY) * 1.04)
+        let scale = max(1.0, max(requiredScaleX, requiredScaleY) * 1.01)
         cam.setScale(scale)
         return scale
     }

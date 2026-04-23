@@ -523,15 +523,15 @@ final class SpriteManager {
         // places this just above the floor (0.1) but below sprite art (z=10).
         // Uses hexRadius*0.7 so the base overlaps clearly with the tile outline
         // while leaving the tile's neon border visible at the edge.
-        let teamHex = SKShapeNode(path: TileMap.hexPath(radius: TileMap.hexRadius * 0.7))
+        let teamHex = SKShapeNode(path: TileMap.hexPath(radius: TileMap.hexRadius * 0.82))
         teamHex.fillColor = team == "player"
-            ? UIColor(hex: "#00FF88").withAlphaComponent(0.75)
-            : UIColor(hex: "#FF3333").withAlphaComponent(0.75)
+            ? UIColor(hex: "#00FF9D").withAlphaComponent(0.92)
+            : UIColor(hex: "#FF4A4A").withAlphaComponent(0.92)
         teamHex.strokeColor = team == "player"
-            ? UIColor(hex: "#00FFAA")
-            : UIColor(hex: "#FF5555")
-        teamHex.lineWidth = 2.0
-        teamHex.glowWidth = 3.0
+            ? UIColor(hex: "#D7FFF0")
+            : UIColor(hex: "#FFE0E0")
+        teamHex.lineWidth = 2.6
+        teamHex.glowWidth = 6.0
         teamHex.position = .zero
         teamHex.zPosition = 0.25
         teamHex.name = "characterTeamHex"
@@ -554,14 +554,14 @@ final class SpriteManager {
         }()
         let idLabel = SKLabelNode(text: initial)
         idLabel.fontName = "Helvetica-Bold"
-        idLabel.fontSize = 14
+        idLabel.fontSize = 22
         idLabel.fontColor = team == "player"
-            ? UIColor(hex: "#001A0D")
-            : UIColor(hex: "#330000")
+            ? UIColor(hex: "#04150F")
+            : UIColor(hex: "#240404")
         idLabel.verticalAlignmentMode = .center
         idLabel.horizontalAlignmentMode = .center
         idLabel.position = .zero
-        idLabel.zPosition = 0.3
+        idLabel.zPosition = 0.35
         idLabel.name = "characterInitial"
         container.addChild(idLabel)
 
@@ -578,6 +578,16 @@ final class SpriteManager {
             default:        baseColor = UIColor(hex: "#FF3333")
             }
         }
+
+        let presenceMarker = SKShapeNode(circleOfRadius: team == "player" ? 10 : 9)
+        presenceMarker.fillColor = baseColor.withAlphaComponent(0.95)
+        presenceMarker.strokeColor = UIColor.white.withAlphaComponent(0.85)
+        presenceMarker.lineWidth = 1.6
+        presenceMarker.glowWidth = 4.0
+        presenceMarker.position = CGPoint(x: 0, y: 4)
+        presenceMarker.zPosition = 1.4
+        presenceMarker.name = "presenceMarker"
+        container.addChild(presenceMarker)
 
         if team == "player" {
             let playerColor: UIColor
