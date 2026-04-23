@@ -256,7 +256,11 @@ final class SpriteManager {
     }
 
     private func loadTexture(named: String) -> SKTexture? {
-        // ── Path 1: Bundle.main subdirectory Sprites/frames/ (production app bundle) ─────
+        // ── Path 1: Bundle.main/Sprites/frames/ (production — explicit subdir, deterministic) ──
+        // Check the dedicated frames subdirectory FIRST. This has the full-quality PNGs.
+        // Using explicit subdirectory URL rather than Bundle.main.url() to avoid the
+        // non-deterministic "first match across entire bundle" behavior when the same
+        // filename exists at both root and in a subdirectory.
         if let resourceURL = Bundle.main.resourceURL {
             let framesURL = resourceURL
                 .appendingPathComponent("Sprites")
@@ -269,7 +273,8 @@ final class SpriteManager {
             }
         }
 
-        // ── Path 2: root of bundle (some Xcode configurations) ────────────────────────
+        // ── Path 2: Root of bundle (some Xcode configurations copy files flat) ────────
+        // Only used as fallback when Sprites/frames/ doesn't have the file.
         if let url = Bundle.main.url(forResource: named, withExtension: nil),
            let image = UIImage(contentsOfFile: url.path) {
            let tex = SKTexture(image: image)
@@ -277,7 +282,7 @@ final class SpriteManager {
             return tex
         }
 
-        // ── Path 3: resourcePath/Sprites/frames/ ─────────────────────────────────────
+        // ── Path 3: resourcePath/Sprites/frames/ (legacy bundle path) ───────────────
         if let resourcePath = Bundle.main.resourcePath {
             let fullPath = resourcePath + "/Sprites/frames/" + named
             if let image = UIImage(contentsOfFile: fullPath) {
