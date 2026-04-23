@@ -2,7 +2,64 @@ import Foundation
 
 @MainActor
 struct CombatFlowController {
+    static func setCombatPhase(gameState: GameState, _ phase: CombatPhase) {
+        gameState.combatPhase = phase
+        CombatFlowController.syncLegacyState(gameState: gameState)
+    }
+
+    static func setCombatOutcome(gameState: GameState, _ outcome: CombatOutcome) {
+        gameState.combatOutcome = outcome
+        CombatFlowController.syncLegacyState(gameState: gameState)
+    }
+
+    /// Legacy fields derived from CombatPhase/CombatOutcome — do not write directly.
+    static func syncLegacyState(gameState: GameState) {
+        let phase = gameState.combatPhase
+        let outcome = gameState.combatOutcome
+
+        gameState.isPlayerTurn = (phase == .playerInput)
+        gameState.isPlayerInputBlocked = (phase != .playerInput)
+
+        switch phase {
+        case .combatResolved, .rewarding, .complete:
+            gameState.combatEnded = true
+            gameState.missionComplete = true
+        default:
+            gameState.combatEnded = false
+            gameState.missionComplete = false
+        }
+
+        switch outcome {
+        case .victory, .extracted:
+            gameState.combatWon = true
+        case .defeat:
+            gameState.combatWon = false
+        case .none:
+            gameState.combatWon = nil
+        }
+    }
+
+    /// Broad combat closure flags are owned here so setup/outcome flows do not write ad hoc.
+    static func resetCombatOutcomeFlagsForNewMission(gameState: GameState) {
+        CombatFlowController.setCombatPhase(gameState: gameState, .idle)
+        CombatFlowController.setCombatOutcome(gameState: gameState, .none)
+    }
+
+    /// Canonical owner path for combat outcome flags once a terminal result is determined.
+    static func applyCombatOutcome(gameState: GameState, won: Bool) {
+        CombatFlowController.setCombatPhase(gameState: gameState, .combatResolved)
+        if won {
+            // Preserve extraction-specific terminal outcome if it was set during request path.
+            if gameState.combatOutcome != .extracted {
+                CombatFlowController.setCombatOutcome(gameState: gameState, .victory)
+            }
+        } else {
+            CombatFlowController.setCombatOutcome(gameState: gameState, .defeat)
+        }
+    }
+
     static func beginRound(gameState: GameState) {
+        CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)
         CombatFlowController.resetTurnTracking(gameState: gameState)
         gameState.isDefending = false
         gameState.defendingCharacterId = nil
@@ -343,11 +400,13 @@ struct CombatFlowController {
     }
 
     static func completeAction(gameState: GameState, for character: Character) {
-        // Set active to this character so endTurn() marks the right one
+        CombatFlowController.setCombatPhase(gameState: gameState, .playerResolving)
+        // Set active to this character so turn-advance marks the right one.
         gameState.activeCharacterId = character.id
-        CombatFlowController.endTurn(gameState: gameState)
+        TurnManager.requestTurnAdvance(gameState: gameState)
     }
 
+    /// Turn-advance implementation invoked by TurnManager ownership entrypoint.
     static func endTurn(gameState: GameState) {
         // NOTE: Do NOT set isPlayerTurn=false or block input here unless we're actually
         // transitioning to the enemy phase. Doing so prematurely disables action buttons
@@ -377,8 +436,7 @@ struct CombatFlowController {
 
         let living = gameState.playerTeam.filter { $0.isAlive }
         guard !living.isEmpty else {
-            gameState.isPlayerInputBlocked = false
-            gameState.isPlayerTurn = true
+            CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)
             return
         }
 
@@ -393,8 +451,7 @@ struct CombatFlowController {
             gameState.activeCharacterId = char.id
             gameState.selectedCharacterId = char.id
             gameState.currentTurnIndex = gameState.playerTeam.firstIndex(where: { $0.id == char.id }) ?? 0
-            gameState.isPlayerInputBlocked = false
-            gameState.isPlayerTurn = true      // Stay in player phase — buttons must remain enabled
+            CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)      // Stay in player phase — buttons must remain enabled
             gameState.isDefending = false
             gameState.defendingCharacterId = nil
             NotificationCenter.default.post(
@@ -404,8 +461,7 @@ struct CombatFlowController {
             )
         } else {
             // All living players have acted — NOW lock input and start enemy phase.
-            gameState.isPlayerTurn = false
-            gameState.isPlayerInputBlocked = true
+            CombatFlowController.setCombatPhase(gameState: gameState, .enemyResolving)
             gameState.currentTurnIndex = 0
             gameState.enemyPhaseCount += 1
             gameState.roundNumber += 1
@@ -498,8 +554,7 @@ struct CombatFlowController {
                 guard let gameState = gameState else { return }
                 if gameState.isPlayerInputBlocked && !gameState.combatEnded {
                     print("[GameState] Safety timeout: force-unblocking player input")
-                    gameState.isPlayerInputBlocked = false
-                    gameState.isPlayerTurn = true
+                    CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)
                     NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
                 }
             }
@@ -552,6 +607,32 @@ struct CombatFlowController {
         }
     }
 
+    /// Request path for scene/UI attack intent against a specific enemy.
+    static func requestAttackOnEnemy(gameState: GameState, enemyId: UUID) {
+        gameState.targetCharacterId = enemyId
+        CombatFlowController.performAttack(gameState: gameState)
+    }
+
+    /// Request path for scene-driven selection updates; selection intent only.
+    static func requestCharacterSelectionFromScene(gameState: GameState, id: UUID) {
+        gameState.selectedCharacterId = id
+    }
+
+    /// Scene callback when enemy phase has fully completed and control returns to player.
+    static func restorePlayerControlAfterEnemyPhase(gameState: GameState) {
+        CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)
+
+        if let char = gameState.findNextLivingCharacter(after: 0) {
+            gameState.activeCharacterId = char.id
+            gameState.selectedCharacterId = char.id
+            NotificationCenter.default.post(
+                name: .turnChanged,
+                object: nil,
+                userInfo: ["characterId": char.id.uuidString]
+            )
+        }
+    }
+
     static func handleTileTap(gameState: GameState, tileX: Int, tileY: Int) {
         if let char = gameState.playerTeam.first(where: { $0.positionX == tileX && $0.positionY == tileY && $0.isAlive }) {
             gameState.selectedCharacterId = char.id
@@ -588,5 +669,61 @@ struct CombatFlowController {
         }
 
         gameState.addLog("Empty tile: (\(tileX),\(tileY))")
+    }
+
+    /// Extraction is a request path; CombatFlowController owns extraction outcome adjudication.
+    static func requestExtraction(
+        gameState: GameState,
+        characterId: UUID?,
+        tileX: Int,
+        tileY: Int
+    ) -> Bool {
+        guard !gameState.combatEnded else { return false }
+        CombatFlowController.setCombatPhase(gameState: gameState, .extractRequested)
+
+        guard tileX == gameState.extractionX && tileY == gameState.extractionY else {
+            CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)
+            gameState.addLog("That is not the extraction point.")
+            return false
+        }
+
+        guard let id = characterId,
+              let char = gameState.playerTeam.first(where: { $0.id == id && $0.isAlive }) else {
+            CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)
+            gameState.addLog("Select a character, then step onto extraction.")
+            return false
+        }
+
+        // Keep model-space position aligned with tile tap before adjudication.
+        char.positionX = tileX
+        char.positionY = tileY
+
+        if !(gameState.livingEnemies.isEmpty && gameState.pendingSpawns.isEmpty) {
+            CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)
+            gameState.addLog("Clear all enemies before extraction!")
+            return false
+        }
+
+        adjudicateExtractionIfEligible(gameState: gameState)
+        return true
+    }
+
+    /// Owner path for extraction mission completion resolution.
+    static func adjudicateExtractionIfEligible(gameState: GameState) {
+        guard gameState.currentMissionType == .extraction else { return }
+        guard gameState.livingEnemies.isEmpty && gameState.pendingSpawns.isEmpty else { return }
+
+        let onExtraction = gameState.livingPlayers.contains {
+            $0.positionX == gameState.extractionX && $0.positionY == gameState.extractionY
+        }
+
+        if onExtraction {
+            CombatFlowController.setCombatOutcome(gameState: gameState, .extracted)
+            gameState.finalizeCombatFromCombatFlow(
+                won: true,
+                missionLog: "🚁 EXTRACTION SUCCESS — Runners are out!",
+                terminalLog: "=== VICTORY ==="
+            )
+        }
     }
 }

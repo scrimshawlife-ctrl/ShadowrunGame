@@ -1,106 +1,99 @@
-# Repo Audit v1
+# Repo Audit v2 — Full Read
 
-Date: 2026-04-21
+Date: 2026-04-23 (UTC)
 
 ## Executive Summary
 
-- overall health: **mixed**
-- main risk: **repo hygiene + authority drift** (duplicate nested workspace plus a very large `GameState` with broad responsibilities)
-- safest next move: **stabilization pass** (workspace cleanup planning + real macOS/Xcode validation before new mechanics)
+- overall health: **mixed, structurally coherent but operationally fragile**
+- primary risk: **repository drift + boundary leakage pressure**
+- immediate safest move: **contain workspace duplication risk, then harden authority seams before feature expansion**
 
-Build validation in this container is **NOT_COMPUTABLE** (`xcodebuild: command not found`).
+Validation status in this container:
+- `swift` toolchain: **NOT_COMPUTABLE** (`swift: command not found`)
+- `xcodebuild`: **NOT_COMPUTABLE** (`xcodebuild: command not found`)
+
+## Scope + Method
+
+This full read pass covered:
+1. Tracked source and docs structure (`git ls-files`, targeted `rg`, `find -maxdepth` scans).
+2. Authority boundary checks (`GameState` ownership vs Rendering/UI write paths).
+3. Repository hygiene and collaborator-friction scan (nested repos, backups, artifacts).
+4. Documentation freshness check against current code topology.
 
 ## Structure Snapshot
 
-Top-level implementation appears to be rooted at repo root:
-- `ShadowrunGameApp.swift`
-- `Game/`, `Rendering/`, `UI/`, `Entities/`, `Missions/`
-- `docs/` + `docs/assets/`
-- `ShadowrunGame.xcodeproj`
+### Strengths
+- Clear top-level domain split is present and readable: `Game/`, `Missions/`, `Rendering/`, `UI/`, `Entities/`, `docs/`.
+- Architecture and handoff docs are present and mostly current for collaborator onboarding.
 
-Observed notable structure risks:
-- Nested duplicate workspace folder exists: `ShadowrunGame/` (contains mirrored source, scripts, screenshots, and its own `.git` + `.venv`).
-- Large runtime artifact footprint in root (`build/`, `screenshots/`, backup `.xcodeproj` folders).
-- No `Tests/` or `UITests/` directories were observed at max depth 3.
+### Risks
+- Nested duplicate workspace/repo exists at `./ShadowrunGame/` with its own `.git`, scripts, docs, and build artifacts.
+- Root contains multiple backup Xcode project directories (`ShadowrunGame.xcodeproj.backup-*`) and large artifact trees (`build/`, `screenshots/`).
+- Current branch is `work`, which does not match preferred branch naming convention (`feature/*`, `fix/*`, `docs/*`, `chore/*`).
 
-## Authority Audit
+## Authority Boundary Audit
 
-### GameState status
+### Findings
+- `GameState` remains practical authority for mission outcome, turn progression, trace state, and extraction flow.
+- `TurnManager.swift` still exists but appears runtime-dormant (commentary/docs references plus local file definition).
+- Rendering layer (`Rendering/BattleScene.swift`) still performs many direct writes into `GameState.shared` for room transitions, turn/input toggles, selection, and door/extraction interactions.
 
-`GameState` is still the practical runtime authority for combat and mission flow.
-Evidence observed:
-- owns turn state (`currentTurnIndex`, `roundNumber`, input lock fields)
-- owns trace/escalation/role/preset/type/mission objective state
-- owns mission setup/reset and enemy phase orchestration
-- owns win/loss and combat log mutation
+### Interpretation
+- The project intent (“`GameState` authoritative core”) is still intact, but mutation pathways are broad.
+- Main pressure line is not missing authority; it is **write-surface breadth**, which increases drift probability during UI/render iterations.
 
-### TurnManager status
+## Size + Complexity Signals
 
-`TurnManager` appears **shadow/stale** (compiled source, but not actively driving runtime flow from visible call sites).
-- No operational references were found outside comments/docs and the file itself.
-- `BattleScene` has a comment mentioning TurnManager, but direct runtime reads/writes use `GameState.shared`.
+Approximate file sizes from this pass:
+- `Game/GameState.swift`: **1,746 lines**
+- `Rendering/BattleScene.swift`: **1,841 lines**
+- `UI/CombatUI.swift`: **1,754 lines**
+- `Game/CombatFlowController.swift`: **592 lines**
 
-### UI/render separation status
+Interpretation:
+- Large-file concentration in state, rendering, and UI is the key entropy driver.
+- Refactor opportunity exists around “narrow seams” (authority façade methods, fewer direct scene writes) rather than large rewrites.
 
-Separation is **mixed**:
-- `CombatUI` is primarily presentational/dispatch.
-- `BattleScene` is primarily render/input but still writes back into `GameState` turn/input/selection state and room-transition state.
-- This is functional but increases cross-surface mutation coupling.
+## Documentation Coherence Check
 
-## Code Health Risks
+- `docs/README.md` still flags legacy diagrams (`runtime-architecture.svg`, `turn-flow.svg`) as unreferenced; this remains accurate.
+- Existing audits (`docs/AuthoritySanityReport.md`, `docs/TurnAuthorityReport.md`, prior `docs/RepoAudit.md`) remain directionally aligned with current code shape.
+- No major doc-code contradiction was observed in this pass.
 
-### Likely compile risks (cannot compile here)
+## Risk Register (Current)
 
-- `GameState.swift` is large (~2,116 lines) and includes multiple domains; this increases accidental coupling risk.
-- Repo includes backup project files and duplicate workspace trees that may confuse contributors/tooling.
-- `README.md` has minor formatting artifact (extra separator spacing), low severity.
-
-### Likely maintenance risks
-
-- God-object pressure in `GameState` (turn flow + AI orchestration + mission objectives + trace + role/preset/type + logging + movement helpers).
-- Shared writes between `BattleScene` and `GameState` for turn/input recovery states.
-- Stale model risk: `TurnManager` concept remains present while non-driving.
-
-### Likely drift risks
-
-- Docs are strong but can drift quickly because behavior changes are frequent and runtime cannot be CI-validated in this environment.
-- Mission/trace docs likely stay accurate short-term, but status claims depend on macOS simulator runs not currently enforced.
-
-## Documentation Audit
-
-Docs currently present:
-- `README.md`
-- `docs/TraceSystem.md`
-- `docs/TurnAuthorityReport.md`
-- `docs/SmokeTestPlan.md`
-- `docs/DuplicateWorkspaceAudit.md`
-- `docs/MissionMatrix.md`
-- `docs/PlaytestChecklist.md`
-
-Alignment status: **partial-to-strong**
-- Core trace/authority/mission matrix docs are present and coherent.
-- `docs/assets/runtime-architecture.svg` and `docs/assets/turn-flow.svg` exist but are not currently linked from `README.md`/`docs/README.md` (unreferenced artifacts).
-
-## Testability Audit
-
-Current ability to test:
-- Manual playtesting support is good (UI toggles, diagnostics panel, checklist docs).
-- Automated test coverage is absent from visible repo structure (no XCTest/UI test target files found in tree scan).
-
-Missing validation path:
-- No build/test execution possible in this Linux container for iOS toolchain.
-- `xcodebuild` unavailable here (`NOT_COMPUTABLE`).
-
-Recommended next validation step on macOS:
-1. Run `xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' build`.
-2. Execute `docs/SmokeTestPlan.md` and `docs/PlaytestChecklist.md` in simulator.
-3. Capture one pass/fail artifact log per objective mode (`Survive`, `Eliminate`).
+1. **High** — Nested repo/workspace (`./ShadowrunGame/`) can cause accidental edits, stale commits, and handoff confusion.
+2. **Medium** — Rendering writes directly into authority state through many call sites (harder to guarantee deterministic turn semantics during visual changes).
+3. **Medium** — Dormant `TurnManager` model remains in tree, preserving conceptual duplication risk.
+4. **Low/Medium** — Toolchain absence in this environment blocks compile-level verification; static review only.
 
 ## Recommended Next Moves
 
-1. **Cleanup (safest first)**
-   - Plan/execute dedicated housekeeping patch for nested `ShadowrunGame/` duplicate and backup project clutter (with backup safety).
-2. **Validation**
-   - Run real macOS/Xcode build + smoke checklist; baseline compile/runtime truth before additional features.
-3. **Gameplay**
-   - Only after validation, continue pacing tuning (mission type + preset matrix) using documented checklist.
+1. **Repo hygiene containment (first)**
+   - Decide canonical root vs nested workspace and archive/remove one path.
+   - Gate future audits to tracked files only and document a single source-of-truth workspace.
+2. **Authority seam tightening (second)**
+   - Introduce explicit, minimal `GameState` façade methods for scene-driven mutations.
+   - Replace direct `GameState.shared.<field>` writes in `BattleScene` incrementally with intent-level calls.
+3. **Runtime truth validation (third, macOS required)**
+   - Run `xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' build`.
+   - Execute smoke checklist and mission matrix validation in simulator.
+
+## Handoff Standard
+
+- **Changed**: Completed a full repository read/audit refresh with updated risk register and prioritization.
+- **Pending**: Workspace deduplication decision and authority seam tightening implementation.
+- **Blocked**: iOS compile/runtime validation is blocked in this container (`swift`/`xcodebuild` unavailable).
+- **Next**: Ship a focused `docs/` + hygiene PR that declares canonical workspace and excludes duplicate tree from active collaboration path.
+
+## Commands Used
+
+- `git status --short`
+- `git branch --show-current`
+- `git ls-files | head -n 200`
+- `find . -maxdepth 2 -type d | sort`
+- `wc -l Game/GameState.swift Game/CombatFlowController.swift Game/TurnManager.swift Rendering/BattleScene.swift UI/CombatUI.swift README.md docs/README.md plans.md docs/RepoAudit.md`
+- `rg -n "GameState\.shared|missionComplete|combatWon|combatEnded|endTurn\(|requestExtraction\(" Game Rendering UI`
+- `rg -n "TurnManager" Game Rendering UI README.md docs`
+- `rg -n "runtime-architecture\.svg|turn-flow\.svg|shadowrune-loop\.svg|shadowrune-architecture\.svg|shadowrune-roles\.svg" README.md docs/README.md docs -g'*.md'`
+- `bash scripts/repo_audit_first_pass.sh`

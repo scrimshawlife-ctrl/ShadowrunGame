@@ -58,7 +58,7 @@ struct MissionSetupService {
         gameState.hasLoggedTraceTriggerForCurrentRun = false
         gameState.actionMode = .street
         logEnemyComposition(gameState: gameState, totalSpawnCount: mission.enemies.count)
-        gameState.missionComplete = false
+        CombatFlowController.resetCombatOutcomeFlagsForNewMission(gameState: gameState)
         gameState.didApplyAttentionRecoveryLastMission = false
         gameState.didApplyHighTraceEscalationBonusLastMission = false
         gameState.lastRewardTier = .low
@@ -83,8 +83,6 @@ struct MissionSetupService {
         gameState.activeCharacterId = gameState.playerTeam.first?.id
         gameState.selectedCharacterId = gameState.playerTeam.first?.id
         gameState.beginRound()
-        gameState.isPlayerInputBlocked = false
-        gameState.isPlayerTurn = true
         gameState.isEnemyPhaseRunning = false
     }
 
@@ -141,7 +139,7 @@ struct MissionSetupService {
         gameState.hasLoggedTraceTriggerForCurrentRun = false
         gameState.actionMode = .street
         logEnemyComposition(gameState: gameState, totalSpawnCount: firstRoom.enemies.count)
-        gameState.missionComplete = false
+        CombatFlowController.resetCombatOutcomeFlagsForNewMission(gameState: gameState)
         gameState.didApplyAttentionRecoveryLastMission = false
         gameState.didApplyHighTraceEscalationBonusLastMission = false
         gameState.lastRewardTier = .low

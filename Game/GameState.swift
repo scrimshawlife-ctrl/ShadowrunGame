@@ -96,6 +96,28 @@ enum MissionType {
     case extraction
 }
 
+/// Additive Stage-1 state machine axis.
+/// Legacy booleans remain for compatibility during migration.
+enum CombatPhase {
+    case idle
+    case playerInput
+    case playerResolving
+    case enemyResolving
+    case extractRequested
+    case combatResolved
+    case rewarding
+    case complete
+}
+
+/// Additive Stage-1 outcome axis.
+/// Legacy booleans remain for compatibility during migration.
+enum CombatOutcome {
+    case none
+    case victory
+    case defeat
+    case extracted
+}
+
 enum EnemyArchetype {
     case watcher
     case enforcer
@@ -199,6 +221,10 @@ final class GameState: ObservableObject {
     @Published var isPlayerTurn: Bool = true
     /// When true, blocks player input in BattleScene while enemy phase is running.
     @Published var isPlayerInputBlocked: Bool = false
+    /// Stage-1 additive migration layer. Owned by CombatFlowController writes only.
+    @Published var combatPhase: CombatPhase = .idle
+    /// Stage-1 additive migration layer. Owned by CombatFlowController writes only.
+    @Published var combatOutcome: CombatOutcome = .none
     /// Guards against double-triggering enemyPhase() within the same frame/turn.
     var isEnemyPhaseRunning: Bool {
         get { sessionState.isEnemyPhaseRunning }
@@ -586,7 +612,7 @@ final class GameState: ObservableObject {
     // MARK: - Computed
 
     var currentCharacter: Character? {
-        guard isPlayerTurn, !playerTeam.isEmpty else { return nil }
+        guard isPlayerInputPhase, !playerTeam.isEmpty else { return nil }
         // Find first living player at or after currentTurnIndex
         for i in currentTurnIndex..<playerTeam.count {
             if playerTeam[i].isAlive { return playerTeam[i] }
@@ -607,6 +633,37 @@ final class GameState: ObservableObject {
 
     var playerTeamWon: Bool {
         isCombatOver && !livingPlayers.isEmpty && livingEnemies.isEmpty
+    }
+
+    /// Compatibility accessor — prefer phase/outcome, legacy fallback retained temporarily.
+    var isPlayerInputPhase: Bool {
+        (combatPhase == .playerInput) || isPlayerTurn
+    }
+
+    /// Compatibility accessor — prefer phase/outcome, legacy fallback retained temporarily.
+    var isInputBlockedByPhase: Bool {
+        (combatPhase != .playerInput) || isPlayerInputBlocked
+    }
+
+    /// Compatibility accessor — prefer phase/outcome, legacy fallback retained temporarily.
+    var isCombatResolvedOrBeyond: Bool {
+        (combatPhase == .combatResolved || combatPhase == .rewarding || combatPhase == .complete) || combatEnded
+    }
+
+    /// Compatibility accessor — prefer phase/outcome, legacy fallback retained temporarily.
+    var isCombatVictoryLike: Bool {
+        if combatOutcome == .victory || combatOutcome == .extracted {
+            return true
+        }
+        if combatOutcome == .defeat {
+            return false
+        }
+        return combatWon ?? false
+    }
+
+    /// Compatibility accessor — prefer phase/outcome, legacy fallback retained temporarily.
+    var isMissionCompleteCompat: Bool {
+        (combatPhase == .complete) || missionComplete
     }
 
     /// Read-only diagnostics summary for turn authority mapping.
@@ -1123,7 +1180,7 @@ final class GameState: ObservableObject {
     }
 
     func endTurn() {
-        CombatFlowController.endTurn(gameState: self)
+        TurnManager.requestTurnAdvance(gameState: self)
     }
 
     /// Check if combat is over
@@ -1139,7 +1196,7 @@ final class GameState: ObservableObject {
 
     /// Request extraction resolution through GameState authority.
     /// Callers should pass the selected living character id (if available) and tapped tile.
-    /// GameState validates extraction tile, updates model position, and finalizes mission state.
+    /// CombatFlowController validates and adjudicates extraction outcome.
     func requestExtraction(characterId: UUID?, tileX: Int, tileY: Int) -> Bool {
         ExtractionController.requestExtraction(
             gameState: self,

@@ -119,6 +119,18 @@ final class TurnManager: ObservableObject {
         advanceTurn()
     }
 
+    // MARK: - Shared Runtime Turn Ownership
+
+    /// Canonical turn-advance owner for runtime combat flow.
+    /// UI/render/request layers should route turn advancement through this entrypoint.
+    static func requestTurnAdvance(gameState: GameState) {
+        TurnManager.endTurn(gameState: gameState)
+    }
+
+    private static func endTurn(gameState: GameState) {
+        CombatFlowController.endTurn(gameState: gameState)
+    }
+
     private func resetRoundActions() {
         for i in 0..<turnOrder.count {
             turnOrder[i].hasActed = false
