@@ -204,32 +204,32 @@ struct TeamRosterBar: View {
                     ZStack {
                         Circle()
                             .fill(archetypeColor(char.archetype).opacity(0.2))
-                            .frame(width: 36, height: 36)
+                            .frame(width: 30, height: 30)
 
                         // Gold border glow if selected
                         if gameState.activeCharacter?.id == char.id {
                             Circle()
                                 .stroke(CombatTheme.gold, lineWidth: 2)
-                                .frame(width: 36, height: 36)
+                                .frame(width: 30, height: 30)
                                 .shadow(color: CombatTheme.gold.opacity(0.6), radius: 4)
                         } else {
                             Circle()
                                 .stroke(archetypeColor(char.archetype).opacity(0.7), lineWidth: 1.5)
-                                .frame(width: 36, height: 36)
+                                .frame(width: 30, height: 30)
                         }
 
                         // Character state
                         if char.currentHP <= 0 {
                             VStack(spacing: 0) {
                                 Image(systemName: "skull.fill")
-                                    .font(.system(size: 14, weight: .bold))
+                                    .font(.system(size: 12, weight: .bold))
                                     .foregroundColor(CombatTheme.enemyColor)
                             }
                             .opacity(0.6)
                         } else {
                             VStack(spacing: 0) {
                                 Text(String(char.name.prefix(1)).uppercased())
-                                    .font(.system(size: 11, weight: .black, design: .rounded))
+                                    .font(.system(size: 10, weight: .black, design: .rounded))
                                     .foregroundColor(archetypeColor(char.archetype))
                             }
                         }
@@ -239,7 +239,7 @@ struct TeamRosterBar: View {
                             .fill(char.hasActedThisRound
                                   ? Color.gray.opacity(0.35)
                                   : archetypeColor(char.archetype).opacity(0.9))
-                            .frame(width: 7, height: 7)
+                            .frame(width: 6, height: 6)
                             .overlay(
                                 Circle()
                                     .stroke(Color.black.opacity(0.5), lineWidth: 0.5)
@@ -278,7 +278,7 @@ struct TeamRosterBar: View {
                         .font(.system(size: 7, weight: .bold, design: .monospaced))
                         .foregroundColor(CombatTheme.textMuted)
                 }
-                .frame(width: 50)
+                .frame(width: 42)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     HapticsManager.shared.buttonTap()
@@ -287,8 +287,8 @@ struct TeamRosterBar: View {
             }
             Spacer()
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(CombatTheme.darkPanel)
@@ -421,8 +421,8 @@ struct StatusDisplay: View {
                     }
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(
@@ -534,13 +534,13 @@ struct ActionBar: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            ActionButton(title: "ATK", icon: "flame.fill", color: CombatTheme.damage, width: 50, height: 38, action: onAttack, disabled: disabled)
-            ActionButton(title: "DEF", icon: "shield.fill", color: CombatTheme.secondary, width: 50, height: 38, action: onDefend, disabled: disabled)
+            ActionButton(title: "ATK", icon: "flame.fill", color: CombatTheme.damage, width: 44, height: 32, action: onAttack, disabled: disabled)
+            ActionButton(title: "DEF", icon: "shield.fill", color: CombatTheme.secondary, width: 44, height: 32, action: onDefend, disabled: disabled)
             if let onSpecial {
-                ActionButton(title: specialTitle, icon: specialIcon, color: specialColor, width: 50, height: 38, action: onSpecial, disabled: disabled)
+                ActionButton(title: specialTitle, icon: specialIcon, color: specialColor, width: 44, height: 32, action: onSpecial, disabled: disabled)
             }
-            ActionButton(title: "ITM", icon: "cross.case.fill", color: Color(hex: "8866FF"), width: 50, height: 38, action: onItems, disabled: disabled)
-            ActionButton(title: "END", icon: "arrow.right.circle.fill", color: CombatTheme.accent, width: 50, height: 38, action: onEndTurn, disabled: disabled)
+            ActionButton(title: "ITM", icon: "cross.case.fill", color: Color(hex: "8866FF"), width: 44, height: 32, action: onItems, disabled: disabled)
+            ActionButton(title: "END", icon: "arrow.right.circle.fill", color: CombatTheme.accent, width: 44, height: 32, action: onEndTurn, disabled: disabled)
         }
     }
 }
@@ -551,11 +551,11 @@ struct CombatLogView: View {
     @ObservedObject var gameState: GameState
 
     private var recentEntries: [String] {
-        Array(gameState.combatLog.suffix(5))
+        Array(gameState.combatLog.suffix(3))
     }
 
     private func hasMoreEntries() -> Bool {
-        gameState.combatLog.count > 5
+        gameState.combatLog.count > 3
     }
 
     private func entryColor(_ text: String) -> Color {
@@ -570,25 +570,25 @@ struct CombatLogView: View {
         VStack(alignment: .leading, spacing: 2) {
             if hasMoreEntries() {
                 Text("...")
-                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                    .font(.system(size: 7, weight: .bold, design: .monospaced))
                     .foregroundColor(CombatTheme.textMuted)
                     .padding(.horizontal, 10)
             }
             ForEach(Array(recentEntries.enumerated()), id: \.offset) { _, entry in
                 HStack(spacing: 4) {
                     Text("›")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 9, weight: .bold))
                         .foregroundColor(CombatTheme.accent)
                     Text(entry)
-                        .font(.system(size: 10, design: .monospaced))
+                        .font(.system(size: 9, design: .monospaced))
                         .foregroundColor(entryColor(entry))
                         .lineLimit(1)
                     Spacer()
                 }
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(CombatTheme.panelBG)
@@ -649,8 +649,8 @@ struct LootBadge: View {
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(CombatTheme.gold)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color(hex: "1A1A00"))
@@ -1161,22 +1161,22 @@ struct TurnIndicatorBanner: View {
                 if isEnemyTurn {
                     Image(systemName: "pause.fill")
                         .font(.system(size: 9))
-                    Text("ENEMY TURN")
-                        .font(.system(size: 10, weight: .black))
+                Text("ENEMY TURN")
+                        .font(.system(size: 9, weight: .black))
                 } else {
                     Image(systemName: "play.fill")
                         .font(.system(size: 9))
                     VStack(spacing: 0) {
                         Text("YOUR TURN")
-                            .font(.system(size: 10, weight: .black))
+                            .font(.system(size: 9, weight: .black))
                         Text(currentCharName)
-                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                            .font(.system(size: 7, weight: .semibold, design: .monospaced))
                     }
                 }
             }
             .foregroundColor(isEnemyTurn ? Color(hex: "FF3333") : CombatTheme.accent)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
             .background(
                 RoundedRectangle(cornerRadius: 6)
                     .fill(isEnemyTurn
@@ -1200,10 +1200,10 @@ struct TurnIndicatorBanner: View {
 
             // Round indicator
             Text("R\(roundNumber)")
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
                 .foregroundColor(CombatTheme.textMuted)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 4)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
                         .fill(Color.black.opacity(0.3))
@@ -1216,13 +1216,13 @@ struct TurnIndicatorBanner: View {
             // Enemy count with skull
             HStack(spacing: 3) {
                 Text("💀")
-                    .font(.system(size: 10))
+                    .font(.system(size: 9))
                 Text("x\(gameState.livingEnemies.count)")
-                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 8, weight: .semibold, design: .monospaced))
                     .foregroundColor(CombatTheme.enemyColor)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
             .background(
                 RoundedRectangle(cornerRadius: 6)
                     .fill(CombatTheme.enemyColor.opacity(0.15))
@@ -1237,12 +1237,12 @@ struct TurnIndicatorBanner: View {
             // Mini mission objective hint
             if !isEnemyTurn {
                 Text("Reach ★ EXIT to extract")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .font(.system(size: 8, weight: .medium, design: .monospaced))
                     .foregroundColor(CombatTheme.accent.opacity(0.7))
             }
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 3)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(CombatTheme.panelBG.opacity(0.8))
@@ -1387,7 +1387,7 @@ struct CombatUI: View {
     @State private var showingItemPicker = false
     @State private var showingSpellPicker = false
     @State private var isEnemyTurnDisplay: Bool = false
-    @State private var showingMissionIntel = true
+    @State private var showingMissionIntel = false
 
     private var specialAbilityTitle: String {
         switch (gameState.activeCharacter ?? gameState.currentCharacter)?.archetype {
@@ -1458,7 +1458,7 @@ struct CombatUI: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            VStack(spacing: 6) {
+            VStack(spacing: 4) {
                 // Turn indicator banner
                 TurnIndicatorBanner(
                     isEnemyTurn: isEnemyTurn || isEnemyTurnDisplay,
@@ -1672,7 +1672,7 @@ struct CombatUI: View {
                 // Combat log
                 CombatLogView(gameState: gameState)
             }
-            .padding(8)
+            .padding(6)
             .background(
                 Rectangle()
                     .fill(CombatTheme.background.opacity(0.90))
@@ -1687,7 +1687,7 @@ struct CombatUI: View {
                     }
                 )
                 .padding(.trailing, 10)
-                .padding(.bottom, 288)
+                .padding(.bottom, 206)
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             }
 
