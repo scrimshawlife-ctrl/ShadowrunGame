@@ -289,7 +289,7 @@ final class BattleScene: SKScene {
         openedDoorKeys.removeAll()
 
         // Reset combat state for the new room
-        GameState.shared.isPlayerInputBlocked = false
+        CombatFlowController.restorePlayerControlAfterEnemyPhase(gameState: GameState.shared)
 
         // Reload the room with the new map, characters, and enemies
         loadRoom(targetRoom, characters: GameState.shared.playerTeam, enemies: newEnemies)
@@ -377,7 +377,7 @@ final class BattleScene: SKScene {
                 guard let self else { return }
                 // Auto-select the new active character AND show their movement range
                 self.showSelectionRing(for: id)
-                GameState.shared.selectedCharacterId = id
+                CombatFlowController.requestCharacterSelectionFromScene(gameState: GameState.shared, id: id)
                 self.focusCamera(on: id)
                 // Selective idle animation: only the active player character animates.
                 // All other player characters are frozen on their first idle frame.
@@ -417,15 +417,8 @@ final class BattleScene: SKScene {
                 guard let self else { return }
                 self.playerInputLocked = false
                 self.isEnemyPhaseRunning = false
-                GameState.shared.isPlayerInputBlocked = false
-                GameState.shared.isPlayerTurn = true
-                // Activate first living character for the new round
-                let nextChar = GameState.shared.findNextLivingCharacter(after: 0)
-                if let char = nextChar {
-                    GameState.shared.activeCharacterId = char.id
-                    GameState.shared.selectedCharacterId = char.id
-                    NotificationCenter.default.post(name: .turnChanged, object: nil, userInfo: ["characterId": char.id.uuidString])
-                }
+                // Render layer is projection-only; combat flow owns progression state restoration.
+                CombatFlowController.restorePlayerControlAfterEnemyPhase(gameState: GameState.shared)
                 print("[BattleScene] .enemyPhaseCompleted received — player input unlocked")
             }
         }
@@ -433,7 +426,7 @@ final class BattleScene: SKScene {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         // Block input during enemy phase or when player input is locked.
-        if playerInputLocked || GameState.shared.isPlayerInputBlocked {
+        if playerInputLocked || GameState.shared.isInputBlockedByPhase {
             GameState.shared.addLog("Enemy phase — wait for your turn.")
             HapticsManager.shared.buttonTap()
             return
@@ -1345,7 +1338,8 @@ final class BattleScene: SKScene {
         // 1. Tap on player character -> select it (always allowed)
         if let (id, _) = characterOnTile {
             showSelectionRing(for: id)
-            GameState.shared.selectedCharacterId = id
+            // Render layer emits selection intent only.
+            CombatFlowController.requestCharacterSelectionFromScene(gameState: GameState.shared, id: id)
             return
         }
 
@@ -1353,8 +1347,7 @@ final class BattleScene: SKScene {
         if let (_, enemySprite) = enemyOnTile {
             if GameState.shared.activeCharacterId != nil || GameState.shared.selectedCharacterId != nil {
                 if let enemyId = UUID(uuidString: enemySprite.enemyId), !enemySprite.enemyId.isEmpty {
-                    GameState.shared.targetCharacterId = enemyId
-                    GameState.shared.performAttack()
+                    CombatFlowController.requestAttackOnEnemy(gameState: GameState.shared, enemyId: enemyId)
                 } else {
                     GameState.shared.addLog("Cannot target this enemy.")
                 }
@@ -1489,25 +1482,16 @@ final class BattleScene: SKScene {
     /// force-unblock and restore the player's turn so the game doesn't freeze permanently.
     override func update(_ currentTime: TimeInterval) {
         refreshTraceVisuals()
-        if GameState.shared.isPlayerInputBlocked {
+        if GameState.shared.isInputBlockedByPhase {
             if inputBlockedSince == nil {
                 inputBlockedSince = currentTime
             } else if currentTime - inputBlockedSince! > 5.0 {
                 print("[BattleScene] ⚠️ Safety timeout: isPlayerInputBlocked stuck for >5s — force-unblocking")
                 playerInputLocked = false
                 isEnemyPhaseRunning = false
-                GameState.shared.isPlayerInputBlocked = false
-                GameState.shared.isPlayerTurn = true
+                // Safety fallback still routes authority through combat flow owner.
+                CombatFlowController.restorePlayerControlAfterEnemyPhase(gameState: GameState.shared)
                 inputBlockedSince = nil
-                if let char = GameState.shared.findNextLivingCharacter(after: 0) {
-                    GameState.shared.activeCharacterId = char.id
-                    GameState.shared.selectedCharacterId = char.id
-                    NotificationCenter.default.post(
-                        name: .turnChanged,
-                        object: nil,
-                        userInfo: ["characterId": char.id.uuidString]
-                    )
-                }
             }
         } else {
             inputBlockedSince = nil

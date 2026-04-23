@@ -401,7 +401,7 @@ struct StatusDisplay: View {
                 }
 
                 // Turn indicator
-                if gameState.isPlayerTurn {
+                if gameState.isPlayerInputPhase {
                     if gameState.isDefending {
                         Text("DEF")
                             .font(.system(size: 8, weight: .black))
@@ -1430,7 +1430,7 @@ struct CombatUI: View {
     }
 
     private var isEnemyTurn: Bool {
-        !gameState.isPlayerTurn || gameState.isPlayerInputBlocked
+        !gameState.isPlayerInputPhase || gameState.isInputBlockedByPhase
     }
 
     private var hasActedThisRound: Bool {
@@ -1569,7 +1569,7 @@ struct CombatUI: View {
                         if gameState.currentMissionType == .stealth {
                             Text("PROGRESS \(gameState.currentTurnCount)/\(gameState.missionTargetTurns)")
                                 .font(.system(size: 8, weight: .semibold, design: .monospaced))
-                                .foregroundColor(gameState.missionComplete ? CombatTheme.accent : CombatTheme.textMuted)
+                                .foregroundColor(gameState.isMissionCompleteCompat ? CombatTheme.accent : CombatTheme.textMuted)
                         }
 
                         if gameState.traceEscalationLevel >= 1 && gameState.playerRole == .street {
@@ -1578,10 +1578,10 @@ struct CombatUI: View {
                                 .foregroundColor(CombatTheme.accent.opacity(0.9))
                         }
 
-                        if gameState.combatEnded {
-                            Text(gameState.combatWon == true ? "MISSION COMPLETE" : "MISSION FAILED")
+                        if gameState.isCombatResolvedOrBeyond {
+                            Text(gameState.isCombatVictoryLike ? "MISSION COMPLETE" : "MISSION FAILED")
                                 .font(.system(size: 9, weight: .black, design: .monospaced))
-                                .foregroundColor(gameState.combatWon == true ? CombatTheme.accent : CombatTheme.enemyColor)
+                                .foregroundColor(gameState.isCombatVictoryLike ? CombatTheme.accent : CombatTheme.enemyColor)
                         }
 
                         LootBadge(items: gameState.loot)
@@ -1627,7 +1627,7 @@ struct CombatUI: View {
                             value: hasActedThisRound ? "USED" : "READY",
                             tint: Color(hex: "B8BCC8"),
                             action: onRecover,
-                            disabled: gameState.combatEnded || isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound
+                            disabled: gameState.isCombatResolvedOrBeyond || isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound
                         )
                         .accessibilityIdentifier("trace_recover_button")
 
@@ -1660,7 +1660,7 @@ struct CombatUI: View {
                     specialIcon: specialAbilityIcon,
                     specialColor: specialAbilityColor,
                     onEndTurn: onEndTurn,
-                    disabled: gameState.combatEnded || isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound
+                    disabled: gameState.isCombatResolvedOrBeyond || isEnemyTurn || isEnemyTurnDisplay || hasActedThisRound
                 )
 
                 // Hit preview — shown when a target is selected

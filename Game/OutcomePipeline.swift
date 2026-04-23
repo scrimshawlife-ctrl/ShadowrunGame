@@ -10,7 +10,10 @@ struct OutcomePipeline {
         terminalLog: String?
     ) {
 
-        guard !gameState.combatEnded else { return }
+        guard !gameState.isCombatResolvedOrBeyond else { return }
+
+        // Stage-1 additive migration: reward/cleanup phase before terminal closure.
+        CombatFlowController.setCombatPhase(gameState: gameState, .rewarding)
 
         // 1. Haptics
         if won {
@@ -54,10 +57,8 @@ struct OutcomePipeline {
         // 12. mission end summary
         gameState.addLog(OutcomePipeline.generateMissionEndSummary(gameState: gameState))
 
-        // 13. set flags
-        gameState.missionComplete = true
-        gameState.combatWon = won
-        gameState.combatEnded = true
+        // 13. set broad outcome flags through canonical combat-flow owner path
+        CombatFlowController.applyCombatOutcome(gameState: gameState, won: won)
 
         // 14. post notification
         NotificationCenter.default.post(
@@ -65,6 +66,9 @@ struct OutcomePipeline {
             object: nil,
             userInfo: ["result": won ? "victory" : "defeat"]
         )
+
+        // Stage-1 additive migration: mark completion after reward/notification closure.
+        CombatFlowController.setCombatPhase(gameState: gameState, .complete)
     }
 
     /// Heat is mission-boundary consequence state.
