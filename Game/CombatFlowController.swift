@@ -604,6 +604,11 @@ struct CombatFlowController {
             gameState.activeCharacterId = char.id
             gameState.targetCharacterId = nil
             gameState.addLog("Selected: \(char.name)")
+            NotificationCenter.default.post(
+                name: .characterSelected,
+                object: nil,
+                userInfo: ["characterId": char.id.uuidString]
+            )
         }
     }
 
@@ -616,6 +621,8 @@ struct CombatFlowController {
     /// Request path for scene-driven selection updates; selection intent only.
     static func requestCharacterSelectionFromScene(gameState: GameState, id: UUID) {
         gameState.selectedCharacterId = id
+        gameState.activeCharacterId = id
+        gameState.targetCharacterId = nil
     }
 
     /// Scene callback when enemy phase has fully completed and control returns to player.

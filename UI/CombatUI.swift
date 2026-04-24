@@ -551,11 +551,11 @@ struct CombatLogView: View {
     @ObservedObject var gameState: GameState
 
     private var recentEntries: [String] {
-        Array(gameState.combatLog.suffix(5))
+        Array(gameState.combatLog.suffix(3))
     }
 
     private func hasMoreEntries() -> Bool {
-        gameState.combatLog.count > 5
+        gameState.combatLog.count > 3
     }
 
     private func entryColor(_ text: String) -> Color {
@@ -1387,7 +1387,7 @@ struct CombatUI: View {
     @State private var showingItemPicker = false
     @State private var showingSpellPicker = false
     @State private var isEnemyTurnDisplay: Bool = false
-    @State private var showingMissionIntel = true
+    @State private var showingMissionIntel = false
 
     private var specialAbilityTitle: String {
         switch (gameState.activeCharacter ?? gameState.currentCharacter)?.archetype {
@@ -1458,7 +1458,7 @@ struct CombatUI: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            VStack(spacing: 6) {
+            VStack(spacing: 4) {
                 // Turn indicator banner
                 TurnIndicatorBanner(
                     isEnemyTurn: isEnemyTurn || isEnemyTurnDisplay,
@@ -1544,7 +1544,7 @@ struct CombatUI: View {
                 HStack(alignment: .top, spacing: 10) {
                     StatusDisplay(gameState: gameState)
                     Spacer(minLength: 0)
-                    VStack(alignment: .trailing, spacing: 6) {
+                    VStack(alignment: .trailing, spacing: 4) {
                         HStack(spacing: 6) {
                             IntelMetricBadge(label: "ROUND", value: "R\(gameState.roundNumber)", tint: CombatTheme.secondary)
                             IntelMetricBadge(label: "ENEMY", value: "\(gameState.livingEnemies.count)", tint: CombatTheme.enemyColor)
@@ -1554,17 +1554,6 @@ struct CombatUI: View {
                                 tint: gameState.traceTier >= 2 ? CombatTheme.enemyColor : CombatTheme.accent
                             )
                         }
-
-                        Text("TYPE \(gameState.missionTypeLabel)  PRESET \(gameState.missionPresetLabel)")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundColor(CombatTheme.textWhite.opacity(0.88))
-                            .multilineTextAlignment(.trailing)
-
-                        Text(gameState.missionTypeHint)
-                            .font(.system(size: 8, weight: .regular, design: .monospaced))
-                            .foregroundColor(CombatTheme.textMuted)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.trailing)
 
                         if gameState.currentMissionType == .stealth {
                             Text("PROGRESS \(gameState.currentTurnCount)/\(gameState.missionTargetTurns)")
@@ -1672,7 +1661,8 @@ struct CombatUI: View {
                 // Combat log
                 CombatLogView(gameState: gameState)
             }
-            .padding(8)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
             .background(
                 Rectangle()
                     .fill(CombatTheme.background.opacity(0.90))

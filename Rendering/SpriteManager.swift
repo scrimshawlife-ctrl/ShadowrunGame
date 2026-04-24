@@ -523,47 +523,19 @@ final class SpriteManager {
         // places this just above the floor (0.1) but below sprite art (z=10).
         // Uses hexRadius*0.7 so the base overlaps clearly with the tile outline
         // while leaving the tile's neon border visible at the edge.
-        let teamHex = SKShapeNode(path: TileMap.hexPath(radius: TileMap.hexRadius * 0.7))
+        let teamHex = SKShapeNode(path: TileMap.hexPath(radius: TileMap.hexRadius * 0.82))
         teamHex.fillColor = team == "player"
-            ? UIColor(hex: "#00FF88").withAlphaComponent(0.75)
-            : UIColor(hex: "#FF3333").withAlphaComponent(0.75)
+            ? UIColor(hex: "#00FF9D").withAlphaComponent(0.92)
+            : UIColor(hex: "#FF4A4A").withAlphaComponent(0.92)
         teamHex.strokeColor = team == "player"
-            ? UIColor(hex: "#00FFAA")
-            : UIColor(hex: "#FF5555")
-        teamHex.lineWidth = 2.0
-        teamHex.glowWidth = 3.0
+            ? UIColor(hex: "#D7FFF0")
+            : UIColor(hex: "#FFE0E0")
+        teamHex.lineWidth = 2.6
+        teamHex.glowWidth = 6.0
         teamHex.position = .zero
         teamHex.zPosition = 0.25
         teamHex.name = "characterTeamHex"
         container.addChild(teamHex)
-
-        // ── Guaranteed-visible identity label ───────────────────────────────
-        // Large high-contrast letter/initial floats above the tile. Even if the
-        // sprite PNG fails to load AND the team hex is somehow hidden, the user
-        // will still see a single-letter marker on each character's tile.
-        let initial: String = {
-            if team == "enemy" { return String(type.prefix(1).uppercased()) }
-            let archKey = archetypeKey(for: type)
-            switch archKey {
-            case "samurai": return "S"
-            case "mage":    return "M"
-            case "decker":  return "D"
-            case "face":    return "F"
-            default:         return String(type.prefix(1).uppercased())
-            }
-        }()
-        let idLabel = SKLabelNode(text: initial)
-        idLabel.fontName = "Helvetica-Bold"
-        idLabel.fontSize = 14
-        idLabel.fontColor = team == "player"
-            ? UIColor(hex: "#001A0D")
-            : UIColor(hex: "#330000")
-        idLabel.verticalAlignmentMode = .center
-        idLabel.horizontalAlignmentMode = .center
-        idLabel.position = .zero
-        idLabel.zPosition = 0.3
-        idLabel.name = "characterInitial"
-        container.addChild(idLabel)
 
         // Player = cyan/green, enemy color varies by archetype
         let baseColor: UIColor
@@ -578,6 +550,56 @@ final class SpriteManager {
             default:        baseColor = UIColor(hex: "#FF3333")
             }
         }
+
+        // ── Guaranteed-visible identity label ───────────────────────────────
+        // Large high-contrast letter/initial floats above the tile. Even if the
+        // sprite PNG fails to load AND the team hex is somehow hidden, the user
+        // will still see a single-letter marker on each character's tile.
+        let initial: String = {
+            if team == "player", let first = name.first {
+                return String(first).uppercased()
+            }
+            return String(type.prefix(1)).uppercased()
+        }()
+        let badgeCenter = CGPoint(x: 0, y: 6)
+        let badgeShadow = SKShapeNode(circleOfRadius: team == "player" ? 24 : 22)
+        badgeShadow.fillColor = UIColor.black.withAlphaComponent(0.72)
+        badgeShadow.strokeColor = .clear
+        badgeShadow.position = badgeCenter
+        badgeShadow.zPosition = 11
+        badgeShadow.name = "presenceBadgeShadow"
+        container.addChild(badgeShadow)
+
+        let badgeRadius: CGFloat = team == "player" ? 19 : 17
+        let badgeOuterRing = SKShapeNode(circleOfRadius: badgeRadius + 4)
+        badgeOuterRing.fillColor = .clear
+        badgeOuterRing.strokeColor = baseColor.withAlphaComponent(0.95)
+        badgeOuterRing.lineWidth = 2.8
+        badgeOuterRing.glowWidth = 8.0
+        badgeOuterRing.position = badgeCenter
+        badgeOuterRing.zPosition = 12
+        badgeOuterRing.name = "presenceBadgeRing"
+        container.addChild(badgeOuterRing)
+
+        let idLabel = SKLabelNode(text: initial)
+        idLabel.fontName = "Helvetica-Bold"
+        idLabel.fontSize = team == "player" ? 25 : 22
+        idLabel.fontColor = UIColor.white
+        idLabel.verticalAlignmentMode = .center
+        idLabel.horizontalAlignmentMode = .center
+        idLabel.position = badgeCenter
+        idLabel.zPosition = 15
+        idLabel.name = "characterInitial"
+        let presenceMarker = SKShapeNode(circleOfRadius: badgeRadius)
+        presenceMarker.fillColor = baseColor.withAlphaComponent(0.96)
+        presenceMarker.strokeColor = UIColor.white.withAlphaComponent(0.82)
+        presenceMarker.lineWidth = 2.0
+        presenceMarker.glowWidth = 8.0
+        presenceMarker.position = badgeCenter
+        presenceMarker.zPosition = 14
+        presenceMarker.name = "presenceMarker"
+        container.addChild(presenceMarker)
+        container.addChild(idLabel)
 
         if team == "player" {
             let playerColor: UIColor

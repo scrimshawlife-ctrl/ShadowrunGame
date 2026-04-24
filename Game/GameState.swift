@@ -889,6 +889,11 @@ final class GameState: ObservableObject {
         MissionSetupService.setupMission(gameState: self, mission: mission)
     }
 
+    @discardableResult
+    func prepareMissionForCombat(named missionId: String?) -> String {
+        MissionSetupService.prepareMissionForCombat(gameState: self, missionId: missionId)
+    }
+
     /// Setup a multi-room mission.
     /// Update tiles for enemy pathfinding (called when a room transition completes).
     func updateTilesForCurrentRoom(_ tiles: [[Int]]) {

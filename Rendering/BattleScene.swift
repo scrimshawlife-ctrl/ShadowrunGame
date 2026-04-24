@@ -16,6 +16,7 @@ final class BattleScene: SKScene {
     private var mapPixelHeight: CGFloat { (CGFloat(tileMap?.mapHeight ?? 9) + 0.5) * TileMap.hexRowSpacing }
     /// Scene-space offset of the tile map's bottom-left corner.
     /// With scene.size = map pixel dims and .aspectFit, this is (.zero) — map fills scene exactly.
+    private let firstTurnCameraYOffset: CGFloat = 0
     private var mapOrigin: CGPoint {
         CGPoint(
             x: max(0, (self.size.width  - mapPixelWidth)  / 2),
@@ -99,13 +100,21 @@ final class BattleScene: SKScene {
             if let rid = pendingInitialRoomId { currentRoomId = rid }
             for character in pendingInitialCharacters { placeCharacter(character) }
             for enemy in pendingInitialEnemies { placeEnemy(enemy) }
+            let initialFocusId =
+                GameState.shared.activeCharacterId
+                ?? GameState.shared.selectedCharacterId
+                ?? pendingInitialCharacters.first(where: { $0.isAlive })?.id
             pendingInitialTileMap = nil
             pendingInitialRoomId = nil
             pendingInitialCharacters = []
             pendingInitialEnemies = []
-            // After placement, re-focus the camera on the player roster's average position
-            // so the characters are centered in the viewport even if the map is larger than the screen.
-            positionCameraOnMap()
+            if let initialFocusId {
+                focusCamera(on: initialFocusId)
+                showSelectionRing(for: initialFocusId)
+                updatePlayerIdleAnimations(activeId: initialFocusId)
+            } else {
+                positionCameraOnMap()
+            }
             print("[BattleScene] didMove: initial load complete, characterNodes=\(characterNodes.count)")
         }
 
@@ -313,9 +322,6 @@ final class BattleScene: SKScene {
     }
 
     private func setupEnemyNotifications() {
-        // Seed combat log with battle start
-        GameState.shared.addLog("『 BATTLE START — SELECT A RUNNER 』")
-
         NotificationCenter.default.addObserver(forName: .characterLevelUp, object: nil, queue: .main) { [weak self] notification in
             guard let userInfo = notification.userInfo,
                   let idStr = userInfo["characterId"] as? String,
@@ -388,7 +394,12 @@ final class BattleScene: SKScene {
             guard let userInfo = notification.userInfo,
                   let idStr = userInfo["characterId"] as? String,
                   let id = UUID(uuidString: idStr) else { return }
-            self?.focusCamera(on: id)
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.showSelectionRing(for: id)
+                self.focusCamera(on: id)
+                self.updatePlayerIdleAnimations(activeId: id)
+            }
         }
         NotificationCenter.default.addObserver(forName: .playerHit, object: nil, queue: .main) { [weak self] notification in
             guard let userInfo = notification.userInfo,
@@ -628,16 +639,34 @@ final class BattleScene: SKScene {
     }
 
     // SwiftUI overlays cover the top objective banner and the bottom combat panel.
-    // Reserve that space when framing the camera so combatants do not spawn under HUD chrome.
-    private let topHUDInset: CGFloat = 96
-    private let bottomHUDInset: CGFloat = 280
+    // These are updated from CombatView after layout so first-turn framing matches
+    // the real HUD footprint on the current device instead of a hardcoded guess.
+    private var topHUDInset: CGFloat = 96
+    private var bottomHUDInset: CGFloat = 280
+
+    func updateViewportInsets(top: CGFloat, bottom: CGFloat) {
+        let resolvedTop = max(0, top)
+        let resolvedBottom = max(0, bottom)
+        guard abs(resolvedTop - topHUDInset) > 0.5 || abs(resolvedBottom - bottomHUDInset) > 0.5 else { return }
+
+        topHUDInset = resolvedTop
+        bottomHUDInset = resolvedBottom
+
+        if let activeId = GameState.shared.activeCharacterId ?? GameState.shared.selectedCharacterId {
+            focusCamera(on: activeId)
+        } else {
+            positionCameraOnMap()
+        }
+    }
 
     private func applyCameraScale(_ cam: SKCameraNode) -> CGFloat {
+        // Keep vertical framing readable on tall phones by fitting to the actual viewport,
+        // then using camera bias to keep the active squad above the bottom HUD.
         let visibleWidth = max(1, size.width)
-        let visibleHeight = max(1, size.height - topHUDInset - bottomHUDInset)
+        let visibleHeight = max(1, size.height)
         let requiredScaleX = mapPixelWidth / visibleWidth
         let requiredScaleY = mapPixelHeight / visibleHeight
-        let scale = max(1.0, max(requiredScaleX, requiredScaleY) * 1.04)
+        let scale = max(1.0, max(requiredScaleX, requiredScaleY) * 1.02)
         cam.setScale(scale)
         return scale
     }
@@ -646,11 +675,23 @@ final class BattleScene: SKScene {
     func positionCameraOnMap() {
         guard let cam = camera else { return }
         let scale = applyCameraScale(cam)
-        let verticalBias = ((bottomHUDInset - topHUDInset) / 2.0) * scale
-        cam.position = CGPoint(
-            x: mapOrigin.x + mapPixelWidth  / 2,
-            y: mapOrigin.y + mapPixelHeight / 2 - verticalBias
+        let visibleSize = cameraVisibleSize(scale: scale)
+        let nextPosition = CGPoint(
+            x: clampedCameraCoordinate(
+                desired: mapOrigin.x + mapPixelWidth / 2,
+                mapStart: mapOrigin.x,
+                mapLength: mapPixelWidth,
+                visibleLength: visibleSize.width
+            ),
+            y: clampedCameraCoordinate(
+                desired: mapOrigin.y + mapPixelHeight / 2 - firstTurnCameraYOffset,
+                mapStart: mapOrigin.y,
+                mapLength: mapPixelHeight,
+                visibleLength: visibleSize.height
+            )
         )
+        cam.position = nextPosition
+        print("[BattleScene] positionCameraOnMap camera=\(nextPosition) topInset=\(topHUDInset) bottomInset=\(bottomHUDInset)")
     }
 
     /// Focus camera on a specific tile, clamped so map edges stay within the unobscured viewport.
@@ -658,18 +699,41 @@ final class BattleScene: SKScene {
         guard let cam = camera else { return }
         let scale = applyCameraScale(cam)
         let c = tileCenter(tileX, tileY)
-        let halfW = (size.width / 2) * scale
-        let halfH = ((size.height - topHUDInset - bottomHUDInset) / 2) * scale
-        let verticalBias = ((bottomHUDInset - topHUDInset) / 2.0) * scale
+        let visibleSize = cameraVisibleSize(scale: scale)
+        let nextPosition = CGPoint(
+            x: clampedCameraCoordinate(
+                desired: c.x,
+                mapStart: mapOrigin.x,
+                mapLength: mapPixelWidth,
+                visibleLength: visibleSize.width
+            ),
+            y: clampedCameraCoordinate(
+                desired: c.y - firstTurnCameraYOffset,
+                mapStart: mapOrigin.y,
+                mapLength: mapPixelHeight,
+                visibleLength: visibleSize.height
+            )
+        )
+        cam.position = nextPosition
+        print("[BattleScene] focusCamera tile=(\(tileX),\(tileY)) target=\(c) camera=\(nextPosition) topInset=\(topHUDInset) bottomInset=\(bottomHUDInset)")
+    }
 
-        let minX = mapOrigin.x + halfW
-        let maxX = mapOrigin.x + mapPixelWidth - halfW
-        let minY = mapOrigin.y + halfH - verticalBias
-        let maxY = mapOrigin.y + mapPixelHeight - halfH - verticalBias
+    private func cameraVisibleSize(scale: CGFloat) -> CGSize {
+        CGSize(width: size.width * scale, height: size.height * scale)
+    }
 
-        let clampedX = minX <= maxX ? max(minX, min(maxX, c.x)) : (mapOrigin.x + mapPixelWidth / 2)
-        let clampedY = minY <= maxY ? max(minY, min(maxY, c.y)) : (mapOrigin.y + mapPixelHeight / 2 - verticalBias)
-        cam.position = CGPoint(x: clampedX, y: clampedY)
+    private func clampedCameraCoordinate(
+        desired: CGFloat,
+        mapStart: CGFloat,
+        mapLength: CGFloat,
+        visibleLength: CGFloat
+    ) -> CGFloat {
+        guard mapLength > visibleLength else { return desired }
+
+        let halfVisible = visibleLength / 2.0
+        let minValue = mapStart + halfVisible
+        let maxValue = mapStart + mapLength - halfVisible
+        return minValue <= maxValue ? max(minValue, min(maxValue, desired)) : desired
     }
 
     // MARK: - Scene Size / Map Fit
@@ -854,7 +918,9 @@ final class BattleScene: SKScene {
             }
         }
 
-        if let first = desiredPlayers.first {
+        if let activeId = GameState.shared.activeCharacterId ?? GameState.shared.selectedCharacterId {
+            focusCamera(on: activeId)
+        } else if let first = desiredPlayers.first {
             focusCamera(on: first.positionX, y: first.positionY)
         }
 
@@ -1708,14 +1774,23 @@ final class BattleScene: SKScene {
         }
     }
 
-    /// With scaleMode = .aspectFit the full map is always visible;
-    /// keep the camera pinned to map center so no black edges appear.
     private func focusCamera(on characterId: UUID) {
-        let mapCenter = CGPoint(
-            x: mapOrigin.x + mapPixelWidth / 2,
-            y: mapOrigin.y + mapPixelHeight / 2
-        )
-        camera?.position = mapCenter
+        if let node = characterNodes[characterId] as? SpriteNode {
+            focusCamera(on: node.tileX, y: node.tileY)
+            return
+        }
+
+        if let character = GameState.shared.playerTeam.first(where: { $0.id == characterId }) {
+            focusCamera(on: character.positionX, y: character.positionY)
+            return
+        }
+
+        if let enemy = GameState.shared.enemies.first(where: { $0.id == characterId }) {
+            focusCamera(on: enemy.positionX, y: enemy.positionY)
+            return
+        }
+
+        positionCameraOnMap()
     }
 
     /// Enemy attack: draw an orange slash line FROM enemy TO player.

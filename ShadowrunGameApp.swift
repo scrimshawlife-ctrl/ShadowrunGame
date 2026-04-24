@@ -150,6 +150,19 @@ struct ContentView: View {
                 DebriefView(manager: phaseManager)
             }
         }
+        .onAppear(perform: applyDebugLaunchOverrideIfNeeded)
+    }
+
+    private func applyDebugLaunchOverrideIfNeeded() {
+        #if DEBUG
+        guard phaseManager.currentPhase == .title else { return }
+        guard let missionId = ProcessInfo.processInfo.environment["SR_AUTOSTART_MISSION_ID"] else { return }
+
+        _ = phaseManager.transition(to: .startGame)
+        _ = phaseManager.transition(to: .selectMission(missionId))
+        _ = GameState.shared.prepareMissionForCombat(named: missionId)
+        _ = phaseManager.transition(to: .beginMission)
+        #endif
     }
 }
 
@@ -544,8 +557,7 @@ struct BriefingView: View {
                 Spacer()
 
                 Button(action: {
-                    HapticsManager.shared.combatStart()
-                    _ = manager.transition(to: .beginMission)
+                    beginMission()
                 }) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
@@ -585,6 +597,12 @@ struct BriefingView: View {
         loadedMission = MissionLoader.shared.loadMission(named: id)
     }
 
+    private func beginMission() {
+        HapticsManager.shared.combatStart()
+        _ = GameState.shared.prepareMissionForCombat(named: manager.selectedMissionId)
+        _ = manager.transition(to: .beginMission)
+    }
+
     private func getTeamColor(_ index: Int) -> Color {
         let colors = [
             Color(hex: "00FF88"),
@@ -602,6 +620,8 @@ struct CombatView: View {
     @ObservedObject var manager: PhaseManager
     @ObservedObject var gameState: GameState
     @State private var showDiagnostics = false
+    @State private var objectiveBannerHeight: CGFloat = 96
+    @State private var combatUIHeight: CGFloat = 220
 
     private var victoryText: String {
         switch manager.selectedMissionId ?? "" {
@@ -632,7 +652,9 @@ struct CombatView: View {
                 BattleSceneView(
                     gameState: gameState,
                     missionId: manager.selectedMissionId,
-                    parentSize: geometry.size
+                    parentSize: geometry.size,
+                    topHUDInset: objectiveBannerHeight,
+                    bottomHUDInset: combatUIHeight
                 )
             }
             .ignoresSafeArea()
@@ -648,6 +670,11 @@ struct CombatView: View {
                     )
                     .padding(.horizontal, 12)
                     .padding(.top, 8)
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear.preference(key: CombatTopOverlayHeightPreferenceKey.self, value: proxy.size.height)
+                        }
+                    )
                     Spacer()
                 }
 
@@ -728,11 +755,40 @@ struct CombatView: View {
                 .background(
                     CombatTheme.background.opacity(0.92)
                 )
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear.preference(key: CombatBottomOverlayHeightPreferenceKey.self, value: proxy.size.height)
+                    }
+                )
             }
         }
         .ignoresSafeArea(edges: .bottom)
+        .onPreferenceChange(CombatTopOverlayHeightPreferenceKey.self) { height in
+            objectiveBannerHeight = max(96, height)
+            print("[CombatView] objectiveBannerHeight=\(objectiveBannerHeight)")
+        }
+        .onPreferenceChange(CombatBottomOverlayHeightPreferenceKey.self) { height in
+            combatUIHeight = max(180, height)
+            print("[CombatView] combatUIHeight=\(combatUIHeight)")
+        }
         .onAppear { FPSMonitor.shared.start() }
         .onDisappear { FPSMonitor.shared.stop() }
+    }
+}
+
+private struct CombatTopOverlayHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 96
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct CombatBottomOverlayHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 280
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 
@@ -840,32 +896,17 @@ private final class FPSMonitor: ObservableObject {
 
 // MARK: - Battle Scene Wrapper
 
-/// SKView that forces all touches to the scene, bypassing SwiftUI overlay hit-testing
-class ForwardingSKView: SKView {
-    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        return self  // claim every touch in our bounds
-    }
-
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesBegan(touches, with: event)
-        (scene as? BattleScene)?.touchesBegan(touches, with: event)
-    }
-
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesMoved(touches, with: event)
-        (scene as? BattleScene)?.touchesMoved(touches, with: event)
-    }
-
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesEnded(touches, with: event)
-        (scene as? BattleScene)?.touchesEnded(touches, with: event)
-    }
-}
+/// Plain SKView wrapper used by BattleSceneView.
+/// BattleScene already receives touches through SpriteKit; claiming every touch here
+/// breaks the SwiftUI combat HUD above it.
+class ForwardingSKView: SKView {}
 
 struct BattleSceneView: UIViewRepresentable {
     @ObservedObject var gameState: GameState
     var missionId: String?
     var parentSize: CGSize = .zero
+    var topHUDInset: CGFloat = 96
+    var bottomHUDInset: CGFloat = 280
 
     // Fixed tile map size — 10 tiles × 56pt = 560pt wide, 18 tiles × 56pt = 1008pt tall
     static let tileMapSize = CGSize(width: 560, height: 1008)
@@ -910,6 +951,13 @@ struct BattleSceneView: UIViewRepresentable {
         }
 
         let missionToLoad = missionId ?? "Mission001"
+        let resolvedTopInset = max(96, topHUDInset)
+        let resolvedBottomInset = max(280, bottomHUDInset)
+
+        if let existingScene = context.coordinator.scene {
+            existingScene.updateViewportInsets(top: resolvedTopInset, bottom: resolvedBottomInset)
+        }
+
         let hasStrictPreparedMatch =
             (context.coordinator.preparedMissionId == missionToLoad)
             && (context.coordinator.scene != nil)
@@ -928,27 +976,12 @@ struct BattleSceneView: UIViewRepresentable {
         // This ensures the tile map is centered and the top/bottom rows are reachable.
         // fitSceneToView() is called BEFORE loadMap() so BattleScene.mapOrigin is correct.
         // With scaleMode = .aspectFit the full scene (map + letterboxing) fills the SKView.
-        let missionTileMap: TileMap?
-        let tileMapFromGameState: () -> TileMap? = {
-            let rawTiles = gameState.currentMissionTilesSnapshot
-            guard !rawTiles.isEmpty else { return nil }
-            let typedTiles = rawTiles.map { row in
-                row.map { TileType(rawValue: $0) ?? .floor }
-            }
-            return TileMap(tiles: typedTiles)
-        }
-        if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionToLoad) {
-            RoomManager.shared.loadMission(named: missionToLoad)
-            gameState.setupMultiRoomMission(multiMission)
-            missionTileMap = tileMapFromGameState()
-        } else if let mission = MissionLoader.shared.loadMission(named: missionToLoad) {
-            gameState.setupMission(mission)
-            missionTileMap = tileMapFromGameState() ?? MissionLoader.shared.buildTileMap(from: mission)
-        } else if let mission = MissionLoader.shared.loadMission(named: "Mission001") {
-            gameState.setupMission(mission)
-            missionTileMap = tileMapFromGameState() ?? MissionLoader.shared.buildTileMap(from: mission)
-        } else {
-            missionTileMap = nil
+        let missionTileMap = resolvePreparedTileMap(for: missionToLoad)
+        let initialRoomId = resolveInitialRoomId(for: missionToLoad)
+
+        guard let missionTileMap, !gameState.playerTeam.isEmpty else {
+            print("[BattleSceneView] Missing prepared combat state for \(missionToLoad); skipping scene creation")
+            return
         }
 
         // Scene size = map pixel dimensions. With .aspectFit, SpriteKit scales to fit the view,
@@ -956,11 +989,7 @@ struct BattleSceneView: UIViewRepresentable {
         // when scene.size == mapPixelDims, keeping all coordinate math simple.
         let mapPixelW  = CGFloat(TileMap.mapWidth - 1) * TileMap.hexColSpacing + TileMap.hexRadius * 2
         let mapHeight: Int
-        if let tmap = missionTileMap {
-            mapHeight = tmap.mapHeight
-        } else {
-            mapHeight = 9
-        }
+        mapHeight = missionTileMap.mapHeight
         let mapPixelH  = (CGFloat(mapHeight) + 0.5) * TileMap.hexRowSpacing
         let sceneSize  = CGSize(width: mapPixelW, height: mapPixelH)
 
@@ -974,41 +1003,65 @@ struct BattleSceneView: UIViewRepresentable {
         scene.anchorPoint = CGPoint(x: 0, y: 0)
         scene.backgroundColor = UIColor(hex: "#0D0D0D")
         scene.isUserInteractionEnabled = true
+        scene.updateViewportInsets(top: resolvedTopInset, bottom: resolvedBottomInset)
 
         // Schedule initial load on the scene. BattleScene.didMove will call loadMap +
         // placeCharacter/placeEnemy once the view is attached and scene.size is final.
         // This is the single source of truth for the first frame — doing placement
         // before presentScene was racey (view nil → fitSceneToView was a no-op →
         // wrong scene.size → wrong mapOrigin → characters off-camera).
-        if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionToLoad) {
-            scene.scheduleInitialLoad(
-                tileMap: missionTileMap ?? TileMap(tiles: multiMission.rooms.first!.tileMap),
-                roomId: multiMission.rooms.first!.id,
-                characters: gameState.playerTeam,
-                enemies: GameState.shared.enemies
-            )
-        } else if let mission = MissionLoader.shared.loadMission(named: missionToLoad) {
-            let tileMap = MissionLoader.shared.buildTileMap(from: mission)
-            scene.scheduleInitialLoad(
-                tileMap: tileMap,
-                roomId: "room_0",
-                characters: gameState.playerTeam,
-                enemies: GameState.shared.enemies
-            )
-        } else if let mission = MissionLoader.shared.loadMission(named: "Mission001") {
-            let tileMap = MissionLoader.shared.buildTileMap(from: mission)
-            scene.scheduleInitialLoad(
-                tileMap: tileMap,
-                roomId: "room_0",
-                characters: gameState.playerTeam,
-                enemies: GameState.shared.enemies
-            )
-        }
+        scene.scheduleInitialLoad(
+            tileMap: missionTileMap,
+            roomId: initialRoomId,
+            characters: gameState.playerTeam,
+            enemies: GameState.shared.enemies
+        )
 
         print("[BattleSceneView] Presenting scene size: \(scene.size), view.bounds: \(skView.bounds.size), playerTeam=\(gameState.playerTeam.count), enemies=\(GameState.shared.enemies.count)")
         skView.presentScene(scene)
         context.coordinator.scene = scene
         context.coordinator.preparedMissionId = missionToLoad
+    }
+
+    private func resolvePreparedTileMap(for missionId: String) -> TileMap? {
+        let rawTiles = gameState.currentMissionTilesSnapshot
+        if !rawTiles.isEmpty {
+            let typedTiles = rawTiles.map { row in
+                row.map { TileType(rawValue: $0) ?? .floor }
+            }
+            return TileMap(tiles: typedTiles)
+        }
+
+        if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionId),
+           let firstRoom = multiMission.rooms.first {
+            return TileMap(tiles: firstRoom.tileMap)
+        }
+
+        if let mission = MissionLoader.shared.loadMission(named: missionId) {
+            return MissionLoader.shared.buildTileMap(from: mission)
+        }
+
+        guard let fallbackMission = MissionLoader.shared.loadMission(named: "Mission001") else {
+            return nil
+        }
+
+        return MissionLoader.shared.buildTileMap(from: fallbackMission)
+    }
+
+    private func resolveInitialRoomId(for missionId: String) -> String {
+        if !gameState.currentRoomId.isEmpty {
+            return gameState.currentRoomId
+        }
+
+        if let currentRoomId = RoomManager.shared.currentRoom?.id, !currentRoomId.isEmpty {
+            return currentRoomId
+        }
+
+        if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: missionId) {
+            return multiMission.rooms.first?.id ?? "room_0"
+        }
+
+        return "room_0"
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(gameState: gameState) }
@@ -1295,7 +1348,7 @@ struct MissionBriefingOverlay: View {
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.5)) { opacity = 0.85 }
+            withAnimation(.easeOut(duration: 0.5)) { opacity = 1.0 }
             withDelay(0.3) {
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                     showContent = true

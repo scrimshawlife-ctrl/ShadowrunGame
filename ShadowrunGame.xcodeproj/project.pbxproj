@@ -445,16 +445,8 @@
 				A0EC2437CC32D3156375A2CE /* MissionLoader.swift */,
 				04656575F759166AF7BB02D4 /* Room.swift */,
 				2E7D941585CAACF5DD62855E /* RoomManager.swift */,
-				42D41A74DD4EA284676DD652 /* Resources */,
 			);
 			path = Missions;
-			sourceTree = "<group>";
-		};
-		42D41A74DD4EA284676DD652 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Resources;
 			sourceTree = "<group>";
 		};
 		43152140617C8BF72462B757 /* Products */ = {
