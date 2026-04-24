@@ -660,13 +660,14 @@ final class BattleScene: SKScene {
     }
 
     private func applyCameraScale(_ cam: SKCameraNode) -> CGFloat {
-        // Keep vertical framing readable on tall phones by fitting to the actual viewport,
-        // then using camera bias to keep the active squad above the bottom HUD.
+        // Scale to fit the UNOBSCURED play corridor (between top objective banner and
+        // bottom combat panel). Using full scene.height here makes the map scale so
+        // small that the HUD overlays eat the bottom half of the board.
         let visibleWidth = max(1, size.width)
-        let visibleHeight = max(1, size.height)
+        let visibleHeight = max(1, size.height - topHUDInset - bottomHUDInset)
         let requiredScaleX = mapPixelWidth / visibleWidth
         let requiredScaleY = mapPixelHeight / visibleHeight
-        let scale = max(1.0, max(requiredScaleX, requiredScaleY) * 1.02)
+        let scale = max(1.0, max(requiredScaleX, requiredScaleY) * 1.04)
         cam.setScale(scale)
         return scale
     }
@@ -676,6 +677,10 @@ final class BattleScene: SKScene {
         guard let cam = camera else { return }
         let scale = applyCameraScale(cam)
         let visibleSize = cameraVisibleSize(scale: scale)
+        // Bottom HUD is taller than the top banner, so shift the camera DOWN
+        // in scene space (lower Y) by half the delta. That puts the map's visual
+        // center in the middle of the unobscured strip, not the full view.
+        let verticalBias = ((bottomHUDInset - topHUDInset) / 2.0) * scale
         let nextPosition = CGPoint(
             x: clampedCameraCoordinate(
                 desired: mapOrigin.x + mapPixelWidth / 2,
@@ -684,14 +689,14 @@ final class BattleScene: SKScene {
                 visibleLength: visibleSize.width
             ),
             y: clampedCameraCoordinate(
-                desired: mapOrigin.y + mapPixelHeight / 2 - firstTurnCameraYOffset,
+                desired: mapOrigin.y + mapPixelHeight / 2 - verticalBias - firstTurnCameraYOffset,
                 mapStart: mapOrigin.y,
                 mapLength: mapPixelHeight,
                 visibleLength: visibleSize.height
             )
         )
         cam.position = nextPosition
-        print("[BattleScene] positionCameraOnMap camera=\(nextPosition) topInset=\(topHUDInset) bottomInset=\(bottomHUDInset)")
+        print("[BattleScene] positionCameraOnMap camera=\(nextPosition) topInset=\(topHUDInset) bottomInset=\(bottomHUDInset) bias=\(verticalBias)")
     }
 
     /// Focus camera on a specific tile, clamped so map edges stay within the unobscured viewport.
@@ -700,6 +705,7 @@ final class BattleScene: SKScene {
         let scale = applyCameraScale(cam)
         let c = tileCenter(tileX, tileY)
         let visibleSize = cameraVisibleSize(scale: scale)
+        let verticalBias = ((bottomHUDInset - topHUDInset) / 2.0) * scale
         let nextPosition = CGPoint(
             x: clampedCameraCoordinate(
                 desired: c.x,
@@ -708,14 +714,14 @@ final class BattleScene: SKScene {
                 visibleLength: visibleSize.width
             ),
             y: clampedCameraCoordinate(
-                desired: c.y - firstTurnCameraYOffset,
+                desired: c.y - verticalBias - firstTurnCameraYOffset,
                 mapStart: mapOrigin.y,
                 mapLength: mapPixelHeight,
                 visibleLength: visibleSize.height
             )
         )
         cam.position = nextPosition
-        print("[BattleScene] focusCamera tile=(\(tileX),\(tileY)) target=\(c) camera=\(nextPosition) topInset=\(topHUDInset) bottomInset=\(bottomHUDInset)")
+        print("[BattleScene] focusCamera tile=(\(tileX),\(tileY)) target=\(c) camera=\(nextPosition) topInset=\(topHUDInset) bottomInset=\(bottomHUDInset) bias=\(verticalBias)")
     }
 
     private func cameraVisibleSize(scale: CGFloat) -> CGSize {

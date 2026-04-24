@@ -3,6 +3,27 @@
 ## Active Mission
 Stabilize authority seams and eliminate workspace ambiguity so collaborators can ship deterministic gameplay changes safely.
 
+## Handoff (2026-04-23 evening — open to Danny)
+
+**Branch:** `fix/combat-first-turn` — PR open against `main` on `scrimshawlife-ctrl/ShadowrunGame`.
+
+**Playtest status (iPhone 17 Pro simulator, iOS 26.4) after `d041228` + camera-inset patch:**
+- P1 — Hex grid renders, but **character and enemy sprites are not visibly identifiable on their tiles**. Only partial colored glyphs read as runners. Root cause not fully isolated; likely interaction between the new board backplate / scanline layer, `SpriteManager.createCharacter`'s presence-badge hierarchy, and container `zPosition = 40`.
+- P1 — **Camera framing still wrong**. The HEAD commit restores HUD-inset compensation in `applyCameraScale` / `positionCameraOnMap` / `focusCamera(on:y:)`, but Aaron's 20:33 MDT playtest still shows the grid mispositioned relative to the strip between the top objective banner and bottom combat panel. More tuning needed — likely interaction with `scaleMode = .aspectFit`, `fitSceneToView()` writing `self.size = view.bounds.size` after `presentScene`, and `updateViewportInsets` only triggering on change > 0.5pt.
+- P2 — Mission briefing overflow and HUD density were addressed in `d041228` and need a fresh pass once the combat board renders correctly.
+
+**What shipped in this branch:**
+- `d041228` (Forge): unblock first turn, replace debug marker overlays with SpriteManager characters, opaque briefing backdrop, tighter CombatUI.
+- HEAD: re-add HUD-aware scale + `verticalBias` so the camera lands in the middle of the unobscured strip.
+
+**Blocked on:**
+- Xcode + physical playtest loop — sim screenshots alone aren't enough to iterate on board/sprite z-order. CLI tap automation isn't wired in this env, so handoff assumes Danny drives the sim manually.
+
+**Next suggested moves:**
+1. Drop a debug overlay that prints `scene.size`, `mapOrigin`, `cam.position`, `scale`, `topHUDInset`, `bottomHUDInset`, and the first character's final scene position — so the framing math can be diffed against a known-good baseline.
+2. Audit `SpriteManager.createCharacter`'s spritesheet lookup (`playerIdleTextures[archKey]`). Confirm whether the procedural fallback path is firing and whether fallback sprites actually sit above the tile layer + backplate.
+3. If framing keeps regressing on tall phones, consider reverting to the v17-style oversized "guaranteed visible" character container (`makeCharacterVisual`) as a short-term unblock and iterating from there.
+
 ## Current State Snapshot (2026-04-23)
 - `GameState` remains gameplay authority for turn/missions/outcomes.
 - Rendering/UI are functional projections, but `BattleScene` still contains broad direct writes into authority state.
