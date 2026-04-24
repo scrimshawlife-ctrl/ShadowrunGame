@@ -49,3 +49,67 @@ Stabilize authority seams and eliminate workspace ambiguity so collaborators can
 
 ## Next Suggested Move
 Create a focused hygiene PR that formally marks the canonical workspace and prevents accidental edits inside the nested duplicate tree.
+
+## Recommended Next Steps (Review: 2026-04-24)
+
+### Changed
+- Consolidated immediate execution guidance into a sequenced plan that starts with repository hygiene, then authority-seam refactors, then macOS validation.
+
+### Pending
+- Canonical workspace decision is still not codified in-repo (`CONTRIBUTING` or guardrails like `.gitignore`/CI checks).
+- `BattleScene` still performs direct authority writes that should move behind intent-level `GameState` APIs.
+- Mission smoke validation for both mission types remains unrecorded on macOS.
+
+### Blocked
+- iOS build/simulator verification is **NOT_COMPUTABLE** in this container because `xcodebuild` is unavailable.
+
+### Next (Explicit Execution Sequence)
+1. **Run 1 — P0 Hygiene PR (first):**
+   - Define canonical workspace path in docs (`README.md` + `plans.md` or `CONTRIBUTING.md` if added).
+   - Add guardrails preventing accidental nested-tree edits (for example: `.gitignore`, repo note, or CI/path lint if available).
+   - Record the exact files changed and the reason each file was touched.
+2. **Run 2 — P1 Authority PR (second):**
+   - Pick one high-frequency `BattleScene` mutation path into `GameState.shared`.
+   - Replace it with one intent-level `GameState` façade API call.
+   - Document before/after authority ownership in a short audit note under `docs/`.
+3. **Run 3 — P2 Validation artifact (third):**
+   - On macOS, run:
+     - `xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' build`
+   - Execute Survive + Eliminate smoke checks from `docs/SmokeTestPlan.md`.
+   - Save dated evidence to `docs/audit/SimulatorValidationReport.md`.
+4. **Run 4 — Handoff closeout:**
+   - Update this `plans.md` section with completed/pending/blocked/next.
+   - Call out remaining risks and the single highest-leverage follow-up action.
+
+### After First Run (Mandatory Explicit Report)
+After Run 1, post a complete status block using this exact shape so collaborators can see the full state without inference:
+
+- **Run Scope:** (what was attempted)
+- **Files Changed:** (explicit path list)
+- **Commands Executed:** (explicit command list, in order)
+- **Artifacts Produced:** (docs/reports/commits)
+- **Pass/Fail by Check:** (each check with outcome)
+- **Blocked:** (`NOT_COMPUTABLE` items with reason)
+- **Next Run Entry Conditions:** (what must be true before Run 2 starts)
+
+## Notion Sync (2026-04-24)
+
+Use this as the canonical payload when updating the Notion project tracker so repo state and planning state stay aligned.
+
+### Notion Fields
+- **Title:** Shadowrune — Execution Ladder (P0→P2)
+- **Date:** 2026-04-24
+- **Status:** In Progress
+- **Current Run:** Run 1 (P0 Hygiene)
+- **Priority:** P0
+- **Blocked:** `NOT_COMPUTABLE` for iOS build/simulator in container (requires macOS + Xcode)
+- **Source of Truth:** `plans.md`
+
+### Notion Update Body (Copy/Paste)
+- **Changed:** Sequenced runbook now explicit (Run 1–Run 4) with required outputs per run.
+- **Pending:** Canonical workspace guardrails, one authority seam refactor path, and macOS validation artifact.
+- **Blocked:** `xcodebuild` unavailable in container; simulator build must run on macOS.
+- **Next:** Execute Run 1 and publish mandatory explicit report (scope/files/commands/artifacts/pass-fail/blocked/entry conditions).
+
+### Sync Rule
+- Every time `plans.md` changes priority, run number, or blocked state, update Notion in the same work session before handoff.
