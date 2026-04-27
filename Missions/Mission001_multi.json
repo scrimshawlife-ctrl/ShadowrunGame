@@ -9,8 +9,6 @@
       "map": [
         [1, 1, 1, 1, 1, 1, 1],
         [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 2, 0, 2, 0, 1],
         [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 0, 0, 0, 0, 1],
@@ -20,26 +18,21 @@
         [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
         [1, 1, 1, 1, 1, 1, 1]
       ],
-      "playerSpawn": { "x": 1, "y": 12 },
+      "playerSpawn": { "x": 1, "y": 10 },
       "extractionPoint": null,
       "enemies": [
-        { "type": "guard", "x": 4, "y": 6, "delay": 0 },
-        { "type": "drone", "x": 2, "y": 5, "delay": 2 }
+        { "type": "guard", "x": 4, "y": 4, "delay": 0 },
+        { "type": "drone", "x": 2, "y": 3, "delay": 2 }
       ],
       "connections": [
         {
           "targetRoomId": "room_1",
           "triggerTileX": 3,
-          "triggerTileY": 8,
+          "triggerTileY": 6,
           "targetSpawnX": 3,
-          "targetSpawnY": 12
+          "targetSpawnY": 10
         }
       ]
     },
@@ -49,44 +42,37 @@
       "map": [
         [1, 1, 1, 1, 1, 1, 1],
         [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 2, 0, 2, 0, 1],
         [1, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 0, 1, 1, 1],
+        [1, 1, 0, 0, 0, 1, 1],
         [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 0, 3, 0, 0, 1],
         [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 0, 3, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 0, 0, 0, 0, 1],
         [1, 1, 1, 1, 1, 1, 1]
       ],
-      "playerSpawn": { "x": 3, "y": 12 },
+      "playerSpawn": { "x": 3, "y": 10 },
       "extractionPoint": null,
       "enemies": [
-        { "type": "elite", "x": 3, "y": 5, "delay": 0 },
-        { "type": "guard", "x": 2, "y": 7, "delay": 3 }
+        { "type": "elite", "x": 3, "y": 3, "delay": 0 },
+        { "type": "guard", "x": 2, "y": 5, "delay": 3 }
       ],
       "connections": [
         {
           "targetRoomId": "room_0",
           "triggerTileX": 3,
-          "triggerTileY": 10,
+          "triggerTileY": 8,
           "targetSpawnX": 3,
-          "targetSpawnY": 8
+          "targetSpawnY": 6
         },
         {
           "targetRoomId": "room_2",
           "triggerTileX": 3,
-          "triggerTileY": 8,
+          "triggerTileY": 6,
           "targetSpawnX": 3,
-          "targetSpawnY": 12
+          "targetSpawnY": 10
         }
       ]
     },
@@ -95,8 +81,6 @@
       "title": "Rooftop Helipad",
       "map": [
         [1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 0, 4, 0, 0, 1],
         [1, 0, 0, 0, 0, 2, 1],
         [1, 0, 2, 0, 0, 0, 1],
@@ -107,26 +91,21 @@
         [1, 0, 0, 3, 0, 0, 1],
         [1, 0, 0, 0, 0, 0, 1],
         [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
         [1, 1, 1, 1, 1, 1, 1]
       ],
-      "playerSpawn": { "x": 3, "y": 12 },
-      "extractionPoint": { "x": 3, "y": 3 },
+      "playerSpawn": { "x": 3, "y": 10 },
+      "extractionPoint": { "x": 3, "y": 1 },
       "enemies": [
-        { "type": "guard", "x": 4, "y": 6, "delay": 0 },
-        { "type": "mage",  "x": 2, "y": 5, "delay": 4 }
+        { "type": "guard", "x": 4, "y": 4, "delay": 0 },
+        { "type": "mage",  "x": 2, "y": 3, "delay": 4 }
       ],
       "connections": [
         {
           "targetRoomId": "room_1",
           "triggerTileX": 3,
-          "triggerTileY": 10,
+          "triggerTileY": 8,
           "targetSpawnX": 3,
-          "targetSpawnY": 8
+          "targetSpawnY": 6
         }
       ]
     }

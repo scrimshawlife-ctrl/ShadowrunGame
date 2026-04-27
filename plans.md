@@ -3,6 +3,23 @@
 ## Active Mission
 Stabilize authority seams and eliminate workspace ambiguity so collaborators can ship deterministic gameplay changes safely.
 
+## Handoff (2026-04-27 Mission 1 parity fix)
+
+**Branch:** `fix/combat-first-turn`
+
+**Changed:**
+- Normalized `Mission001_multi.json` to the same 12-row by 7-column room footprint used by the working multi-room missions.
+- Moved Mission 1 player spawns, enemy spawns, door triggers, transition spawns, and final extraction point onto that working grid scale so BattleScene uses the same effective tile sizing and combatant presentation path.
+
+**Pending:**
+- Fresh iPhone simulator/device visual pass to confirm Mission 1 now shows player sprites, enemy sprites, and board scale at parity with Missions 2-5.
+
+**Blocked:**
+- Full iOS build/runtime validation is `NOT_COMPUTABLE` here because simulator availability remains constrained in this environment.
+
+**Next:**
+- Launch Mission 1 locally and compare room_0 against Mission 2 room_0 for visible runner/enemy silhouettes and equivalent board scale.
+
 ## Handoff (2026-04-27)
 
 **Branch:** `fix/combat-first-turn`
