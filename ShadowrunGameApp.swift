@@ -240,24 +240,23 @@ struct TitleView: View {
             Image("title_splash")
                 .resizable()
                 .scaledToFill()
-                .ignoresSafeArea()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .offset(y: 36)
 
             LinearGradient(
                 colors: [
-                    Color.black.opacity(0.72),
-                    Color.black.opacity(0.18),
-                    Color.black.opacity(0.78)
+                    Color.black.opacity(0.82),
+                    Color.black.opacity(0.08),
+                    Color.black.opacity(0.88)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
+            .offset(y: 36)
             .ignoresSafeArea()
 
-            MatrixRainView()
-                .opacity(0.08)
-
             VStack(spacing: 24) {
-                Spacer()
+                Spacer().frame(minHeight: 60)
 
                 VStack(spacing: 16) {
                     Button(action: {
