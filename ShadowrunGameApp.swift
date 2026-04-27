@@ -257,44 +257,6 @@ struct TitleView: View {
                 .opacity(0.08)
 
             VStack(spacing: 24) {
-                VStack(spacing: 10) {
-                    Text("SHADOWRUNE")
-                        .font(.system(size: 44, weight: .black, design: .rounded)).minimumScaleFactor(0.8)
-                        .foregroundColor(Color(hex: "F2FBFF"))
-                        .tracking(3)
-                        .shadow(color: Color(hex: "00E5FF").opacity(0.7), radius: 14)
-                        .shadow(color: Color(hex: "FF4FD8").opacity(0.35), radius: 28)
-
-                    HStack(spacing: 10) {
-                        Capsule()
-                            .fill(Color(hex: "00FFD0").opacity(0.75))
-                            .frame(width: 28, height: 2)
-                        Text("TACTICAL CYBERFANTASY")
-                            .font(.system(size: 13, weight: .bold, design: .monospaced))
-                            .foregroundColor(Color(hex: "FF7AE6"))
-                            .tracking(3)
-                        Capsule()
-                            .fill(Color(hex: "00FFD0").opacity(0.75))
-                            .frame(width: 28, height: 2)
-                    }
-
-                    Text("A neon extraction in the Sixth World")
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.76))
-                        .tracking(1)
-                }
-                .padding(.top, 34)
-                .padding(.horizontal, 18)
-                .padding(.vertical, 18)
-                .background(
-                    RoundedRectangle(cornerRadius: 18)
-                        .fill(Color.black.opacity(0.26))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 18)
-                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                        )
-                )
-
                 Spacer()
 
                 VStack(spacing: 16) {
@@ -326,10 +288,26 @@ struct TitleView: View {
                 }
                 .padding(.bottom, 12)
 
-                Text("v0.1 // SHADOWRUNE PROTOTYPE")
-                    .font(.system(size: 10, weight: .light, design: .monospaced))
-                    .foregroundColor(Color(hex: "00FF88").opacity(0.7))
-                    .tracking(1)
+                VStack(spacing: 8) {
+                    Text("TACTICAL CYBERFANTASY")
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color(hex: "FF7AE6").opacity(0.95))
+                        .tracking(2)
+                    Text("v0.1 // SHADOWRUNE PROTOTYPE")
+                        .font(.system(size: 10, weight: .light, design: .monospaced))
+                        .foregroundColor(Color(hex: "00FF88").opacity(0.72))
+                        .tracking(1)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.black.opacity(0.32))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        )
+                )
             }
             .padding(24)
         }
