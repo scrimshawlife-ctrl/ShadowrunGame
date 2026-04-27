@@ -237,28 +237,51 @@ struct TitleView: View {
 
     var body: some View {
         ZStack {
-            // Matrix rain background
+            Image("title_splash")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+
+            LinearGradient(
+                colors: [
+                    Color.black.opacity(0.72),
+                    Color.black.opacity(0.18),
+                    Color.black.opacity(0.78)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
             MatrixRainView()
-                .opacity(0.1)
+                .opacity(0.08)
 
-            VStack(spacing: 32) {
+            VStack(spacing: 24) {
                 VStack(spacing: 8) {
-                    Text("SHADOWRUN")
-                        .font(.system(size: 36, weight: .black)).minimumScaleFactor(0.8)
-                        .foregroundColor(Color(hex: "00FF88"))
+                    Text("SHADOWRUNE")
+                        .font(.system(size: 42, weight: .black)).minimumScaleFactor(0.8)
+                        .foregroundColor(Color(hex: "DDFBFF"))
                         .tracking(2)
-                        .shadow(color: Color(hex: "00FF88").opacity(0.6), radius: 12)
-                    Text("TACTICAL")
-                        .font(.system(size: 24, weight: .light))
-                        .foregroundColor(.gray)
-                        .tracking(8)
+                        .shadow(color: Color(hex: "00E5FF").opacity(0.65), radius: 14)
+                        .shadow(color: Color(hex: "FF4FD8").opacity(0.35), radius: 24)
+                    Text("TACTICAL CYBERFANTASY")
+                        .font(.system(size: 16, weight: .semibold, design: .monospaced))
+                        .foregroundColor(Color(hex: "FF7AE6"))
+                        .tracking(4)
 
-                    // Horizontal divider
                     Rectangle()
-                        .fill(Color(hex: "00FF88").opacity(0.3))
+                        .fill(Color(hex: "00FFD0").opacity(0.45))
                         .frame(height: 1)
-                        .frame(width: 200)
+                        .frame(width: 240)
+
+                    Text("A neon extraction in the Sixth World")
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.72))
+                        .tracking(1)
                 }
+                .padding(.top, 36)
+
+                Spacer()
 
                 VStack(spacing: 16) {
                     Button(action: {
@@ -279,7 +302,7 @@ struct TitleView: View {
                             .font(.headline)
                             .foregroundColor(Color(hex: "00FF88").opacity(0.4))
                             .frame(width: 220, height: 50)
-                            .background(Color.clear)
+                            .background(Color.black.opacity(0.15))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color(hex: "00FF88").opacity(0.3), lineWidth: 2)
@@ -287,13 +310,11 @@ struct TitleView: View {
                     }
                     .disabled(true)
                 }
+                .padding(.bottom, 12)
 
-                Spacer()
-
-                // Version text
-                Text("v0.1 // TACTICAL COMBAT SYSTEM")
+                Text("v0.1 // SHADOWRUNE PROTOTYPE")
                     .font(.system(size: 10, weight: .light, design: .monospaced))
-                    .foregroundColor(Color(hex: "00FF88").opacity(0.5))
+                    .foregroundColor(Color(hex: "00FF88").opacity(0.7))
                     .tracking(1)
             }
             .padding(24)
