@@ -349,6 +349,30 @@ final class SpriteManager {
         }
     }
 
+    private func addSpriteOutline(
+        texture: SKTexture,
+        to container: SKNode,
+        scale: CGFloat,
+        position: CGPoint,
+        anchorPoint: CGPoint,
+        color: UIColor,
+        flippedX: Bool = false
+    ) {
+        let outline = SKSpriteNode(texture: texture)
+        outline.anchorPoint = anchorPoint
+        outline.setScale(scale * 1.14)
+        if flippedX {
+            outline.xScale = -abs(outline.xScale)
+        }
+        outline.position = position
+        outline.zPosition = 9
+        outline.name = "characterSpriteOutline"
+        outline.color = color
+        outline.colorBlendFactor = 1.0
+        outline.alpha = 0.62
+        container.addChild(outline)
+    }
+
     // MARK: - Tile Sprites
 
     /// Create a tile sprite for the given tile type and grid position.
@@ -619,11 +643,11 @@ final class SpriteManager {
                 // tile-top (heroic scale), but not so tall it clips into adjacent tiles.
                 let targetH: CGFloat
                 switch archKey {
-                case "samurai": targetH = 70
-                case "mage":    targetH = 78
-                case "decker":  targetH = 70
-                case "face":    targetH = 78
-                default:        targetH = 70
+                case "samurai": targetH = 84
+                case "mage":    targetH = 90
+                case "decker":  targetH = 84
+                case "face":    targetH = 90
+                default:        targetH = 84
                 }
                 let spriteNode = SKSpriteNode(texture: tex)
                 let scale = targetH / spriteNode.size.height
@@ -638,6 +662,15 @@ final class SpriteManager {
                 }
                 // Position feet just below tile center so the character stands ON the hex.
                 spriteNode.position = CGPoint(x: 0, y: -18)
+                addSpriteOutline(
+                    texture: tex,
+                    to: container,
+                    scale: scale,
+                    position: spriteNode.position,
+                    anchorPoint: spriteNode.anchorPoint,
+                    color: playerColor,
+                    flippedX: archKey == "samurai"
+                )
                 spriteNode.zPosition = 10   // well above floor ring (0.5) and all tile art
                 spriteNode.name = "characterSprite"
                 container.addChild(spriteNode)
@@ -1290,12 +1323,20 @@ final class SpriteManager {
                 // Main sprite node — NO color tint; sprites carry their own palette
                 // Bottom-anchored + height-based scaling so the enemy stands on the
                 // tile regardless of the source frame's aspect ratio.
-                let targetH: CGFloat = isBoss ? 90 : 72
+                let targetH: CGFloat = isBoss ? 104 : 88
                 let spriteNode = SKSpriteNode(texture: firstTex)
                 let scale = targetH / max(spriteNode.size.height, 1.0)
                 spriteNode.setScale(scale)
                 spriteNode.anchorPoint = CGPoint(x: 0.5, y: 0.0)
                 spriteNode.position = CGPoint(x: 0, y: -18)
+                addSpriteOutline(
+                    texture: firstTex,
+                    to: container,
+                    scale: scale,
+                    position: spriteNode.position,
+                    anchorPoint: spriteNode.anchorPoint,
+                    color: accentColor
+                )
                 spriteNode.zPosition = 10
                 spriteNode.name = "characterSprite"
                 spriteNode.colorBlendFactor = 0.0  // full original palette — no tint overlay
@@ -1350,11 +1391,19 @@ final class SpriteManager {
                         SKAction.fadeAlpha(to: 0.8, duration: 0.9)
                     ])))
                     let fbSprite = SKSpriteNode(texture: fbTex)
-                    let fbTargetH: CGFloat = 72
+                    let fbTargetH: CGFloat = 88
                     let fbScale = fbTargetH / max(fbSprite.size.height, 1.0)
                     fbSprite.setScale(fbScale)
                     fbSprite.anchorPoint = CGPoint(x: 0.5, y: 0.0)
                     fbSprite.position = CGPoint(x: 0, y: -18)
+                    addSpriteOutline(
+                        texture: fbTex,
+                        to: container,
+                        scale: fbScale,
+                        position: fbSprite.position,
+                        anchorPoint: fbSprite.anchorPoint,
+                        color: fallbackTint
+                    )
                     fbSprite.zPosition = 10
                     fbSprite.name = "characterSprite"
                     fbSprite.color = fallbackTint

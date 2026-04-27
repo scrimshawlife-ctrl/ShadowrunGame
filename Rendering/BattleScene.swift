@@ -656,13 +656,9 @@ final class BattleScene: SKScene {
         topHUDInset = resolvedTop
         bottomHUDInset = resolvedBottom
 
-        guard changed || camera != nil else { return }
+        guard changed, camera != nil else { return }
 
-        if let activeId = GameState.shared.activeCharacterId ?? GameState.shared.selectedCharacterId {
-            focusCamera(on: activeId)
-        } else {
-            positionCameraOnMap()
-        }
+        positionCameraOnMap()
     }
 
     private func applyCameraScale(_ cam: SKCameraNode) -> CGFloat {
@@ -671,9 +667,11 @@ final class BattleScene: SKScene {
         // small that the HUD overlays eat the bottom half of the board.
         let visibleWidth = max(1, size.width)
         let visibleHeight = unobscuredViewportHeight
-        let requiredScaleX = mapPixelWidth / visibleWidth
-        let requiredScaleY = mapPixelHeight / visibleHeight
-        let scale = max(1.0, max(requiredScaleX, requiredScaleY) * 1.04)
+        let targetMapScreenWidth = visibleWidth * 1.14
+        let targetMapScreenHeight = visibleHeight * 0.88
+        let requiredScaleX = mapPixelWidth / targetMapScreenWidth
+        let requiredScaleY = mapPixelHeight / targetMapScreenHeight
+        let scale = max(0.86, max(requiredScaleX, requiredScaleY))
         cam.setScale(scale)
         return scale
     }
@@ -708,28 +706,8 @@ final class BattleScene: SKScene {
 
     /// Focus camera on a specific tile, clamped so map edges stay within the unobscured viewport.
     func focusCamera(on tileX: Int, y tileY: Int) {
-        guard let cam = camera else { return }
-        let scale = applyCameraScale(cam)
-        let c = tileCenter(tileX, tileY)
-        let visibleSize = cameraVisibleSize(scale: scale)
-        let verticalBias = ((bottomHUDInset - topHUDInset) / 2.0) * scale
-        let nextPosition = CGPoint(
-            x: clampedCameraCoordinate(
-                desired: c.x,
-                mapStart: mapOrigin.x,
-                mapLength: mapPixelWidth,
-                visibleLength: visibleSize.width
-            ),
-            y: clampedCameraCoordinate(
-                desired: c.y - verticalBias - firstTurnCameraYOffset,
-                mapStart: mapOrigin.y,
-                mapLength: mapPixelHeight,
-                visibleLength: visibleSize.height
-            )
-        )
-        cam.position = nextPosition
-        refreshCameraDebugOverlay(reason: "focusCamera")
-        print("[BattleScene] focusCamera tile=(\(tileX),\(tileY)) target=\(c) camera=\(nextPosition) topInset=\(topHUDInset) bottomInset=\(bottomHUDInset) bias=\(verticalBias)")
+        positionCameraOnMap()
+        print("[BattleScene] focusCamera locked to board center; requested tile=(\(tileX),\(tileY))")
     }
 
     private var unobscuredViewportHeight: CGFloat {

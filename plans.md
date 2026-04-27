@@ -3,6 +3,25 @@
 ## Active Mission
 Stabilize authority seams and eliminate workspace ambiguity so collaborators can ship deterministic gameplay changes safely.
 
+## Handoff (2026-04-27)
+
+**Branch:** `fix/combat-first-turn`
+
+**Changed:**
+- Fixed combat camera instability by making viewport inset updates reframe only when HUD measurements actually change, instead of refocusing on every SwiftUI update.
+- Locked normal focus requests to the board-centered camera frame so selecting/turn changes no longer make the grid drift around during play.
+- Increased combatant readability with larger player/enemy sprite targets and high-contrast under-sprite outlines, keeping actors above tile art in Mission 1.
+- Zoomed the board modestly larger inside the HUD corridor so playable tiles occupy more of the screen.
+
+**Pending:**
+- Fresh iPhone simulator/device visual pass from Xcode to confirm the larger board framing and actor silhouettes on Aaron's Mission 1 extraction screenshot path.
+
+**Blocked:**
+- `xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath /tmp/ShadowrunGameDerivedData build` is `NOT_COMPUTABLE` here: CoreSimulator is unavailable and no iPhone 16 simulator destination exists in this environment.
+
+**Next:**
+- Run Mission 1 on a local iPhone 16/17 simulator and verify the board stays fixed while selecting, moving, ending turns, and enemy phase animations run.
+
 ## Handoff (2026-04-26 evening)
 
 **Branch:** `fix/combat-first-turn`
