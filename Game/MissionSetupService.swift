@@ -2,6 +2,29 @@ import Foundation
 
 @MainActor
 struct MissionSetupService {
+    @discardableResult
+    static func prepareMissionForCombat(gameState: GameState, missionId: String?) -> String {
+        let resolvedMissionId = missionId ?? "Mission001"
+
+        if let multiMission = MissionLoader.shared.loadMultiRoomMission(named: resolvedMissionId) {
+            RoomManager.shared.loadMission(named: resolvedMissionId)
+            setupMultiRoomMission(gameState: gameState, mission: multiMission)
+            return resolvedMissionId
+        }
+
+        if let mission = MissionLoader.shared.loadMission(named: resolvedMissionId) {
+            setupMission(gameState: gameState, mission: mission)
+            return resolvedMissionId
+        }
+
+        guard let fallbackMission = MissionLoader.shared.loadMission(named: "Mission001") else {
+            return resolvedMissionId
+        }
+
+        setupMission(gameState: gameState, mission: fallbackMission)
+        return "Mission001"
+    }
+
     private static func archetypeLabel(_ archetype: EnemyArchetype) -> String {
         switch archetype {
         case .watcher: return "Watcher"
@@ -84,6 +107,7 @@ struct MissionSetupService {
         gameState.selectedCharacterId = gameState.playerTeam.first?.id
         gameState.beginRound()
         gameState.isEnemyPhaseRunning = false
+        gameState.addLog("『 BATTLE START — SELECT A RUNNER 』")
     }
 
     static func setupMultiRoomMission(gameState: GameState, mission: MultiRoomMission) {
@@ -172,6 +196,8 @@ struct MissionSetupService {
         gameState.activeCharacterId = gameState.playerTeam.first?.id
         gameState.selectedCharacterId = gameState.playerTeam.first?.id
         gameState.beginRound()
+        gameState.isEnemyPhaseRunning = false
+        gameState.addLog("『 BATTLE START — SELECT A RUNNER 』")
     }
 
     static func updateTilesForCurrentRoom(gameState: GameState, tiles: [[Int]]) {

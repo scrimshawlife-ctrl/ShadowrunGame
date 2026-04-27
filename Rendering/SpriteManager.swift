@@ -349,6 +349,30 @@ final class SpriteManager {
         }
     }
 
+    private func addSpriteOutline(
+        texture: SKTexture,
+        to container: SKNode,
+        scale: CGFloat,
+        position: CGPoint,
+        anchorPoint: CGPoint,
+        color: UIColor,
+        flippedX: Bool = false
+    ) {
+        let outline = SKSpriteNode(texture: texture)
+        outline.anchorPoint = anchorPoint
+        outline.setScale(scale * 1.14)
+        if flippedX {
+            outline.xScale = -abs(outline.xScale)
+        }
+        outline.position = position
+        outline.zPosition = 9
+        outline.name = "characterSpriteOutline"
+        outline.color = color
+        outline.colorBlendFactor = 1.0
+        outline.alpha = 0.62
+        container.addChild(outline)
+    }
+
     // MARK: - Tile Sprites
 
     /// Create a tile sprite for the given tile type and grid position.
@@ -523,47 +547,19 @@ final class SpriteManager {
         // places this just above the floor (0.1) but below sprite art (z=10).
         // Uses hexRadius*0.7 so the base overlaps clearly with the tile outline
         // while leaving the tile's neon border visible at the edge.
-        let teamHex = SKShapeNode(path: TileMap.hexPath(radius: TileMap.hexRadius * 0.7))
+        let teamHex = SKShapeNode(path: TileMap.hexPath(radius: TileMap.hexRadius * 0.82))
         teamHex.fillColor = team == "player"
-            ? UIColor(hex: "#00FF88").withAlphaComponent(0.75)
-            : UIColor(hex: "#FF3333").withAlphaComponent(0.75)
+            ? UIColor(hex: "#00FF9D").withAlphaComponent(0.92)
+            : UIColor(hex: "#FF4A4A").withAlphaComponent(0.92)
         teamHex.strokeColor = team == "player"
-            ? UIColor(hex: "#00FFAA")
-            : UIColor(hex: "#FF5555")
-        teamHex.lineWidth = 2.0
-        teamHex.glowWidth = 3.0
+            ? UIColor(hex: "#D7FFF0")
+            : UIColor(hex: "#FFE0E0")
+        teamHex.lineWidth = 2.6
+        teamHex.glowWidth = 6.0
         teamHex.position = .zero
         teamHex.zPosition = 0.25
         teamHex.name = "characterTeamHex"
         container.addChild(teamHex)
-
-        // ── Guaranteed-visible identity label ───────────────────────────────
-        // Large high-contrast letter/initial floats above the tile. Even if the
-        // sprite PNG fails to load AND the team hex is somehow hidden, the user
-        // will still see a single-letter marker on each character's tile.
-        let initial: String = {
-            if team == "enemy" { return String(type.prefix(1).uppercased()) }
-            let archKey = archetypeKey(for: type)
-            switch archKey {
-            case "samurai": return "S"
-            case "mage":    return "M"
-            case "decker":  return "D"
-            case "face":    return "F"
-            default:         return String(type.prefix(1).uppercased())
-            }
-        }()
-        let idLabel = SKLabelNode(text: initial)
-        idLabel.fontName = "Helvetica-Bold"
-        idLabel.fontSize = 14
-        idLabel.fontColor = team == "player"
-            ? UIColor(hex: "#001A0D")
-            : UIColor(hex: "#330000")
-        idLabel.verticalAlignmentMode = .center
-        idLabel.horizontalAlignmentMode = .center
-        idLabel.position = .zero
-        idLabel.zPosition = 0.3
-        idLabel.name = "characterInitial"
-        container.addChild(idLabel)
 
         // Player = cyan/green, enemy color varies by archetype
         let baseColor: UIColor
@@ -578,6 +574,35 @@ final class SpriteManager {
             default:        baseColor = UIColor(hex: "#FF3333")
             }
         }
+
+        // ── Low-profile identity label ─────────────────────────────────────
+        // Keep this below runner art. The previous presence badge sat above the
+        // sprite and made the combatants read as colored glyphs instead of runners.
+        let initial: String = {
+            if team == "enemy" { return String(type.prefix(1).uppercased()) }
+            let archKey = archetypeKey(for: type)
+            switch archKey {
+            case "samurai": return "S"
+            case "mage":    return "M"
+            case "decker":  return "D"
+            case "face":    return "F"
+            default:
+                if let first = name.first { return String(first).uppercased() }
+                return String(type.prefix(1).uppercased())
+            }
+        }()
+        let idLabel = SKLabelNode(text: initial)
+        idLabel.fontName = "Helvetica-Bold"
+        idLabel.fontSize = 13
+        idLabel.fontColor = team == "player"
+            ? UIColor(hex: "#001A0D")
+            : UIColor(hex: "#330000")
+        idLabel.verticalAlignmentMode = .center
+        idLabel.horizontalAlignmentMode = .center
+        idLabel.position = .zero
+        idLabel.zPosition = 0.3
+        idLabel.name = "characterInitial"
+        container.addChild(idLabel)
 
         if team == "player" {
             let playerColor: UIColor
@@ -618,11 +643,11 @@ final class SpriteManager {
                 // tile-top (heroic scale), but not so tall it clips into adjacent tiles.
                 let targetH: CGFloat
                 switch archKey {
-                case "samurai": targetH = 70
-                case "mage":    targetH = 78
-                case "decker":  targetH = 70
-                case "face":    targetH = 78
-                default:        targetH = 70
+                case "samurai": targetH = 84
+                case "mage":    targetH = 90
+                case "decker":  targetH = 84
+                case "face":    targetH = 90
+                default:        targetH = 84
                 }
                 let spriteNode = SKSpriteNode(texture: tex)
                 let scale = targetH / spriteNode.size.height
@@ -637,6 +662,15 @@ final class SpriteManager {
                 }
                 // Position feet just below tile center so the character stands ON the hex.
                 spriteNode.position = CGPoint(x: 0, y: -18)
+                addSpriteOutline(
+                    texture: tex,
+                    to: container,
+                    scale: scale,
+                    position: spriteNode.position,
+                    anchorPoint: spriteNode.anchorPoint,
+                    color: playerColor,
+                    flippedX: archKey == "samurai"
+                )
                 spriteNode.zPosition = 10   // well above floor ring (0.5) and all tile art
                 spriteNode.name = "characterSprite"
                 container.addChild(spriteNode)
@@ -1289,12 +1323,20 @@ final class SpriteManager {
                 // Main sprite node — NO color tint; sprites carry their own palette
                 // Bottom-anchored + height-based scaling so the enemy stands on the
                 // tile regardless of the source frame's aspect ratio.
-                let targetH: CGFloat = isBoss ? 90 : 72
+                let targetH: CGFloat = isBoss ? 104 : 88
                 let spriteNode = SKSpriteNode(texture: firstTex)
                 let scale = targetH / max(spriteNode.size.height, 1.0)
                 spriteNode.setScale(scale)
                 spriteNode.anchorPoint = CGPoint(x: 0.5, y: 0.0)
                 spriteNode.position = CGPoint(x: 0, y: -18)
+                addSpriteOutline(
+                    texture: firstTex,
+                    to: container,
+                    scale: scale,
+                    position: spriteNode.position,
+                    anchorPoint: spriteNode.anchorPoint,
+                    color: accentColor
+                )
                 spriteNode.zPosition = 10
                 spriteNode.name = "characterSprite"
                 spriteNode.colorBlendFactor = 0.0  // full original palette — no tint overlay
@@ -1349,11 +1391,19 @@ final class SpriteManager {
                         SKAction.fadeAlpha(to: 0.8, duration: 0.9)
                     ])))
                     let fbSprite = SKSpriteNode(texture: fbTex)
-                    let fbTargetH: CGFloat = 72
+                    let fbTargetH: CGFloat = 88
                     let fbScale = fbTargetH / max(fbSprite.size.height, 1.0)
                     fbSprite.setScale(fbScale)
                     fbSprite.anchorPoint = CGPoint(x: 0.5, y: 0.0)
                     fbSprite.position = CGPoint(x: 0, y: -18)
+                    addSpriteOutline(
+                        texture: fbTex,
+                        to: container,
+                        scale: fbScale,
+                        position: fbSprite.position,
+                        anchorPoint: fbSprite.anchorPoint,
+                        color: fallbackTint
+                    )
                     fbSprite.zPosition = 10
                     fbSprite.name = "characterSprite"
                     fbSprite.color = fallbackTint
@@ -1943,7 +1993,7 @@ final class SpriteManager {
             } // end fallback procedural enemy sprites
         }
 
-        // Container zPosition must be ABOVE tile z (z=10) so characters are always visible above the grid.
+        // Container zPosition must be ABOVE tile art so characters are always visible above the grid.
         // With ignoresSiblingOrder=true, zPosition is the ONLY render-order determinant.
         container.zPosition = 11
         // Initial position using correct hex grid math. BattleScene.placeCharacter/placeEnemy

@@ -21,8 +21,8 @@
 
 If you are picking this repo up from another contributor, start here:
 
-1. Read `AGENTS.md` for workflow conventions, branch/commit expectations, and PR standards.
-2. Read `plans.md` for active priorities, decision history, and immediate next steps.
+1. Read `plans.md` — the top "Handoff" section is the active status dispatch; it lists what just shipped, what's still broken, and the next suggested moves.
+2. Read `AGENTS.md` for workflow conventions, branch/commit expectations, and PR standards.
 3. Review `docs/TurnAuthorityReport.md` and `docs/TraceSystem.md` before touching gameplay logic.
 4. Keep `GameState` as runtime authority; rendering/UI should remain projection layers.
 

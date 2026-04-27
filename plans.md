@@ -3,6 +3,81 @@
 ## Active Mission
 Stabilize authority seams and eliminate workspace ambiguity so collaborators can ship deterministic gameplay changes safely.
 
+## Handoff (2026-04-27 Mission 1 parity fix)
+
+**Branch:** `fix/combat-first-turn`
+
+**Changed:**
+- Normalized `Mission001_multi.json` to the same 12-row by 7-column room footprint used by the working multi-room missions.
+- Moved Mission 1 player spawns, enemy spawns, door triggers, transition spawns, and final extraction point onto that working grid scale so BattleScene uses the same effective tile sizing and combatant presentation path.
+
+**Pending:**
+- Fresh iPhone simulator/device visual pass to confirm Mission 1 now shows player sprites, enemy sprites, and board scale at parity with Missions 2-5.
+
+**Blocked:**
+- Full iOS build/runtime validation is `NOT_COMPUTABLE` here because simulator availability remains constrained in this environment.
+
+**Next:**
+- Launch Mission 1 locally and compare room_0 against Mission 2 room_0 for visible runner/enemy silhouettes and equivalent board scale.
+
+## Handoff (2026-04-27)
+
+**Branch:** `fix/combat-first-turn`
+
+**Changed:**
+- Fixed combat camera instability by making viewport inset updates reframe only when HUD measurements actually change, instead of refocusing on every SwiftUI update.
+- Locked normal focus requests to the board-centered camera frame so selecting/turn changes no longer make the grid drift around during play.
+- Increased combatant readability with larger player/enemy sprite targets and high-contrast under-sprite outlines, keeping actors above tile art in Mission 1.
+- Zoomed the board modestly larger inside the HUD corridor so playable tiles occupy more of the screen.
+
+**Pending:**
+- Fresh iPhone simulator/device visual pass from Xcode to confirm the larger board framing and actor silhouettes on Aaron's Mission 1 extraction screenshot path.
+
+**Blocked:**
+- `xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath /tmp/ShadowrunGameDerivedData build` is `NOT_COMPUTABLE` here: CoreSimulator is unavailable and no iPhone 16 simulator destination exists in this environment.
+
+**Next:**
+- Run Mission 1 on a local iPhone 16/17 simulator and verify the board stays fixed while selecting, moving, ending turns, and enemy phase animations run.
+
+## Handoff (2026-04-26 evening)
+
+**Branch:** `fix/combat-first-turn`
+
+**Changed:**
+- Fixed runner readability by demoting `SpriteManager.createCharacter`'s presence badge into a low-profile under-sprite label, so loaded character/enemy PNG art remains the dominant visible layer above tile art and the board backplate.
+- Added a DEBUG camera overlay/log line with `scene.size`, `mapOrigin`, camera position/scale, HUD insets, map pixel size, and first player final scene position.
+- Tightened camera framing by using the unobscured top-banner/bottom-panel corridor for vertical camera clamping and by passing the measured bottom combat panel height instead of forcing it to at least 280pt.
+
+**Pending:**
+- Fresh simulator/device visual pass to confirm runner art and camera placement on the target tall-phone viewport.
+
+**Blocked:**
+- `xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' build` is `NOT_COMPUTABLE` here: the named simulator is unavailable and CoreSimulator/actool report no available simulator runtimes.
+
+**Next:**
+- Run a manual iPhone 16/17 simulator playtest in a local Xcode environment with working simulator runtimes and compare the DEBUG overlay values against the visible HUD corridor.
+
+## Handoff (2026-04-23 evening — open to Danny)
+
+**Branch:** `fix/combat-first-turn` — PR open against `main` on `scrimshawlife-ctrl/ShadowrunGame`.
+
+**Playtest status (iPhone 17 Pro simulator, iOS 26.4) after `d041228` + camera-inset patch:**
+- P1 — Hex grid renders, but **character and enemy sprites are not visibly identifiable on their tiles**. Only partial colored glyphs read as runners. Root cause not fully isolated; likely interaction between the new board backplate / scanline layer, `SpriteManager.createCharacter`'s presence-badge hierarchy, and container `zPosition = 40`.
+- P1 — **Camera framing still wrong**. The HEAD commit restores HUD-inset compensation in `applyCameraScale` / `positionCameraOnMap` / `focusCamera(on:y:)`, but Aaron's 20:33 MDT playtest still shows the grid mispositioned relative to the strip between the top objective banner and bottom combat panel. More tuning needed — likely interaction with `scaleMode = .aspectFit`, `fitSceneToView()` writing `self.size = view.bounds.size` after `presentScene`, and `updateViewportInsets` only triggering on change > 0.5pt.
+- P2 — Mission briefing overflow and HUD density were addressed in `d041228` and need a fresh pass once the combat board renders correctly.
+
+**What shipped in this branch:**
+- `d041228` (Forge): unblock first turn, replace debug marker overlays with SpriteManager characters, opaque briefing backdrop, tighter CombatUI.
+- HEAD: re-add HUD-aware scale + `verticalBias` so the camera lands in the middle of the unobscured strip.
+
+**Blocked on:**
+- Xcode + physical playtest loop — sim screenshots alone aren't enough to iterate on board/sprite z-order. CLI tap automation isn't wired in this env, so handoff assumes Danny drives the sim manually.
+
+**Next suggested moves:**
+1. Drop a debug overlay that prints `scene.size`, `mapOrigin`, `cam.position`, `scale`, `topHUDInset`, `bottomHUDInset`, and the first character's final scene position — so the framing math can be diffed against a known-good baseline.
+2. Audit `SpriteManager.createCharacter`'s spritesheet lookup (`playerIdleTextures[archKey]`). Confirm whether the procedural fallback path is firing and whether fallback sprites actually sit above the tile layer + backplate.
+3. If framing keeps regressing on tall phones, consider reverting to the v17-style oversized "guaranteed visible" character container (`makeCharacterVisual`) as a short-term unblock and iterating from there.
+
 ## Current State Snapshot (2026-04-23)
 - `GameState` remains gameplay authority for turn/missions/outcomes.
 - Rendering/UI are functional projections, but `BattleScene` still contains broad direct writes into authority state.
