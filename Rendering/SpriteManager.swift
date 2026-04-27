@@ -551,54 +551,33 @@ final class SpriteManager {
             }
         }
 
-        // ── Guaranteed-visible identity label ───────────────────────────────
-        // Large high-contrast letter/initial floats above the tile. Even if the
-        // sprite PNG fails to load AND the team hex is somehow hidden, the user
-        // will still see a single-letter marker on each character's tile.
+        // ── Low-profile identity label ─────────────────────────────────────
+        // Keep this below runner art. The previous presence badge sat above the
+        // sprite and made the combatants read as colored glyphs instead of runners.
         let initial: String = {
-            if team == "player", let first = name.first {
-                return String(first).uppercased()
+            if team == "enemy" { return String(type.prefix(1).uppercased()) }
+            let archKey = archetypeKey(for: type)
+            switch archKey {
+            case "samurai": return "S"
+            case "mage":    return "M"
+            case "decker":  return "D"
+            case "face":    return "F"
+            default:
+                if let first = name.first { return String(first).uppercased() }
+                return String(type.prefix(1).uppercased())
             }
-            return String(type.prefix(1)).uppercased()
         }()
-        let badgeCenter = CGPoint(x: 0, y: 6)
-        let badgeShadow = SKShapeNode(circleOfRadius: team == "player" ? 24 : 22)
-        badgeShadow.fillColor = UIColor.black.withAlphaComponent(0.72)
-        badgeShadow.strokeColor = .clear
-        badgeShadow.position = badgeCenter
-        badgeShadow.zPosition = 11
-        badgeShadow.name = "presenceBadgeShadow"
-        container.addChild(badgeShadow)
-
-        let badgeRadius: CGFloat = team == "player" ? 19 : 17
-        let badgeOuterRing = SKShapeNode(circleOfRadius: badgeRadius + 4)
-        badgeOuterRing.fillColor = .clear
-        badgeOuterRing.strokeColor = baseColor.withAlphaComponent(0.95)
-        badgeOuterRing.lineWidth = 2.8
-        badgeOuterRing.glowWidth = 8.0
-        badgeOuterRing.position = badgeCenter
-        badgeOuterRing.zPosition = 12
-        badgeOuterRing.name = "presenceBadgeRing"
-        container.addChild(badgeOuterRing)
-
         let idLabel = SKLabelNode(text: initial)
         idLabel.fontName = "Helvetica-Bold"
-        idLabel.fontSize = team == "player" ? 25 : 22
-        idLabel.fontColor = UIColor.white
+        idLabel.fontSize = 13
+        idLabel.fontColor = team == "player"
+            ? UIColor(hex: "#001A0D")
+            : UIColor(hex: "#330000")
         idLabel.verticalAlignmentMode = .center
         idLabel.horizontalAlignmentMode = .center
-        idLabel.position = badgeCenter
-        idLabel.zPosition = 15
+        idLabel.position = .zero
+        idLabel.zPosition = 0.3
         idLabel.name = "characterInitial"
-        let presenceMarker = SKShapeNode(circleOfRadius: badgeRadius)
-        presenceMarker.fillColor = baseColor.withAlphaComponent(0.96)
-        presenceMarker.strokeColor = UIColor.white.withAlphaComponent(0.82)
-        presenceMarker.lineWidth = 2.0
-        presenceMarker.glowWidth = 8.0
-        presenceMarker.position = badgeCenter
-        presenceMarker.zPosition = 14
-        presenceMarker.name = "presenceMarker"
-        container.addChild(presenceMarker)
         container.addChild(idLabel)
 
         if team == "player" {
@@ -1965,7 +1944,7 @@ final class SpriteManager {
             } // end fallback procedural enemy sprites
         }
 
-        // Container zPosition must be ABOVE tile z (z=10) so characters are always visible above the grid.
+        // Container zPosition must be ABOVE tile art so characters are always visible above the grid.
         // With ignoresSiblingOrder=true, zPosition is the ONLY render-order determinant.
         container.zPosition = 11
         // Initial position using correct hex grid math. BattleScene.placeCharacter/placeEnemy

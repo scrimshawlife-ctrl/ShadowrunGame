@@ -952,7 +952,7 @@ struct BattleSceneView: UIViewRepresentable {
 
         let missionToLoad = missionId ?? "Mission001"
         let resolvedTopInset = max(96, topHUDInset)
-        let resolvedBottomInset = max(280, bottomHUDInset)
+        let resolvedBottomInset = max(180, bottomHUDInset)
 
         if let existingScene = context.coordinator.scene {
             existingScene.updateViewportInsets(top: resolvedTopInset, bottom: resolvedBottomInset)

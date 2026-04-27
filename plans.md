@@ -3,6 +3,24 @@
 ## Active Mission
 Stabilize authority seams and eliminate workspace ambiguity so collaborators can ship deterministic gameplay changes safely.
 
+## Handoff (2026-04-26 evening)
+
+**Branch:** `fix/combat-first-turn`
+
+**Changed:**
+- Fixed runner readability by demoting `SpriteManager.createCharacter`'s presence badge into a low-profile under-sprite label, so loaded character/enemy PNG art remains the dominant visible layer above tile art and the board backplate.
+- Added a DEBUG camera overlay/log line with `scene.size`, `mapOrigin`, camera position/scale, HUD insets, map pixel size, and first player final scene position.
+- Tightened camera framing by using the unobscured top-banner/bottom-panel corridor for vertical camera clamping and by passing the measured bottom combat panel height instead of forcing it to at least 280pt.
+
+**Pending:**
+- Fresh simulator/device visual pass to confirm runner art and camera placement on the target tall-phone viewport.
+
+**Blocked:**
+- `xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' build` is `NOT_COMPUTABLE` here: the named simulator is unavailable and CoreSimulator/actool report no available simulator runtimes.
+
+**Next:**
+- Run a manual iPhone 16/17 simulator playtest in a local Xcode environment with working simulator runtimes and compare the DEBUG overlay values against the visible HUD corridor.
+
 ## Handoff (2026-04-23 evening — open to Danny)
 
 **Branch:** `fix/combat-first-turn` — PR open against `main` on `scrimshawlife-ctrl/ShadowrunGame`.

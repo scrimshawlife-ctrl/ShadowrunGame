@@ -68,6 +68,10 @@ final class BattleScene: SKScene {
     private var pendingInitialCharacters: [Character] = []
     private var pendingInitialEnemies: [Enemy] = []
 
+    #if DEBUG
+    private let debugOverlayName = "cameraDebugOverlay"
+    #endif
+
     /// Called by BattleSceneView BEFORE presentScene. Stashes the initial tilemap and
     /// roster so didMove can perform the actual loadMap/placeCharacter/placeEnemy with
     /// the view attached and scene.size final.
@@ -647,10 +651,12 @@ final class BattleScene: SKScene {
     func updateViewportInsets(top: CGFloat, bottom: CGFloat) {
         let resolvedTop = max(0, top)
         let resolvedBottom = max(0, bottom)
-        guard abs(resolvedTop - topHUDInset) > 0.5 || abs(resolvedBottom - bottomHUDInset) > 0.5 else { return }
+        let changed = abs(resolvedTop - topHUDInset) > 0.5 || abs(resolvedBottom - bottomHUDInset) > 0.5
 
         topHUDInset = resolvedTop
         bottomHUDInset = resolvedBottom
+
+        guard changed || camera != nil else { return }
 
         if let activeId = GameState.shared.activeCharacterId ?? GameState.shared.selectedCharacterId {
             focusCamera(on: activeId)
@@ -664,7 +670,7 @@ final class BattleScene: SKScene {
         // bottom combat panel). Using full scene.height here makes the map scale so
         // small that the HUD overlays eat the bottom half of the board.
         let visibleWidth = max(1, size.width)
-        let visibleHeight = max(1, size.height - topHUDInset - bottomHUDInset)
+        let visibleHeight = unobscuredViewportHeight
         let requiredScaleX = mapPixelWidth / visibleWidth
         let requiredScaleY = mapPixelHeight / visibleHeight
         let scale = max(1.0, max(requiredScaleX, requiredScaleY) * 1.04)
@@ -696,6 +702,7 @@ final class BattleScene: SKScene {
             )
         )
         cam.position = nextPosition
+        refreshCameraDebugOverlay(reason: "positionCameraOnMap")
         print("[BattleScene] positionCameraOnMap camera=\(nextPosition) topInset=\(topHUDInset) bottomInset=\(bottomHUDInset) bias=\(verticalBias)")
     }
 
@@ -721,11 +728,16 @@ final class BattleScene: SKScene {
             )
         )
         cam.position = nextPosition
+        refreshCameraDebugOverlay(reason: "focusCamera")
         print("[BattleScene] focusCamera tile=(\(tileX),\(tileY)) target=\(c) camera=\(nextPosition) topInset=\(topHUDInset) bottomInset=\(bottomHUDInset) bias=\(verticalBias)")
     }
 
+    private var unobscuredViewportHeight: CGFloat {
+        max(1, size.height - topHUDInset - bottomHUDInset)
+    }
+
     private func cameraVisibleSize(scale: CGFloat) -> CGSize {
-        CGSize(width: size.width * scale, height: size.height * scale)
+        CGSize(width: size.width * scale, height: unobscuredViewportHeight * scale)
     }
 
     private func clampedCameraCoordinate(
@@ -753,6 +765,85 @@ final class BattleScene: SKScene {
         guard let view = self.view else { return }
         self.size = view.bounds.size
     }
+
+    #if DEBUG
+    private func refreshCameraDebugOverlay(reason: String) {
+        guard let cam = camera else { return }
+
+        let overlay: SKNode
+        if let existing = childNode(withName: debugOverlayName) {
+            overlay = existing
+            overlay.removeAllChildren()
+        } else {
+            overlay = SKNode()
+            overlay.name = debugOverlayName
+            overlay.zPosition = 300
+            addChild(overlay)
+        }
+
+        let scale = max(cam.xScale, 1.0)
+        overlay.setScale(scale)
+        overlay.position = CGPoint(
+            x: cam.position.x - (size.width * scale / 2.0) + 10 * scale,
+            y: cam.position.y + (size.height * scale / 2.0) - 18 * scale
+        )
+
+        let firstCharacter = GameState.shared.playerTeam.first.flatMap { character -> (Character, SpriteNode)? in
+            guard let node = characterNodes[character.id] as? SpriteNode else { return nil }
+            return (character, node)
+        }
+        let firstText: String
+        if let (character, node) = firstCharacter {
+            firstText = "first \(character.name.prefix(8)) tile(\(node.tileX),\(node.tileY)) pos \(fmt(node.position))"
+        } else {
+            firstText = "first n/a"
+        }
+
+        let lines = [
+            "scene \(fmt(size)) origin \(fmt(mapOrigin)) cam \(fmt(cam.position)) s \(fmt(cam.xScale))",
+            "insets t \(fmt(topHUDInset)) b \(fmt(bottomHUDInset)) visibleH \(fmt(unobscuredViewportHeight))",
+            "map \(fmt(mapPixelWidth))x\(fmt(mapPixelHeight)) \(firstText)",
+            "debug \(reason)"
+        ]
+
+        let bg = SKShapeNode(rectOf: CGSize(width: 340, height: 58), cornerRadius: 4)
+        bg.fillColor = UIColor.black.withAlphaComponent(0.68)
+        bg.strokeColor = UIColor(hex: "#00FF88").withAlphaComponent(0.45)
+        bg.lineWidth = 1
+        bg.position = CGPoint(x: 170, y: -22)
+        bg.zPosition = -1
+        overlay.addChild(bg)
+
+        for (index, text) in lines.enumerated() {
+            let label = SKLabelNode(text: text)
+            label.fontName = "Menlo-Bold"
+            label.fontSize = 8
+            label.fontColor = UIColor(hex: "#00FF88")
+            label.horizontalAlignmentMode = .left
+            label.verticalAlignmentMode = .top
+            label.position = CGPoint(x: 6, y: -CGFloat(index) * 13)
+            overlay.addChild(label)
+        }
+
+        print("[BattleScene][CameraDebug] \(lines.joined(separator: " | "))")
+    }
+
+    private func fmt(_ value: CGFloat) -> String {
+        String(format: "%.1f", value)
+    }
+
+    private func fmt(_ point: CGPoint) -> String {
+        "(\(fmt(point.x)),\(fmt(point.y)))"
+    }
+
+    private func fmt(_ size: CGSize) -> String {
+        "\(fmt(size.width))x\(fmt(size.height))"
+    }
+    #endif
+
+    #if !DEBUG
+    private func refreshCameraDebugOverlay(reason: String) {}
+    #endif
 
     // MARK: - Load Map
 
@@ -982,6 +1073,7 @@ final class BattleScene: SKScene {
         addChild(node)
         characterNodes[character.id] = node
         SpriteManager.shared.updateHP(on: node, currentHP: character.currentHP, maxHP: character.maxHP, currentStun: character.currentStun, maxStun: character.maxStun, level: character.level, isPlayer: true)
+        refreshCameraDebugOverlay(reason: "placeCharacter")
         print("[BattleScene] placeCharacter \(character.name) at tile(\(character.positionX),\(character.positionY)) → pos \(node.position) scene.size=\(self.size) mapOrigin=\(mapOrigin) parent=\(node.parent?.name ?? "nil")")
     }
 
@@ -1050,6 +1142,7 @@ final class BattleScene: SKScene {
         addChild(node)
         characterNodes[enemy.id] = node
         SpriteManager.shared.updateHP(on: node, currentHP: enemy.currentHP, maxHP: enemy.maxHP, currentStun: enemy.currentStun, maxStun: enemy.maxStun)
+        refreshCameraDebugOverlay(reason: "placeEnemy")
         print("[BattleScene] placeEnemy \(enemy.name) at tile(\(enemy.positionX),\(enemy.positionY)) → pos \(node.position)")
     }
 
