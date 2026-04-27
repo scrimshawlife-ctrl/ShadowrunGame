@@ -563,14 +563,7 @@
 		6F9F4CCA76FEC94BD0F7BD98 = {
 			isa = PBXGroup;
 			children = (
-				3FDDFCA5C7C1AD9CA34ACBE7 /* Sprites */,
-				B6BF78B4E134D6BF6BDC8134 /* Entities */,
-				AEDAA074FC889561130CE877 /* Game */,
-				1536B0A5BDF51E2BD6CA90B2 /* Missions */,
-				4FD4846841CF08CE16075C9C /* Rendering */,
 				668EE11ED1A1D117D571117C /* ShadowrunGame */,
-				571CE6C52BCDAF08B7936592 /* Sprites */,
-				7D5432A9AC68F4338FD30772 /* UI */,
 				43152140617C8BF72462B757 /* Products */,
 			);
 			sourceTree = "<group>";
