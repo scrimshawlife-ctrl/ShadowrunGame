@@ -421,7 +421,7 @@
 		F7003DDBBA43F79AAE0B2907 /* medic_idle_0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = medic_idle_0.png; sourceTree = "<group>"; };
 		F8B63FC03AC72D74165F88E1 /* corpmage_walk_3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = corpmage_walk_3.png; sourceTree = "<group>"; };
 		F90C2F90A4C17AB1A79E911B /* mech_walk_1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mech_walk_1.png; sourceTree = "<group>"; };
-		F924F61741981A984C3985F6 /* ShadowrunGame.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ShadowrunGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F924F61741981A984C3985F6 /* Shadowrune.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Shadowrune.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FAF5E7EE7B02E68C2AE02872 /* tilesheet_2_r2c1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tilesheet_2_r2c1.png; sourceTree = "<group>"; };
 		FC83DB2A49AB7E84B21C0036 /* tilesheet_1_r3c1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tilesheet_1_r3c1.png; sourceTree = "<group>"; };
 		FDAC6C8D76AEB437B905098C /* corpmage_attack_1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = corpmage_attack_1.png; sourceTree = "<group>"; };
@@ -452,7 +452,7 @@
 		43152140617C8BF72462B757 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F924F61741981A984C3985F6 /* ShadowrunGame.app */,
+				F924F61741981A984C3985F6 /* Shadowrune.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -556,7 +556,7 @@
 				571CE6C52BCDAF08B7936592 /* Sprites */,
 				7D5432A9AC68F4338FD30772 /* UI */,
 			);
-			name = ShadowrunGame;
+			name = Shadowrune;
 			path = .;
 			sourceTree = "<group>";
 		};
@@ -734,9 +734,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		BC21FF41AB1B6EFBAE700C76 /* ShadowrunGame */ = {
+		BC21FF41AB1B6EFBAE700C76 /* Shadowrune */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0830F178506CFE156AB77E9D /* Build configuration list for PBXNativeTarget "ShadowrunGame" */;
+			buildConfigurationList = 0830F178506CFE156AB77E9D /* Build configuration list for PBXNativeTarget "Shadowrune" */;
 			buildPhases = (
 				09C9C485906375BBA85445CB /* Sources */,
 				0712B45A3EF2372033A21790 /* Resources */,
@@ -745,11 +745,11 @@
 			);
 			dependencies = (
 			);
-			name = ShadowrunGame;
+			name = Shadowrune;
 			packageProductDependencies = (
 			);
-			productName = ShadowrunGame;
-			productReference = F924F61741981A984C3985F6 /* ShadowrunGame.app */;
+			productName = Shadowrune;
+			productReference = F924F61741981A984C3985F6 /* Shadowrune.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -763,7 +763,7 @@
 				TargetAttributes = {
 				};
 			};
-			buildConfigurationList = 607FE1327C3739B07CE5B1A8 /* Build configuration list for PBXProject "ShadowrunGame" */;
+			buildConfigurationList = 607FE1327C3739B07CE5B1A8 /* Build configuration list for PBXProject "Shadowrune" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -777,7 +777,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				BC21FF41AB1B6EFBAE700C76 /* ShadowrunGame */,
+				BC21FF41AB1B6EFBAE700C76 /* Shadowrune */,
 			);
 		};
 /* End PBXProject section */
@@ -1022,7 +1022,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.shadowrun.game;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shadowrune.game;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1103,7 +1103,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.shadowrun.game;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shadowrune.game;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1182,7 +1182,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0830F178506CFE156AB77E9D /* Build configuration list for PBXNativeTarget "ShadowrunGame" */ = {
+		0830F178506CFE156AB77E9D /* Build configuration list for PBXNativeTarget "Shadowrune" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C7562AFA6D7BBB57BB965C37 /* Debug */,
@@ -1191,7 +1191,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		607FE1327C3739B07CE5B1A8 /* Build configuration list for PBXProject "ShadowrunGame" */ = {
+		607FE1327C3739B07CE5B1A8 /* Build configuration list for PBXProject "Shadowrune" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F9EE8B68C3848BCDF6844213 /* Debug */,

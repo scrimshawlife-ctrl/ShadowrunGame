@@ -118,7 +118,7 @@ struct MissionObjectiveBanner: View {
 }
 
 @main
-struct ShadowrunGameApp: App {
+struct ShadowruneApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
