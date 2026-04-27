@@ -257,29 +257,43 @@ struct TitleView: View {
                 .opacity(0.08)
 
             VStack(spacing: 24) {
-                VStack(spacing: 8) {
+                VStack(spacing: 10) {
                     Text("SHADOWRUNE")
-                        .font(.system(size: 42, weight: .black)).minimumScaleFactor(0.8)
-                        .foregroundColor(Color(hex: "DDFBFF"))
-                        .tracking(2)
-                        .shadow(color: Color(hex: "00E5FF").opacity(0.65), radius: 14)
-                        .shadow(color: Color(hex: "FF4FD8").opacity(0.35), radius: 24)
-                    Text("TACTICAL CYBERFANTASY")
-                        .font(.system(size: 16, weight: .semibold, design: .monospaced))
-                        .foregroundColor(Color(hex: "FF7AE6"))
-                        .tracking(4)
+                        .font(.system(size: 44, weight: .black, design: .rounded)).minimumScaleFactor(0.8)
+                        .foregroundColor(Color(hex: "F2FBFF"))
+                        .tracking(3)
+                        .shadow(color: Color(hex: "00E5FF").opacity(0.7), radius: 14)
+                        .shadow(color: Color(hex: "FF4FD8").opacity(0.35), radius: 28)
 
-                    Rectangle()
-                        .fill(Color(hex: "00FFD0").opacity(0.45))
-                        .frame(height: 1)
-                        .frame(width: 240)
+                    HStack(spacing: 10) {
+                        Capsule()
+                            .fill(Color(hex: "00FFD0").opacity(0.75))
+                            .frame(width: 28, height: 2)
+                        Text("TACTICAL CYBERFANTASY")
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
+                            .foregroundColor(Color(hex: "FF7AE6"))
+                            .tracking(3)
+                        Capsule()
+                            .fill(Color(hex: "00FFD0").opacity(0.75))
+                            .frame(width: 28, height: 2)
+                    }
 
                     Text("A neon extraction in the Sixth World")
                         .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.72))
+                        .foregroundColor(.white.opacity(0.76))
                         .tracking(1)
                 }
-                .padding(.top, 36)
+                .padding(.top, 34)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 18)
+                .background(
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(Color.black.opacity(0.26))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18)
+                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        )
+                )
 
                 Spacer()
 

@@ -5,7 +5,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
-    <string>Shadowrun</string>
+    <string>Shadowrune</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -27,7 +27,7 @@
         <key>UIColorName</key>
         <string></string>
         <key>UIImageName</key>
-        <string></string>
+        <string>title_splash</string>
     </dict>
     <key>UIRequiredDeviceCapabilities</key>
     <array>
