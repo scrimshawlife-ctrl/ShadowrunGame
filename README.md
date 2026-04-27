@@ -137,7 +137,7 @@ Handoff updates should always include:
 │   └── TurnAuthorityReport.md
 ├── Info.plist
 ├── ShadowrunGameApp.swift
-└── ShadowrunGame.xcodeproj/
+└── Shadowrune.xcodeproj/
 ```
 
 ---
@@ -145,13 +145,13 @@ Handoff updates should always include:
 ## ▶️ Run
 
 ### Xcode
-1. Open `ShadowrunGame.xcodeproj`
+1. Open `Shadowrune.xcodeproj`
 2. Select scheme `ShadowrunGame`
 3. Run on an iOS simulator
 
 ### CLI
 ```bash
-xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' build
+xcodebuild -project Shadowrune.xcodeproj -scheme Shadowrune -destination 'platform=iOS Simulator,name=iPhone 16' build
 ```
 
 Note: iOS builds require macOS + Xcode.

@@ -34,7 +34,7 @@ Stabilize authority seams and eliminate workspace ambiguity so collaborators can
 - Fresh iPhone simulator/device visual pass from Xcode to confirm the larger board framing and actor silhouettes on Aaron's Mission 1 extraction screenshot path.
 
 **Blocked:**
-- `xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath /tmp/ShadowrunGameDerivedData build` is `NOT_COMPUTABLE` here: CoreSimulator is unavailable and no iPhone 16 simulator destination exists in this environment.
+- `xcodebuild -project Shadowrune.xcodeproj -scheme Shadowrune -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath /tmp/ShadowrunGameDerivedData build` is `NOT_COMPUTABLE` here: CoreSimulator is unavailable and no iPhone 16 simulator destination exists in this environment.
 
 **Next:**
 - Run Mission 1 on a local iPhone 16/17 simulator and verify the board stays fixed while selecting, moving, ending turns, and enemy phase animations run.
@@ -52,7 +52,7 @@ Stabilize authority seams and eliminate workspace ambiguity so collaborators can
 - Fresh simulator/device visual pass to confirm runner art and camera placement on the target tall-phone viewport.
 
 **Blocked:**
-- `xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' build` is `NOT_COMPUTABLE` here: the named simulator is unavailable and CoreSimulator/actool report no available simulator runtimes.
+- `xcodebuild -project Shadowrune.xcodeproj -scheme Shadowrune -destination 'platform=iOS Simulator,name=iPhone 16' build` is `NOT_COMPUTABLE` here: the named simulator is unavailable and CoreSimulator/actool report no available simulator runtimes.
 
 **Next:**
 - Run a manual iPhone 16/17 simulator playtest in a local Xcode environment with working simulator runtimes and compare the DEBUG overlay values against the visible HUD corridor.

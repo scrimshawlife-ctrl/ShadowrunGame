@@ -3,8 +3,8 @@
 # Run this in Terminal with Xcode QUIT first.
 set -u
 
-LIVE="$HOME/.openclaw/workspace/workspace-coding/ShadowrunGame"
-OLD="$HOME/.openclaw/workspace-coding/ShadowrunGame"
+LIVE="$HOME/.openclaw/workspace/workspace-coding/Shadowrune"
+OLD="$HOME/.openclaw/workspace-coding/Shadowrune"
 
 echo "=== 1. Sanity check: live project must exist ==="
 if [ ! -d "$LIVE" ]; then
@@ -56,5 +56,5 @@ echo "zPosition = 50:    $(grep -c 'zPosition = 50' "$LIVE/Rendering/BattleScene
 
 echo
 echo "=== DONE ==="
-echo "Now open Xcode ONLY from: $LIVE/ShadowrunGame.xcodeproj"
+echo "Now open Xcode ONLY from: $LIVE/Shadowrune.xcodeproj"
 echo "Then: Product → Clean Build Folder (⇧⌘K), then Run."

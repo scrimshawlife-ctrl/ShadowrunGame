@@ -21,7 +21,7 @@ Because this environment cannot run iOS builds, use this validation ladder:
 1. Static review for authority boundaries (`GameState` vs rendering).
 2. Confirm docs reflect behavior changes.
 3. If local macOS is available, run:
-   - `xcodebuild -project ShadowrunGame.xcodeproj -scheme ShadowrunGame -destination 'platform=iOS Simulator,name=iPhone 16' build`
+   - `xcodebuild -project Shadowrune.xcodeproj -scheme Shadowrune -destination 'platform=iOS Simulator,name=iPhone 16' build`
 
 If full validation is not possible, explicitly mark `NOT_COMPUTABLE` in PR notes.
 

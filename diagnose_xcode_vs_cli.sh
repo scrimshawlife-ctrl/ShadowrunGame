@@ -3,7 +3,7 @@
 # Also builds with the EXACT destination Xcode uses (iPhone 17 Pro) so we rule
 # out generic/device differences.
 
-PROJECT_DIR="$HOME/.openclaw/workspace/workspace-coding/ShadowrunGame"
+PROJECT_DIR="$HOME/.openclaw/workspace/workspace-coding/Shadowrune"
 cd "$PROJECT_DIR"
 
 echo "=== 1. Check what's in DerivedData right now ==="
@@ -25,8 +25,8 @@ fi
 echo
 echo "=== 3. Build CLI with EXACT iPhone 17 Pro destination ==="
 xcodebuild \
-    -project ShadowrunGame.xcodeproj \
-    -scheme ShadowrunGame \
+    -project Shadowrune.xcodeproj \
+    -scheme Shadowrune \
     -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
     -configuration Debug \
     clean build 2>&1 | grep -aE "error:|BUILD " | head -20

@@ -22,10 +22,10 @@ rm -rfv ~/Library/Saved\ Application\ State/com.apple.dt.Xcode.savedState 2>/dev
 
 echo
 echo "=== 5. Re-run the build from CLI to confirm code compiles ==="
-cd "$HOME/.openclaw/workspace/workspace-coding/ShadowrunGame"
+cd "$HOME/.openclaw/workspace/workspace-coding/Shadowrune"
 xcodebuild \
-    -project ShadowrunGame.xcodeproj \
-    -scheme ShadowrunGame \
+    -project Shadowrune.xcodeproj \
+    -scheme Shadowrune \
     -destination 'generic/platform=iOS Simulator' \
     -configuration Debug \
     clean build 2>&1 | tail -5
@@ -33,5 +33,5 @@ xcodebuild \
 echo
 echo "=== DONE ==="
 echo "Now open Xcode FRESH:"
-echo "  open ~/.openclaw/workspace/workspace-coding/ShadowrunGame/ShadowrunGame.xcodeproj"
+echo "  open ~/.openclaw/workspace/workspace-coding/Shadowrune/Shadowrune.xcodeproj"
 echo "Wait ~30s for indexing (status bar top center). Then ⌘R."

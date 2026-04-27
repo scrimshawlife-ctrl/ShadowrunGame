@@ -6,14 +6,14 @@
 # Run with Xcode CLOSED for a clean build.
 set -u
 
-PROJECT_DIR="$HOME/.openclaw/workspace/workspace-coding/ShadowrunGame"
+PROJECT_DIR="$HOME/.openclaw/workspace/workspace-coding/Shadowrune"
 cd "$PROJECT_DIR"
 
 LOG="build.log"
 echo "=== Running xcodebuild (this will take 30-60 seconds) ==="
 xcodebuild \
-    -project ShadowrunGame.xcodeproj \
-    -scheme ShadowrunGame \
+    -project Shadowrune.xcodeproj \
+    -scheme Shadowrune \
     -destination 'generic/platform=iOS Simulator' \
     -configuration Debug \
     clean build 2>&1 | tee "$LOG"
