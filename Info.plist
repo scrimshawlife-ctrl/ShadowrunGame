@@ -25,9 +25,9 @@
     <key>UILaunchScreen</key>
     <dict>
         <key>UIColorName</key>
-        <string></string>
+        <string>AccentColor</string>
         <key>UIImageName</key>
-        <string>title_splash</string>
+        <string></string>
     </dict>
     <key>UIRequiredDeviceCapabilities</key>
     <array>
