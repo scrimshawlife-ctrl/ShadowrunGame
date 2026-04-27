@@ -2,6 +2,8 @@
   "id": "run002_multi",
   "title": "Ghost Protocol",
   "description": "A rogue AI has locked down a corporate server farm. Navigate the facility, neutralize its security drones, and extract the core data.",
+  "briefing": "A rogue AI codenamed 'Specter' has seized control of a Renraku server farm. The corp wants it offline and the data pulled before it can spread. Security is fully automated — drones and mage-class ICE. Watch for overlapping fields of fire and don't let the mage lock you down. Get in, shut it down, get the core out.",
+  "missionCompleteSummary": "Specter is offline. Core data extracted and delivered to the megacorp client. The AI's spread was contained before it could breach the outer grid. Clean work — Renraku will remember this run.",
   "rooms": [
     {
       "id": "room_0",

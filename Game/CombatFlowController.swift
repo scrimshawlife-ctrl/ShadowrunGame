@@ -473,7 +473,20 @@ struct CombatFlowController {
     }
 
     static func checkCombatEnd(gameState: GameState) {
-        if gameState.currentMissionType == .assault && gameState.livingEnemies.isEmpty && gameState.pendingSpawns.isEmpty {
+        // ASSAULT ENDING: only finalize if we're in a single-room mission or the LAST room of a multi-room mission.
+        let isLastRoom: Bool
+        if let mission = RoomManager.shared.currentMission,
+           let currentRoom = RoomManager.shared.currentRoom,
+           let idx = mission.rooms.firstIndex(where: { $0.id == currentRoom.id }) {
+            isLastRoom = (idx == mission.rooms.count - 1)
+        } else {
+            isLastRoom = true // single-room mission
+        }
+
+        if gameState.currentMissionType == .assault
+            && gameState.livingEnemies.isEmpty
+            && gameState.pendingSpawns.isEmpty
+            && isLastRoom {
             gameState.finalizeCombatFromCombatFlow(won: true, missionLog: "MISSION COMPLETE — ASSAULT TARGET ELIMINATED")
             return
         }

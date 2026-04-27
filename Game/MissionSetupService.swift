@@ -126,6 +126,14 @@ struct MissionSetupService {
         gameState.pendingSpawns = []
         assignMissionTypeForCurrentLoad(gameState: gameState)
 
+        // Load mission story/briefing text from JSON
+        if let briefing = mission.briefing {
+            gameState.briefingText = briefing
+        }
+        if let summary = mission.missionCompleteSummary {
+            gameState.missionCompleteSummaryText = summary
+        }
+
         for (spawnIndex, spawn) in firstRoom.enemies.enumerated() {
             let archetype = archetypeForSpawnIndex(gameState: gameState, spawnIndex: spawnIndex)
             let enemy = makeEnemy(gameState: gameState, for: spawn.type, archetype: archetype)

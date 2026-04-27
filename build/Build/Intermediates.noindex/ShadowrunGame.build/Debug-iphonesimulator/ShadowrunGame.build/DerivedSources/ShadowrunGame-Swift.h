@@ -389,14 +389,11 @@ SWIFT_CLASS("_TtC13ShadowrunGame11BattleScene")
 - (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder OBJC_DESIGNATED_INITIALIZER;
 @end
 
-@class UIView;
-/// SKView that forces all touches to the scene, bypassing SwiftUI overlay hit-testing
+/// Plain SKView wrapper used by BattleSceneView.
+/// BattleScene already receives touches through SpriteKit; claiming every touch here
+/// breaks the SwiftUI combat HUD above it.
 SWIFT_CLASS("_TtC13ShadowrunGame16ForwardingSKView")
 @interface ForwardingSKView : SKView
-- (UIView * _Nullable)hitTest:(CGPoint)point withEvent:(UIEvent * _Nullable)event SWIFT_WARN_UNUSED_RESULT;
-- (void)touchesBegan:(NSSet<UITouch *> * _Nonnull)touches withEvent:(UIEvent * _Nullable)event;
-- (void)touchesMoved:(NSSet<UITouch *> * _Nonnull)touches withEvent:(UIEvent * _Nullable)event;
-- (void)touchesEnded:(NSSet<UITouch *> * _Nonnull)touches withEvent:(UIEvent * _Nullable)event;
 - (nonnull instancetype)initWithFrame:(CGRect)frame OBJC_DESIGNATED_INITIALIZER;
 - (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)coder OBJC_DESIGNATED_INITIALIZER;
 @end

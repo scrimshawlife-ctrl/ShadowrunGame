@@ -74,6 +74,8 @@ struct MultiRoomMission: Codable {
     let id: String
     let title: String
     let description: String
+    let briefing: String?           // story/plot text shown at mission start
+    let missionCompleteSummary: String?  // shown on victory
     let rooms: [Room]
 
     /// The room the player starts in.

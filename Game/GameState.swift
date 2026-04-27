@@ -795,7 +795,11 @@ final class GameState: ObservableObject {
             rewardProfile = "Balanced approach yields bonus."
         }
 
+        // Prepend story briefing text from mission JSON if available
+        let storyBriefing = briefingText.map { "\($0)\n\n" } ?? ""
+
         return """
+        \(storyBriefing)
         ------------------------
 
         MISSION BRIEFING
@@ -1234,6 +1238,18 @@ final class GameState: ObservableObject {
     var extractionY: Int {
         get { sessionState.extractionY }
         set { sessionState.extractionY = newValue }
+    }
+
+    /// Briefing text loaded from mission JSON (story/plot shown at mission start).
+    var briefingText: String? {
+        get { sessionState.missionBriefingText }
+        set { sessionState.missionBriefingText = newValue }
+    }
+
+    /// Mission complete summary text loaded from mission JSON (shown on victory).
+    var missionCompleteSummaryText: String? {
+        get { sessionState.missionCompleteSummaryText }
+        set { sessionState.missionCompleteSummaryText = newValue }
     }
 
 

@@ -46,6 +46,16 @@
     "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/Weapon.swiftdeps",
     "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/Weapon~partial.swiftmodule"
   },
+  "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/CombatFlowController.swift" : {
+    "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatFlowController.swiftconstvalues",
+    "dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatFlowController.d",
+    "diagnostics" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatFlowController.dia",
+    "index-unit-output-path" : "/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatFlowController.o",
+    "llvm-bc" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatFlowController.bc",
+    "object" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatFlowController.o",
+    "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatFlowController.swiftdeps",
+    "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatFlowController~partial.swiftmodule"
+  },
   "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/CombatResolver.swift" : {
     "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatResolver.swiftconstvalues",
     "dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatResolver.d",
@@ -55,6 +65,16 @@
     "object" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatResolver.o",
     "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatResolver.swiftdeps",
     "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/CombatResolver~partial.swiftmodule"
+  },
+  "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/ConsequenceEngine.swift" : {
+    "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ConsequenceEngine.swiftconstvalues",
+    "dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ConsequenceEngine.d",
+    "diagnostics" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ConsequenceEngine.dia",
+    "index-unit-output-path" : "/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ConsequenceEngine.o",
+    "llvm-bc" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ConsequenceEngine.bc",
+    "object" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ConsequenceEngine.o",
+    "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ConsequenceEngine.swiftdeps",
+    "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ConsequenceEngine~partial.swiftmodule"
   },
   "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/DiceEngine.swift" : {
     "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/DiceEngine.swiftconstvalues",
@@ -66,6 +86,16 @@
     "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/DiceEngine.swiftdeps",
     "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/DiceEngine~partial.swiftmodule"
   },
+  "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/ExtractionController.swift" : {
+    "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ExtractionController.swiftconstvalues",
+    "dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ExtractionController.d",
+    "diagnostics" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ExtractionController.dia",
+    "index-unit-output-path" : "/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ExtractionController.o",
+    "llvm-bc" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ExtractionController.bc",
+    "object" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ExtractionController.o",
+    "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ExtractionController.swiftdeps",
+    "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/ExtractionController~partial.swiftmodule"
+  },
   "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/GameNotifications.swift" : {
     "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameNotifications.swiftconstvalues",
     "dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameNotifications.d",
@@ -75,6 +105,16 @@
     "object" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameNotifications.o",
     "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameNotifications.swiftdeps",
     "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameNotifications~partial.swiftmodule"
+  },
+  "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/GameSessionState.swift" : {
+    "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameSessionState.swiftconstvalues",
+    "dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameSessionState.d",
+    "diagnostics" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameSessionState.dia",
+    "index-unit-output-path" : "/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameSessionState.o",
+    "llvm-bc" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameSessionState.bc",
+    "object" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameSessionState.o",
+    "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameSessionState.swiftdeps",
+    "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameSessionState~partial.swiftmodule"
   },
   "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/GameState.swift" : {
     "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/GameState.swiftconstvalues",
@@ -95,6 +135,36 @@
     "object" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/HapticsManager.o",
     "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/HapticsManager.swiftdeps",
     "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/HapticsManager~partial.swiftmodule"
+  },
+  "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/MissionSetupService.swift" : {
+    "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/MissionSetupService.swiftconstvalues",
+    "dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/MissionSetupService.d",
+    "diagnostics" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/MissionSetupService.dia",
+    "index-unit-output-path" : "/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/MissionSetupService.o",
+    "llvm-bc" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/MissionSetupService.bc",
+    "object" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/MissionSetupService.o",
+    "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/MissionSetupService.swiftdeps",
+    "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/MissionSetupService~partial.swiftmodule"
+  },
+  "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/OutcomePipeline.swift" : {
+    "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/OutcomePipeline.swiftconstvalues",
+    "dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/OutcomePipeline.d",
+    "diagnostics" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/OutcomePipeline.dia",
+    "index-unit-output-path" : "/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/OutcomePipeline.o",
+    "llvm-bc" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/OutcomePipeline.bc",
+    "object" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/OutcomePipeline.o",
+    "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/OutcomePipeline.swiftdeps",
+    "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/OutcomePipeline~partial.swiftmodule"
+  },
+  "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/PathingAndAIHelpers.swift" : {
+    "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/PathingAndAIHelpers.swiftconstvalues",
+    "dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/PathingAndAIHelpers.d",
+    "diagnostics" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/PathingAndAIHelpers.dia",
+    "index-unit-output-path" : "/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/PathingAndAIHelpers.o",
+    "llvm-bc" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/PathingAndAIHelpers.bc",
+    "object" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/PathingAndAIHelpers.o",
+    "swift-dependencies" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/PathingAndAIHelpers.swiftdeps",
+    "swiftmodule" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/PathingAndAIHelpers~partial.swiftmodule"
   },
   "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/Game/TurnManager.swift" : {
     "const-values" : "/Users/prabu/.openclaw/workspace/workspace-coding/ShadowrunGame/build/Build/Intermediates.noindex/ShadowrunGame.build/Debug-iphonesimulator/ShadowrunGame.build/Objects-normal/arm64/TurnManager.swiftconstvalues",

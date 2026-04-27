@@ -30,4 +30,8 @@ final class GameSessionState {
     var missionTargetTurns: Int = 6
     var currentTurnCount: Int = 0
     var isItemMenuVisible: Bool = false
+
+    // Mission narrative text (loaded from JSON or set during mission setup)
+    var missionBriefingText: String? = nil
+    var missionCompleteSummaryText: String? = nil
 }

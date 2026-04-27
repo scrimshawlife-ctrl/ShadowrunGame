@@ -2,6 +2,8 @@
   "id": "run001_multi",
   "title": "The Extraction",
   "description": "Corporate asset extraction. Neutralize hostiles, navigate the facility, and reach the extraction point.",
+  "briefing": "Your runner team has been tapped for a high-value corporate extraction. An asset is being held in a secured Ritech facility on the outskirts of the city. Clear the perimeter, fight through their security, and bring the package out. Ritech's response teams are heavy — keep your head down and move fast. No witnesses.",
+  "missionCompleteSummary": "Asset secured and extracted. Ritech security neutralized. Payment being transferred to your runner hub account. Good work — stay sharp out there.",
   "rooms": [
     {
       "id": "room_0",
