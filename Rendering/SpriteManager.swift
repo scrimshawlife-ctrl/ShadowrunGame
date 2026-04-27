@@ -549,10 +549,10 @@ final class SpriteManager {
         // while leaving the tile's neon border visible at the edge.
         let teamHex = SKShapeNode(path: TileMap.hexPath(radius: TileMap.hexRadius * 0.82))
         teamHex.fillColor = team == "player"
-            ? UIColor(hex: "#00FF9D").withAlphaComponent(0.92)
+            ? UIColor(hex: "#00FF9D").withAlphaComponent(0.30)
             : UIColor(hex: "#FF4A4A").withAlphaComponent(0.92)
         teamHex.strokeColor = team == "player"
-            ? UIColor(hex: "#D7FFF0")
+            ? UIColor(hex: "#D7FFF0").withAlphaComponent(0.50)
             : UIColor(hex: "#FFE0E0")
         teamHex.lineWidth = 2.6
         teamHex.glowWidth = 6.0
