@@ -245,15 +245,20 @@ struct TitleView: View {
 
             LinearGradient(
                 colors: [
-                    Color.black.opacity(0.82),
+                    Color.black.opacity(0.35),
                     Color.black.opacity(0.08),
-                    Color.black.opacity(0.88)
+                    Color.black.opacity(0.55)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
             .offset(y: 36)
             .ignoresSafeArea()
+
+            // Extra bright text layer — clear path so text pops
+            Color.black.opacity(0.15)
+                .offset(y: 36)
+                .ignoresSafeArea()
 
             VStack(spacing: 24) {
                 Spacer().frame(minHeight: 60)
@@ -269,18 +274,19 @@ struct TitleView: View {
                             .frame(width: 220, height: 50)
                             .background(Color(hex: "00FF88"))
                             .cornerRadius(8)
+                            .shadow(color: Color(hex: "00FF88").opacity(0.5), radius: 8)
                     }
                     Button(action: {
                         HapticsManager.shared.buttonTap()
                     }) {
                         Text("CONTINUE (COMING SOON)")
                             .font(.headline)
-                            .foregroundColor(Color(hex: "00FF88").opacity(0.4))
+                            .foregroundColor(Color(hex: "00FF88").opacity(0.5))
                             .frame(width: 220, height: 50)
-                            .background(Color.black.opacity(0.15))
+                            .background(Color.black.opacity(0.2))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color(hex: "00FF88").opacity(0.3), lineWidth: 2)
+                                    .stroke(Color(hex: "00FF88").opacity(0.35), lineWidth: 2)
                             )
                     }
                     .disabled(true)
@@ -290,21 +296,23 @@ struct TitleView: View {
                 VStack(spacing: 8) {
                     Text("TACTICAL CYBERFANTASY")
                         .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color(hex: "FF7AE6").opacity(0.95))
+                        .foregroundColor(Color(hex: "00FFCC"))
                         .tracking(2)
+                        .shadow(color: Color(hex: "00FFCC").opacity(0.8), radius: 4)
                     Text("v0.1 // SHADOWRUNE PROTOTYPE")
                         .font(.system(size: 10, weight: .light, design: .monospaced))
-                        .foregroundColor(Color(hex: "00FF88").opacity(0.72))
+                        .foregroundColor(Color(hex: "00FF88").opacity(0.85))
                         .tracking(1)
+                        .shadow(color: Color(hex: "00FF88").opacity(0.4), radius: 3)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.black.opacity(0.32))
+                        .fill(Color.black.opacity(0.28))
                         .overlay(
                             RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                                .stroke(Color(hex: "00FF88").opacity(0.25), lineWidth: 1)
                         )
                 )
             }
