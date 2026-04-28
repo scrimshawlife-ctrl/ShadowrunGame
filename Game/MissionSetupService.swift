@@ -35,6 +35,7 @@ struct MissionSetupService {
 
     static func setupMission(gameState: GameState, mission: Mission) {
         print("[GameState] setupMission: \(mission.title)")
+        RoomManager.shared.unloadMission()
         gameState.playerTeam = Character.allRunners
         if let spawn = Optional(mission.playerSpawn) {
             for (i, char) in gameState.playerTeam.enumerated() {
@@ -193,12 +194,10 @@ struct MissionSetupService {
         if let _ = firstRoom.extractionPoint {
             gameState.extractionX = adjustedFirstRoomMap.1.x
             gameState.extractionY = adjustedFirstRoomMap.1.y
-            gameState.addLog("Reach extraction at (\(gameState.extractionX), \(gameState.extractionY))")
-        } else if let firstConn = firstRoom.connections.first {
-            gameState.extractionX = firstConn.triggerTileX
-            gameState.extractionY = firstConn.triggerTileY
-            gameState.addLog("Find a way through to: \(firstConn.targetRoomId)")
+            gameState.addLog("🚁 Extraction marker active — reach it when all rooms are clear!")
         }
+        // For rooms without an extraction point (intermediate rooms), don't set extractionX/Y.
+        // The player must clear all rooms to activate extraction in the final room.
 
         processDelayedSpawns(gameState: gameState, enemyPhaseIndex: 0)
         gameState.activeCharacterId = gameState.playerTeam.first?.id

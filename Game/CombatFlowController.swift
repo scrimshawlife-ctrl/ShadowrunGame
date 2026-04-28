@@ -426,11 +426,30 @@ struct CombatFlowController {
         }
 
         gameState.currentTurnCount += 1
-        if gameState.currentMissionType == .stealth && !gameState.missionComplete && gameState.currentTurnCount >= gameState.missionTargetTurns {
+        // Single-room stealth: end when turn window closes
+        if RoomManager.shared.currentMission == nil
+            && gameState.currentMissionType == .stealth
+            && !gameState.missionComplete
+            && gameState.currentTurnCount >= gameState.missionTargetTurns {
             gameState.finalizeCombatFromCombatFlow(
                 won: true,
                 missionLog: "MISSION COMPLETE — STEALTH WINDOW HELD FOR \(gameState.missionTargetTurns) TURNS"
             )
+            return
+        }
+        // Multi-room stealth: only end on turn window if ALL rooms cleared (no partial completion)
+        if gameState.currentMissionType == .stealth
+            && RoomManager.shared.currentMission != nil
+            && !gameState.missionComplete
+            && gameState.currentTurnCount >= gameState.missionTargetTurns {
+            if RoomManager.shared.areAllRoomsCleared {
+                gameState.finalizeCombatFromCombatFlow(
+                    won: true,
+                    missionLog: "MISSION COMPLETE — STEALTH WINDOW HELD FOR \(gameState.missionTargetTurns) TURNS"
+                )
+            } else {
+                gameState.addLog("Stealth window closed — clear remaining rooms!")
+            }
             return
         }
 
@@ -473,7 +492,10 @@ struct CombatFlowController {
     }
 
     static func checkCombatEnd(gameState: GameState) {
+        let isMultiRoomMission = RoomManager.shared.currentMission != nil
+
         // ASSAULT ENDING: only finalize if we're in a single-room mission or the LAST room of a multi-room mission.
+        // Multi-room missions rely on extraction flow for victory (player reaches extraction tile after all rooms cleared).
         let isLastRoom: Bool
         if let mission = RoomManager.shared.currentMission,
            let currentRoom = RoomManager.shared.currentRoom,
@@ -511,6 +533,10 @@ struct CombatFlowController {
         let livingPlayers = gameState.playerTeam.filter { $0.isAlive }
         // Skip enemy phase if no enemies alive — post .enemyPhaseCompleted so player input unlocks.
         guard !livingEnemies.isEmpty else {
+            gameState.processDelayedSpawns(enemyPhaseIndex: gameState.enemyPhaseCount)
+            if gameState.livingEnemies.isEmpty && gameState.pendingSpawns.isEmpty {
+                gameState.onRoomCleared()
+            }
             gameState.isEnemyPhaseRunning = false
             CombatFlowController.beginRound(gameState: gameState)
             NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
@@ -707,6 +733,14 @@ struct CombatFlowController {
             return false
         }
 
+        if RoomManager.shared.currentMission != nil {
+            guard RoomManager.shared.isExtractionActive() else {
+                CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)
+                gameState.addLog("Extraction is locked until every room is clear.")
+                return false
+            }
+        }
+
         guard let id = characterId,
               let char = gameState.playerTeam.first(where: { $0.id == id && $0.isAlive }) else {
             CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)
@@ -730,8 +764,12 @@ struct CombatFlowController {
 
     /// Owner path for extraction mission completion resolution.
     static func adjudicateExtractionIfEligible(gameState: GameState) {
-        guard gameState.currentMissionType == .extraction else { return }
+        let isMultiRoomMission = RoomManager.shared.currentMission != nil
+        guard isMultiRoomMission || gameState.currentMissionType == .extraction else { return }
         guard gameState.livingEnemies.isEmpty && gameState.pendingSpawns.isEmpty else { return }
+        if RoomManager.shared.currentMission != nil {
+            guard RoomManager.shared.isExtractionActive() else { return }
+        }
 
         let onExtraction = gameState.livingPlayers.contains {
             $0.positionX == gameState.extractionX && $0.positionY == gameState.extractionY

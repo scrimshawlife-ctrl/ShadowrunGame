@@ -184,32 +184,14 @@ final class BattleScene: SKScene {
             guard let dir = notification.userInfo?["direction"] as? String else { return }
             self?.handleRoomNavigationArrow(direction: dir)
         }
+        NotificationCenter.default.addObserver(forName: .roomCleared, object: nil, queue: .main) { [weak self] _ in
+            self?.refreshObjectiveMarkers()
+        }
     }
 
     /// Handle LEFT/RIGHT arrow tap from CombatUI — navigate to adjacent room without a door.
     private func handleRoomNavigationArrow(direction: String) {
-        guard let currentIdx = RoomManager.shared.currentMission?.rooms.firstIndex(where: { $0.id == currentRoomId }) else { return }
-        let targetIdx: Int
-        if direction == "left" {
-            targetIdx = currentIdx - 1
-        } else {
-            targetIdx = currentIdx + 1
-        }
-        guard targetIdx >= 0, targetIdx < (RoomManager.shared.currentMission?.rooms.count ?? 0) else {
-            GameState.shared.addLog("No room in that direction.")
-            return
-        }
-        let targetRoom = RoomManager.shared.currentMission!.rooms[targetIdx]
-        GameState.shared.addLog("Entering: \(targetRoom.title)...")
-
-        // Do NOT pre-mark room as entered here — handleRoomTransitionCompleted checks
-        // isRoomEntered to decide whether to reset spawn positions. Marking early would
-        // cause first-entry rooms to skip spawn reset, leaving characters at their
-        // previous-room positions (which are off-map in the new room → disappear bug).
-
-        // Begin transition (fade handled by .roomTransitionStarted notification)
-        RoomManager.shared.beginTransition(to: targetRoom)
-        NotificationCenter.default.post(name: .roomTransitionStarted, object: nil)
+        GameState.shared.addLog("Use the marked door tile to move between rooms.")
     }
 
     private func handleRoomTransitionCompleted() {
@@ -254,8 +236,11 @@ final class BattleScene: SKScene {
         RoomManager.shared.markRoomEntered(targetRoom.id)
 
         // Replace GameState enemies with this room's enemies only.
-        // Old-room enemies are removed — each room spawns fresh on entry.
-        let newEnemies = targetRoom.enemies.map { enemySpawn -> Enemy in
+        // Cleared rooms stay empty on return; uncleared rooms honor delayed spawns.
+        var newEnemies: [Enemy] = []
+        var newPendingSpawns: [GameState.PendingSpawn] = []
+        if !RoomManager.shared.isRoomCleared(targetRoom.id) {
+            for enemySpawn in targetRoom.enemies {
             let enemy: Enemy
             switch enemySpawn.type {
             case "guard":   enemy = Enemy.corpGuard()
@@ -267,9 +252,15 @@ final class BattleScene: SKScene {
             }
             enemy.positionX = enemySpawn.x
             enemy.positionY = enemySpawn.y
-            return enemy
+                if enemySpawn.delay == 0 {
+                    newEnemies.append(enemy)
+                } else {
+                    newPendingSpawns.append(GameState.PendingSpawn(enemy: enemy, delayRounds: enemySpawn.delay))
+                }
+            }
         }
         GameState.shared.enemies = newEnemies
+        GameState.shared.pendingSpawns = newPendingSpawns
 
         RoomManager.shared.completeTransition(to: targetRoom)
 
@@ -284,11 +275,19 @@ final class BattleScene: SKScene {
         if let extraction = targetRoom.extractionPoint {
             GameState.shared.extractionX = extraction.x
             GameState.shared.extractionY = extraction.y
-            GameState.shared.addLog("Reach extraction at (\(extraction.x), \(extraction.y))")
+            if RoomManager.shared.isExtractionActive(in: targetRoom) {
+                GameState.shared.addLog("Extraction active at (\(extraction.x), \(extraction.y))")
+            } else {
+                GameState.shared.addLog("Clear this room to activate extraction.")
+            }
         } else if let mapExtraction = firstExtractionTile(in: targetRoom.map) {
             GameState.shared.extractionX = mapExtraction.x
             GameState.shared.extractionY = mapExtraction.y
-            GameState.shared.addLog("Reach extraction at (\(mapExtraction.x), \(mapExtraction.y))")
+            if RoomManager.shared.isExtractionActive(in: targetRoom) {
+                GameState.shared.addLog("Extraction active at (\(mapExtraction.x), \(mapExtraction.y))")
+            } else {
+                GameState.shared.addLog("Clear this room to activate extraction.")
+            }
         } else if let firstConn = targetRoom.connections.first {
             GameState.shared.extractionX = firstConn.triggerTileX
             GameState.shared.extractionY = firstConn.triggerTileY
@@ -825,26 +824,108 @@ final class BattleScene: SKScene {
 
     // MARK: - Load Map
 
+    private func presentationTileMap(for room: Room) -> TileMap {
+        var visibleMap = room.map
+        if !RoomManager.shared.isExtractionActive(in: room) {
+            for y in visibleMap.indices {
+                for x in visibleMap[y].indices where visibleMap[y][x] == TileType.extraction.rawValue {
+                    visibleMap[y][x] = TileType.floor.rawValue
+                }
+            }
+        }
+        return TileMap(tiles: visibleMap.map { row in row.map { TileType(rawValue: $0) ?? .floor } })
+    }
+
+    private func refreshObjectiveMarkers() {
+        guard let room = RoomManager.shared.currentRoom,
+              let mapNode = childNode(withName: "TileMap") else { return }
+        mapNode.childNode(withName: "objectiveMarkers")?.removeFromParent()
+        addObjectiveMarkers(to: mapNode, room: room)
+    }
+
+    private func addObjectiveMarkers(to mapNode: SKNode, room: Room) {
+        let markerLayer = SKNode()
+        markerLayer.name = "objectiveMarkers"
+        markerLayer.zPosition = 18
+
+        for connection in room.connections {
+            addObjectiveMarker(
+                to: markerLayer,
+                x: connection.triggerTileX,
+                y: connection.triggerTileY,
+                title: RoomManager.shared.isRoomCleared(room.id) ? "DOOR" : "INTEL",
+                color: UIColor(hex: "#FFD24A")
+            )
+        }
+
+        if RoomManager.shared.isExtractionActive(in: room) {
+            addObjectiveMarker(
+                to: markerLayer,
+                x: GameState.shared.extractionX,
+                y: GameState.shared.extractionY,
+                title: "EXTRACT",
+                color: UIColor(hex: "#00FF88")
+            )
+        }
+
+        mapNode.addChild(markerLayer)
+    }
+
+    private func addObjectiveMarker(to layer: SKNode, x: Int, y: Int, title: String, color: UIColor) {
+        let center = TileMap.tileCenter(x: x, y: y)
+        let ring = SKShapeNode(path: TileMap.hexPath(radius: TileMap.hexRadius + 5))
+        ring.position = center
+        ring.fillColor = .clear
+        ring.strokeColor = color.withAlphaComponent(0.82)
+        ring.lineWidth = 2.4
+        ring.glowWidth = 5
+        ring.zPosition = 0
+        ring.run(SKAction.repeatForever(SKAction.sequence([
+            SKAction.fadeAlpha(to: 0.35, duration: 0.55),
+            SKAction.fadeAlpha(to: 1.0, duration: 0.55)
+        ])))
+        layer.addChild(ring)
+
+        let label = SKLabelNode(fontNamed: "Menlo-Bold")
+        label.text = title
+        label.fontSize = title.count > 5 ? 9 : 10
+        label.fontColor = color
+        label.horizontalAlignmentMode = .center
+        label.verticalAlignmentMode = .center
+        label.position = CGPoint(x: center.x, y: center.y + TileMap.hexRowSpacing * 0.72)
+        label.zPosition = 1
+        layer.addChild(label)
+    }
+
     /// Load a mission's tile map.
     func loadMap(_ tileMap: TileMap) {
-        self.tileMap = tileMap
-        addBoardBackplate(for: tileMap)
-        let mapNode = tileMap.buildNode()
+        let visibleTileMap: TileMap
+        if let room = RoomManager.shared.currentRoom {
+            visibleTileMap = presentationTileMap(for: room)
+        } else {
+            visibleTileMap = tileMap
+        }
+        self.tileMap = visibleTileMap
+        addBoardBackplate(for: visibleTileMap)
+        let mapNode = visibleTileMap.buildNode()
         // Center the map node in the scene so all tiles are within the camera's view.
         mapNode.position = mapOrigin
         addChild(mapNode)
+        if let room = RoomManager.shared.currentRoom {
+            addObjectiveMarkers(to: mapNode, room: room)
+        }
 
         // Add ambient effects
-        tileMap.addAmbientEffects(to: mapNode, mapSize: tileMap.size)
+        visibleTileMap.addAmbientEffects(to: mapNode, mapSize: visibleTileMap.size)
 
         // Add coordinate labels at map edges for tactical clarity
-        addMapCoordinateLabels(tileMap: tileMap)
+        addMapCoordinateLabels(tileMap: visibleTileMap)
 
         // Re-center camera on the now-centered map.
         positionCameraOnMap()
         refreshTraceVisuals(force: true)
 
-        print("[BattleScene] loadMap: mapNode at \(mapNode.position), mapSize=\(tileMap.size), scene.size=\(self.size), mapOrigin=\(mapOrigin)")
+        print("[BattleScene] loadMap: mapNode at \(mapNode.position), mapSize=\(visibleTileMap.size), scene.size=\(self.size), mapOrigin=\(mapOrigin)")
     }
 
     /// Adds a deterministic backplate under the map to improve board readability and depth.
@@ -1270,7 +1351,7 @@ final class BattleScene: SKScene {
         characterNodes.removeAll()
 
         // Build new tilemap
-        let newTileMap = TileMap(tiles: room.tileMap)
+        let newTileMap = presentationTileMap(for: room)
         self.tileMap = newTileMap
 
         // Sync tiles to GameState for enemy pathfinding
@@ -1281,6 +1362,7 @@ final class BattleScene: SKScene {
         mapNode.position = mapOrigin
         addBoardBackplate(for: newTileMap)
         addChild(mapNode)
+        addObjectiveMarkers(to: mapNode, room: room)
 
         // Center camera on map first — will be refined to character position below.
         positionCameraOnMap()
@@ -1352,8 +1434,8 @@ final class BattleScene: SKScene {
 
     /// Check if the given tile is an extraction tile.
     func isExtractionTile(_ tileX: Int, _ tileY: Int) -> Bool {
-        guard let tm = tileMap else { return false }
-        return tm.tiles[tileY][tileX] == .extraction
+        guard RoomManager.shared.isExtractionActive() else { return false }
+        return tileX == GameState.shared.extractionX && tileY == GameState.shared.extractionY
     }
 
     /// Check if a given tile is walkable (floor, door, extraction, or cover — NOT wall).
@@ -1361,6 +1443,7 @@ final class BattleScene: SKScene {
         guard let tm = tileMap else { return false }
         guard tileX >= 0, tileX < TileMap.mapWidth, tileY >= 0, tileY < tm.mapHeight else { return false }
         let t = tm.tiles[tileY][tileX]
+        if t == .door && !RoomManager.shared.isRoomCleared(currentRoomId) { return false }
         return t == .floor || t == .door || t == .extraction || t == .cover
     }
 
@@ -1453,6 +1536,12 @@ final class BattleScene: SKScene {
             // Extraction resolution is GameState-authoritative.
             if let sprite = selectedCharacterNode as? SpriteNode,
                let charEntry = characterNodes.first(where: { $0.value === sprite }) {
+                let reachable = bfsReachable(fromX: sprite.tileX, fromY: sprite.tileY, maxSteps: movementRange)
+                let alreadyOnExtraction = sprite.tileX == tileX && sprite.tileY == tileY
+                guard alreadyOnExtraction || reachable.contains(where: { $0.x == tileX && $0.y == tileY }) else {
+                    GameState.shared.addLog("Move closer to extraction first.")
+                    return
+                }
                 animateCharacterMove(characterId: charEntry.key, toTileX: tileX, toTileY: tileY)
                 sprite.tileX = tileX
                 sprite.tileY = tileY
@@ -1580,12 +1669,25 @@ final class BattleScene: SKScene {
             GameState.shared.addLog("Select a character, then step onto the door.")
             return
         }
-        let dx = abs(tileX - sprite.tileX)
-        let dy = abs(tileY - sprite.tileY)
-        // Trigger if standing on the door tile (dx=0,dy=0) OR adjacent to it (one of 8 surrounding tiles)
-        let canTrigger = (dx == 0 && dy == 0) || (dx <= 1 && dy <= 1 && (dx + dy > 0))
-        guard canTrigger else {
-            GameState.shared.addLog("Move adjacent to the door first.")
+        let standingOnDoor = sprite.tileX == tileX && sprite.tileY == tileY
+        guard standingOnDoor else {
+            guard RoomManager.shared.isRoomCleared(currentRoomId) else {
+                GameState.shared.addLog("Door locked: clear this room and secure its intel first.")
+                return
+            }
+
+            let reachable = bfsReachable(fromX: sprite.tileX, fromY: sprite.tileY, maxSteps: movementRange)
+            guard reachable.contains(where: { $0.x == tileX && $0.y == tileY }) else {
+                GameState.shared.addLog("Move closer to the door first.")
+                return
+            }
+            guard let charEntry = characterNodes.first(where: { $0.value === sprite }) else { return }
+            animateCharacterMove(characterId: charEntry.key, toTileX: tileX, toTileY: tileY)
+            GameState.shared.moveCharacter(id: charEntry.key, toTileX: tileX, toTileY: tileY)
+            sprite.tileX = tileX
+            sprite.tileY = tileY
+            GameState.shared.addLog("Door ready. Tap it again to enter.")
+            clearHighlights()
             return
         }
 

@@ -30,6 +30,7 @@ final class RoomManager: ObservableObject {
     /// A room is "entered" if the player has loaded it at least once.
     /// First entry uses spawn; back-navigation preserves the player's last position in that room.
     private var enteredRoomIds: Set<String> = []
+    private var clearedRoomIds: Set<String> = []
 
     /// Mark a room as entered (call before beginTransition so the flag is set
     /// before handleRoomTransitionCompleted checks it).
@@ -53,9 +54,53 @@ final class RoomManager: ObservableObject {
             currentMission = mission
             currentRoom = mission.rooms.first
             currentRoomIndex = 0
+            enteredRoomIds.removeAll()
+            clearedRoomIds.removeAll()
             return mission
         }
         return nil
+    }
+
+    func unloadMission() {
+        currentMission = nil
+        currentRoom = nil
+        currentRoomIndex = 0
+        isTransitioning = false
+        pendingRoomTransition = nil
+        pendingConnectionTargetX = nil
+        pendingConnectionTargetY = nil
+        enteredRoomIds.removeAll()
+        clearedRoomIds.removeAll()
+    }
+
+    @discardableResult
+    func markCurrentRoomCleared() -> Bool {
+        guard let roomId = currentRoom?.id else { return false }
+        let inserted = clearedRoomIds.insert(roomId).inserted
+        return inserted
+    }
+
+    func isRoomCleared(_ roomId: String) -> Bool {
+        clearedRoomIds.contains(roomId)
+    }
+
+    var areAllRoomsCleared: Bool {
+        guard let rooms = currentMission?.rooms, !rooms.isEmpty else { return false }
+        return rooms.allSatisfy { clearedRoomIds.contains($0.id) }
+    }
+
+    func roomHasExtraction(_ room: Room) -> Bool {
+        if room.extractionPoint != nil { return true }
+        return room.map.contains { row in row.contains(TileType.extraction.rawValue) }
+    }
+
+    func isExtractionActive(in room: Room? = nil) -> Bool {
+        guard let mission = currentMission else { return true }
+        let checkedRoom = room ?? currentRoom
+        guard let checkedRoom else { return false }
+        return areAllRoomsCleared
+            && roomHasExtraction(checkedRoom)
+            && mission.rooms.contains { $0.id == checkedRoom.id }
     }
 
     /// Called by BattleScene when player steps on a door tile.
@@ -68,6 +113,11 @@ final class RoomManager: ObservableObject {
         guard let connection = room.connections.first(where: {
             $0.triggerTileX == x && $0.triggerTileY == y
         }) else { return nil }
+
+        guard isRoomCleared(room.id) else {
+            GameState.shared.addLog("Door locked: clear this room first.")
+            return nil
+        }
 
         // Find the target room
         guard let targetRoom = currentMission?.rooms.first(where: { $0.id == connection.targetRoomId }) else {
