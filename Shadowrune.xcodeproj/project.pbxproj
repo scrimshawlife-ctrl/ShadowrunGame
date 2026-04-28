@@ -214,6 +214,7 @@
 		FCCED9A68C6ACF835498617C /* drone_idle_3.png in Resources */ = {isa = PBXBuildFile; fileRef = 8213DF721ED541A121AAE8C7 /* drone_idle_3.png */; };
 		FE1FC364D69D93B0A6563424 /* Mission001.json in Resources */ = {isa = PBXBuildFile; fileRef = 6F86022E17C397238717995E /* Mission001.json */; };
 		FEEFDE92106CE25858A1C3D3 /* boss_attack_1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2E6F102A08EDDB202BFC58B3 /* boss_attack_1.png */; };
+		LAUNCH0002EFGH /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = LAUNCH0001ABCD /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -426,6 +427,7 @@
 		FC83DB2A49AB7E84B21C0036 /* tilesheet_1_r3c1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tilesheet_1_r3c1.png; sourceTree = "<group>"; };
 		FDAC6C8D76AEB437B905098C /* corpmage_attack_1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = corpmage_attack_1.png; sourceTree = "<group>"; };
 		FE8496B695343432683DE9A3 /* corpmage_attack_0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = corpmage_attack_0.png; sourceTree = "<group>"; };
+		LAUNCH0001ABCD /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -548,6 +550,7 @@
 			children = (
 				9FEB66390C9587CE7B4FDCC5 /* Assets.xcassets */,
 				A740844F15716738C9E3A354 /* Info.plist */,
+		LAUNCH0001ABCD /* LaunchScreen.storyboard */,
 				023B9A88E659B03ED335AEC9 /* ShadowrunGameApp.swift */,
 				B6BF78B4E134D6BF6BDC8134 /* Entities */,
 				AEDAA074FC889561130CE877 /* Game */,
@@ -961,6 +964,7 @@
 				9021B8490CCE481DE176A3AA /* tilesheet_3_r5c0.png in Resources */,
 				277DAA971F293CF5C26B4052 /* tilesheet_3_r5c1.png in Resources */,
 				191089AEEEF5BB8D1608D023 /* tilesheet_3_r5c2.png in Resources */,
+				LAUNCH0002EFGH /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
