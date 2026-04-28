@@ -132,10 +132,28 @@ struct ShadowruneApp: App {
 struct ContentView: View {
     @StateObject private var phaseManager = PhaseManager()
     @ObservedObject private var gameState = GameState.shared
+    @State private var showLaunchSplash = true
 
     var body: some View {
         ZStack {
             Color(hex: "0D0D0D").ignoresSafeArea()
+
+            // Launch splash — Decker full-screen image for first ~3 seconds
+            if showLaunchSplash {
+                Image("launch_screen")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                    .zIndex(100)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                            withAnimation(.easeOut(duration: 0.6)) {
+                                showLaunchSplash = false
+                            }
+                        }
+                    }
+            }
 
             switch phaseManager.currentPhase {
             case .title:

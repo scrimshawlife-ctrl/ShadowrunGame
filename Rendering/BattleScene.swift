@@ -2066,7 +2066,9 @@ final class BattleScene: SKScene {
                 guard nx >= 0, nx < TileMap.mapWidth, ny >= 0, ny < mapH else { continue }
                 let key = "\(nx),\(ny)"
                 guard !visited.contains(key) else { continue }
-                guard isWalkableTile(nx, ny) else { continue }
+                // Allow door tiles in BFS even if locked — player must be adjacent to tap them.
+                // Actual movement onto the door tile is blocked by isWalkableTile in handleDoorTileTap.
+                guard isWalkableTile(nx, ny) || ((tileMap?.tiles[ny][nx] ?? .floor) == .door) else { continue }
                 // Enemies block movement
                 guard !enemyPositions.contains(key) else { continue }
                 visited.insert(key)
