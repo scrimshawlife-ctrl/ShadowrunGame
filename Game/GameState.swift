@@ -1264,7 +1264,7 @@ final class GameState: ObservableObject {
             if RoomManager.shared.areAllRoomsCleared {
                 addLog("All rooms cleared. Extraction point is active.")
             } else {
-                addLog("Intel secured. Door access unlocked.")
+                addLog("Door unlocked — move to the next room.")
             }
         }
         NotificationCenter.default.post(name: .roomCleared, object: nil)

@@ -526,9 +526,6 @@ struct CombatFlowController {
         guard !gameState.isEnemyPhaseRunning else { return }
         gameState.isEnemyPhaseRunning = true
 
-        // Post .enemyPhaseBegan so CombatUI can update ("Enemy Turn" UI)
-        NotificationCenter.default.post(name: .enemyPhaseBegan, object: nil)
-
         let livingEnemies = gameState.enemies.filter { $0.isAlive }
         let livingPlayers = gameState.playerTeam.filter { $0.isAlive }
         // Skip enemy phase if no enemies alive — post .enemyPhaseCompleted so player input unlocks.
@@ -542,6 +539,10 @@ struct CombatFlowController {
             NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
             return
         }
+
+        // Only show "Enemy Turn" badge AFTER we've confirmed there are enemies to act.
+        NotificationCenter.default.post(name: .enemyPhaseBegan, object: nil)
+
         // If no players left, combat will end via checkCombatEnd() in the notify block.
         guard !livingPlayers.isEmpty else {
             gameState.isEnemyPhaseRunning = false

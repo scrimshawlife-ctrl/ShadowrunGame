@@ -16,7 +16,8 @@ final class BattleScene: SKScene {
     private var mapPixelHeight: CGFloat { (CGFloat(tileMap?.mapHeight ?? 9) + 0.5) * TileMap.hexRowSpacing }
     /// Scene-space offset of the tile map's bottom-left corner.
     /// With scene.size = map pixel dims and .aspectFit, this is (.zero) — map fills scene exactly.
-    private let firstTurnCameraYOffset: CGFloat = 0
+    /// Scene-space Y offset applied to camera target — negative shifts camera UP, revealing more map at bottom.
+    private let firstTurnCameraYOffset: CGFloat = -36
     private var mapOrigin: CGPoint {
         CGPoint(
             x: max(0, (self.size.width  - mapPixelWidth)  / 2),
@@ -699,7 +700,6 @@ final class BattleScene: SKScene {
             )
         )
         cam.position = nextPosition
-        refreshCameraDebugOverlay(reason: "positionCameraOnMap")
         print("[BattleScene] positionCameraOnMap camera=\(nextPosition) topInset=\(topHUDInset) bottomInset=\(bottomHUDInset) bias=\(verticalBias)")
     }
 
@@ -743,7 +743,7 @@ final class BattleScene: SKScene {
         self.size = view.bounds.size
     }
 
-    #if DEBUG
+    #if false
     private func refreshCameraDebugOverlay(reason: String) {
         guard let cam = camera else { return }
 
@@ -853,7 +853,7 @@ final class BattleScene: SKScene {
                 to: markerLayer,
                 x: connection.triggerTileX,
                 y: connection.triggerTileY,
-                title: RoomManager.shared.isRoomCleared(room.id) ? "DOOR" : "INTEL",
+                title: RoomManager.shared.isRoomCleared(room.id) ? "DOOR" : "LOCKED",
                 color: UIColor(hex: "#FFD24A")
             )
         }
@@ -1132,7 +1132,6 @@ final class BattleScene: SKScene {
         addChild(node)
         characterNodes[character.id] = node
         SpriteManager.shared.updateHP(on: node, currentHP: character.currentHP, maxHP: character.maxHP, currentStun: character.currentStun, maxStun: character.maxStun, level: character.level, isPlayer: true)
-        refreshCameraDebugOverlay(reason: "placeCharacter")
         print("[BattleScene] placeCharacter \(character.name) at tile(\(character.positionX),\(character.positionY)) → pos \(node.position) scene.size=\(self.size) mapOrigin=\(mapOrigin) parent=\(node.parent?.name ?? "nil")")
     }
 
@@ -1201,7 +1200,6 @@ final class BattleScene: SKScene {
         addChild(node)
         characterNodes[enemy.id] = node
         SpriteManager.shared.updateHP(on: node, currentHP: enemy.currentHP, maxHP: enemy.maxHP, currentStun: enemy.currentStun, maxStun: enemy.maxStun)
-        refreshCameraDebugOverlay(reason: "placeEnemy")
         print("[BattleScene] placeEnemy \(enemy.name) at tile(\(enemy.positionX),\(enemy.positionY)) → pos \(node.position)")
     }
 
@@ -1672,7 +1670,7 @@ final class BattleScene: SKScene {
         let standingOnDoor = sprite.tileX == tileX && sprite.tileY == tileY
         guard standingOnDoor else {
             guard RoomManager.shared.isRoomCleared(currentRoomId) else {
-                GameState.shared.addLog("Door locked: clear this room and secure its intel first.")
+                GameState.shared.addLog("Door locked: clear this room first.")
                 return
             }
 

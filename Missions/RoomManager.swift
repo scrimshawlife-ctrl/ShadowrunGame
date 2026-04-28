@@ -77,11 +77,14 @@ final class RoomManager: ObservableObject {
     func markCurrentRoomCleared() -> Bool {
         guard let roomId = currentRoom?.id else { return false }
         let inserted = clearedRoomIds.insert(roomId).inserted
+        print("[RoomManager] markCurrentRoomCleared() room=\(roomId) newlyInserted=\(inserted) clearedRoomIds now = \(Array(clearedRoomIds))")
         return inserted
     }
 
     func isRoomCleared(_ roomId: String) -> Bool {
-        clearedRoomIds.contains(roomId)
+        let cleared = clearedRoomIds.contains(roomId)
+        print("[RoomManager] isRoomCleared(\(roomId)) = \(cleared) clearedRoomIds = \(Array(clearedRoomIds))")
+        return cleared
     }
 
     var areAllRoomsCleared: Bool {
