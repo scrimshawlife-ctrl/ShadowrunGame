@@ -16,8 +16,8 @@ final class BattleScene: SKScene {
     private var mapPixelHeight: CGFloat { (CGFloat(tileMap?.mapHeight ?? 9) + 0.5) * TileMap.hexRowSpacing }
     /// Scene-space offset of the tile map's bottom-left corner.
     /// With scene.size = map pixel dims and .aspectFit, this is (.zero) — map fills scene exactly.
-    /// Scene-space Y offset applied to camera target — negative shifts camera UP, revealing more map at bottom.
-    private let firstTurnCameraYOffset: CGFloat = -50
+    /// Scene-space Y offset applied to camera target; positive lowers the camera so the map sits higher on screen.
+    private let firstTurnCameraYOffset: CGFloat = 36
     private var mapOrigin: CGPoint {
         CGPoint(
             x: max(0, (self.size.width  - mapPixelWidth)  / 2),
@@ -646,7 +646,7 @@ final class BattleScene: SKScene {
     // These are updated from CombatView after layout so first-turn framing matches
     // the real HUD footprint on the current device instead of a hardcoded guess.
     private var topHUDInset: CGFloat = 96
-    private var bottomHUDInset: CGFloat = 280
+    private var bottomHUDInset: CGFloat = 180
 
     func updateViewportInsets(top: CGFloat, bottom: CGFloat) {
         let resolvedTop = max(0, top)
@@ -667,11 +667,11 @@ final class BattleScene: SKScene {
         // small that the HUD overlays eat the bottom half of the board.
         let visibleWidth = max(1, size.width)
         let visibleHeight = unobscuredViewportHeight
-        let targetMapScreenWidth = visibleWidth * 1.14
-        let targetMapScreenHeight = visibleHeight * 0.88
+        let targetMapScreenWidth = visibleWidth * 1.20
+        let targetMapScreenHeight = visibleHeight * 0.98
         let requiredScaleX = mapPixelWidth / targetMapScreenWidth
         let requiredScaleY = mapPixelHeight / targetMapScreenHeight
-        let scale = max(0.86, max(requiredScaleX, requiredScaleY))
+        let scale = max(0.80, max(requiredScaleX, requiredScaleY))
         cam.setScale(scale)
         return scale
     }

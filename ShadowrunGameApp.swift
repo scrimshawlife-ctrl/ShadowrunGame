@@ -659,7 +659,7 @@ struct CombatView: View {
     @ObservedObject var gameState: GameState
     @State private var showDiagnostics = false
     @State private var objectiveBannerHeight: CGFloat = 96
-    @State private var combatUIHeight: CGFloat = 220
+    @State private var combatUIHeight: CGFloat = 180
 
     private var victoryText: String {
         switch manager.selectedMissionId ?? "" {
@@ -806,7 +806,7 @@ struct CombatView: View {
             print("[CombatView] objectiveBannerHeight=\(objectiveBannerHeight)")
         }
         .onPreferenceChange(CombatBottomOverlayHeightPreferenceKey.self) { height in
-            combatUIHeight = max(180, height)
+            combatUIHeight = max(150, height)
             print("[CombatView] combatUIHeight=\(combatUIHeight)")
         }
         .onAppear { FPSMonitor.shared.start() }
@@ -944,7 +944,7 @@ struct BattleSceneView: UIViewRepresentable {
     var missionId: String?
     var parentSize: CGSize = .zero
     var topHUDInset: CGFloat = 96
-    var bottomHUDInset: CGFloat = 280
+    var bottomHUDInset: CGFloat = 180
 
     // Fixed tile map size — 10 tiles × 56pt = 560pt wide, 18 tiles × 56pt = 1008pt tall
     static let tileMapSize = CGSize(width: 560, height: 1008)
@@ -990,7 +990,7 @@ struct BattleSceneView: UIViewRepresentable {
 
         let missionToLoad = missionId ?? "Mission001"
         let resolvedTopInset = max(96, topHUDInset)
-        let resolvedBottomInset = max(180, bottomHUDInset)
+        let resolvedBottomInset = max(150, bottomHUDInset)
 
         if let existingScene = context.coordinator.scene {
             existingScene.updateViewportInsets(top: resolvedTopInset, bottom: resolvedBottomInset)

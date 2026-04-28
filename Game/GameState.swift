@@ -1255,7 +1255,7 @@ final class GameState: ObservableObject {
 
     /// MULTI-ROOM PROGRESSION: called when livingEnemies becomes empty.
     func onRoomCleared() {
-        guard livingEnemies.isEmpty && pendingSpawns.isEmpty else { return }
+        guard livingEnemies.isEmpty else { return }
         if RoomManager.shared.currentMission != nil {
             guard RoomManager.shared.markCurrentRoomCleared() else { return }
         }

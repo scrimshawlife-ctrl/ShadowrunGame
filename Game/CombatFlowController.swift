@@ -479,6 +479,18 @@ struct CombatFlowController {
                 userInfo: ["characterId": char.id.uuidString]
             )
         } else {
+            guard !gameState.livingEnemies.isEmpty else {
+                gameState.onRoomCleared()
+                gameState.currentTurnIndex = 0
+                gameState.roundNumber += 1
+                gameState.addLog("═══ ROUND \(gameState.roundNumber) ═══")
+                HapticsManager.shared.roundStart()
+                NotificationCenter.default.post(name: .roundStarted, object: nil, userInfo: ["round": gameState.roundNumber])
+                CombatFlowController.beginRound(gameState: gameState)
+                NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
+                return
+            }
+
             // All living players have acted — NOW lock input and start enemy phase.
             CombatFlowController.setCombatPhase(gameState: gameState, .enemyResolving)
             gameState.currentTurnIndex = 0
@@ -492,8 +504,6 @@ struct CombatFlowController {
     }
 
     static func checkCombatEnd(gameState: GameState) {
-        let isMultiRoomMission = RoomManager.shared.currentMission != nil
-
         // ASSAULT ENDING: only finalize if we're in a single-room mission or the LAST room of a multi-room mission.
         // Multi-room missions rely on extraction flow for victory (player reaches extraction tile after all rooms cleared).
         let isLastRoom: Bool
@@ -753,7 +763,11 @@ struct CombatFlowController {
         char.positionX = tileX
         char.positionY = tileY
 
-        if !(gameState.livingEnemies.isEmpty && gameState.pendingSpawns.isEmpty) {
+        let hasActiveThreats = RoomManager.shared.currentMission != nil
+            ? !gameState.livingEnemies.isEmpty
+            : !(gameState.livingEnemies.isEmpty && gameState.pendingSpawns.isEmpty)
+
+        if hasActiveThreats {
             CombatFlowController.setCombatPhase(gameState: gameState, .playerInput)
             gameState.addLog("Clear all enemies before extraction!")
             return false
@@ -767,7 +781,11 @@ struct CombatFlowController {
     static func adjudicateExtractionIfEligible(gameState: GameState) {
         let isMultiRoomMission = RoomManager.shared.currentMission != nil
         guard isMultiRoomMission || gameState.currentMissionType == .extraction else { return }
-        guard gameState.livingEnemies.isEmpty && gameState.pendingSpawns.isEmpty else { return }
+        if isMultiRoomMission {
+            guard gameState.livingEnemies.isEmpty else { return }
+        } else {
+            guard gameState.livingEnemies.isEmpty && gameState.pendingSpawns.isEmpty else { return }
+        }
         if RoomManager.shared.currentMission != nil {
             guard RoomManager.shared.isExtractionActive() else { return }
         }
