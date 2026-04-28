@@ -1564,6 +1564,18 @@ final class BattleScene: SKScene {
         // and is not relevant when the player is tapping an enemy.
         let doorTileWithEnemy = isDoorTile(tileX, tileY) && enemyOnTile != nil
 
+        if isDoorTile(tileX, tileY) && enemyOnTile == nil {
+            if let (id, characterSprite) = characterOnTile,
+               characterSprite !== selectedCharacterNode {
+                showSelectionRing(for: id)
+                CombatFlowController.requestCharacterSelectionFromScene(gameState: GameState.shared, id: id)
+                return
+            }
+
+            handleDoorTileTap(tileX: tileX, tileY: tileY)
+            return
+        }
+
         // 1. Tap on player character -> select it (always allowed)
         if let (id, _) = characterOnTile {
             showSelectionRing(for: id)
@@ -1593,7 +1605,7 @@ final class BattleScene: SKScene {
             return
         }
 
-        // Block movement onto a door tile (locked or not) — door handling is above.
+        // Block movement onto a door tile that did not route through door handling above.
         if isDoorTile(tileX, tileY) {
             GameState.shared.addLog("Cannot move onto a door tile.")
             return
