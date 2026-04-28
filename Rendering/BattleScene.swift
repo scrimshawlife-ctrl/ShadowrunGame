@@ -7,7 +7,7 @@ final class BattleScene: SKScene {
 
     private var tileMap: TileMap?
     /// Bottom padding added to scene height so the bottom row sits above the CombatUI bar.
-    private let mapBottomPadding: CGFloat = 30
+    private let mapBottomPadding: CGFloat = 0
     /// Cached map dimensions for coordinate conversion — derived from the TileMap instance.
     /// Pointy-top odd-r bounding box:
     ///   width  = cols · hexColSpacing + R/2       (right-side pointy vertex extends 0.5R)
@@ -17,7 +17,7 @@ final class BattleScene: SKScene {
     /// Scene-space offset of the tile map's bottom-left corner.
     /// With scene.size = map pixel dims and .aspectFit, this is (.zero) — map fills scene exactly.
     /// Scene-space Y offset applied to camera target — negative shifts camera UP, revealing more map at bottom.
-    private let firstTurnCameraYOffset: CGFloat = -36
+    private let firstTurnCameraYOffset: CGFloat = -50
     private var mapOrigin: CGPoint {
         CGPoint(
             x: max(0, (self.size.width  - mapPixelWidth)  / 2),
@@ -1754,14 +1754,13 @@ final class BattleScene: SKScene {
         // Bug 3 fix: skip enemy phase if no enemies are alive
         if GameState.shared.enemies.filter({ $0.isAlive }).isEmpty {
             print("Forge: enemy doing turn — no enemies alive, skipping")
+            // Bug 3 fix: call onRoomCleared so the door marker refreshes to DOOR
+            GameState.shared.onRoomCleared()
             NotificationCenter.default.post(name: .enemyPhaseCompleted, object: nil)
             return
         }
         print("Forge: enemy doing turn")
         isEnemyPhaseRunning = true
-
-        // Update UI to show enemy turn
-        NotificationCenter.default.post(name: .enemyPhaseBegan, object: nil)
 
         // Trigger GameState's enemy phase — this runs all enemy AI and will call
         // back via notifications (enemyMoved, enemyDied, etc.) as each enemy acts.

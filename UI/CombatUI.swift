@@ -1661,8 +1661,8 @@ struct CombatUI: View {
                 // Combat log
                 CombatLogView(gameState: gameState)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 4)
             .background(
                 Rectangle()
                     .fill(CombatTheme.background.opacity(0.90))
