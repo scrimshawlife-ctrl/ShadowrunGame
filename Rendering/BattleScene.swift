@@ -1523,12 +1523,6 @@ final class BattleScene: SKScene {
             print("[BattleScene] Input locked — waiting for enemy phase")
             return
         }
-        // Check if this is a door tile — if so, attempt room transition
-        if isDoorTile(tileX, tileY) {
-            handleDoorTileTap(tileX: tileX, tileY: tileY)
-            return
-        }
-
         // Check extraction tile — win immediately if all enemies are cleared and player stands on it
         if isExtractionTile(tileX, tileY) {
             // Extraction resolution is GameState-authoritative.
@@ -1565,6 +1559,11 @@ final class BattleScene: SKScene {
             }
         }
 
+        // Door tiles with an enemy on them: skip the door transition logic and go straight
+        // to attack handling. The movement-into-locked-door check lives in handleDoorTileTap
+        // and is not relevant when the player is tapping an enemy.
+        let doorTileWithEnemy = isDoorTile(tileX, tileY) && enemyOnTile != nil
+
         // 1. Tap on player character -> select it (always allowed)
         if let (id, _) = characterOnTile {
             showSelectionRing(for: id)
@@ -1591,6 +1590,12 @@ final class BattleScene: SKScene {
         // 3. Tap empty tile -> move the selected character (FREE action, no turn cost)
         guard let sprite = selectedCharacterNode as? SpriteNode else {
             GameState.shared.addLog("Select a character first.")
+            return
+        }
+
+        // Block movement onto a door tile (locked or not) — door handling is above.
+        if isDoorTile(tileX, tileY) {
+            GameState.shared.addLog("Cannot move onto a door tile.")
             return
         }
 
