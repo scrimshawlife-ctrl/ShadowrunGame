@@ -28,8 +28,8 @@ final class BattleScene: SKScene {
     private var currentTurnIndex: Int = 0
     private var lastRenderedTraceTier: Int = -1
 
-    /// Movement range for BFS pathfinding — 2 hexes per turn (SR5 standard walk range)
-    private var movementRange: Int { return 2 }
+    /// Movement range for BFS pathfinding — 4 hexes per turn (SR5 sprint range for tactical mobility)
+    private var movementRange: Int { return 4 }
 
     /// Current room ID — synced with RoomManager.currentRoomId during transitions.
     var currentRoomId: String = "room_0"
