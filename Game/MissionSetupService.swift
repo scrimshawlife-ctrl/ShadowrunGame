@@ -126,6 +126,16 @@ struct MissionSetupService {
         gameState.enemies = []
         gameState.pendingSpawns = []
         assignMissionTypeForCurrentLoad(gameState: gameState)
+        // Multi-room missions are structured around door progression to a final
+        // extraction tile. Allowing .stealth (turn-survival win) or .assault
+        // (room-clear win) would let the player win in room_0 without ever
+        // entering rooms 1+. Force .extraction so completion only fires when a
+        // runner stands on the designated extraction point in the final room.
+        if gameState.currentMissionType != .extraction {
+            gameState.currentMissionType = .extraction
+            gameState.currentMapSituation = .chokepoint
+            gameState.addLog("MISSION TYPE — \(gameState.missionTypeLabel) (multi-room override)")
+        }
 
         // Load mission story/briefing text from JSON
         if let briefing = mission.briefing {
