@@ -126,6 +126,20 @@ final class GauntletStore: ObservableObject {
     /// floor 4 on. Reuses the persisted picks if they exist (stable within a
     /// floor attempt); otherwise rolls fresh distinct arenas and persists.
     func arenaIdsForCurrentFloor() -> [String] {
+        #if DEBUG
+        // Art/QA pass: force an exact arena line-up, e.g.
+        // SIMCTL_CHILD_SR_FORCE_ARENA_IDS=arena_08,arena_09
+        // Wins over the persisted picks so each launch is reproducible.
+        if let forced = ProcessInfo.processInfo.environment["SR_FORCE_ARENA_IDS"] {
+            let ids = forced.split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { ArenaPool.entry(id: $0) != nil }
+            if !ids.isEmpty {
+                dlog("[Gauntlet] SR_FORCE_ARENA_IDS → \(ids)")
+                return ids
+            }
+        }
+        #endif
         if let picked = floorArenaIds, !picked.isEmpty { return picked }
         let count = currentFloor >= 4 ? 3 : 2
         let picked = ArenaPool.randomArenaIds(count: count)
