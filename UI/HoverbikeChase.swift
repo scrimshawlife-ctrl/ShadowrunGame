@@ -906,7 +906,35 @@ struct HoverbikeChaseScene: View {
     private var briefingCard: some View {
         ZStack {
             Color.black.opacity(0.86).ignoresSafeArea()
+            // The card is rendered ROTATED (the scene fakes landscape while the
+            // device is portrait), so this VStack's height is bounded by the
+            // screen's WIDTH — ~402pt on an iPhone. The rules list is variable:
+            // up to 4 gear-gated loadout lines, plus BEST RUN, plus CORP HEAT.
+            // Unscrolled, a geared-up player pushed RIDE clean off the edge and
+            // the mission became unstartable (playtest 2026-07-25). Scroll the
+            // body, and keep RIDE OUTSIDE the scroll so it is always reachable
+            // no matter how long the list grows.
             VStack(spacing: 9) {
+                ScrollView(showsIndicators: true) {
+                    briefingBody
+                }
+                rideButton
+            }
+            .padding(28)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.black.opacity(0.92))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color(hex: "FF00AA").opacity(0.55), lineWidth: 1.5)
+                    )
+            )
+            .padding(.horizontal, 22)
+        }
+    }
+
+    private var briefingBody: some View {
+        VStack(spacing: 9) {
                 Text("↻  TURN YOUR PHONE SIDEWAYS")
                     .font(.system(size: 11, weight: .black, design: .monospaced)).tracking(1)
                     .foregroundColor(Color(hex: "00FFCC"))
@@ -950,31 +978,25 @@ struct HoverbikeChaseScene: View {
                     }
                 }
                 .padding(.top, 4)
-                Button(action: {
-                    HapticsManager.shared.buttonTap()
-                    withAnimation(.easeIn(duration: 0.25)) { showBriefing = false }
-                }) {
-                    Text("RIDE")
-                        .font(.system(size: 13, weight: .black, design: .monospaced))
-                        .tracking(3)
-                        .foregroundColor(.black)
-                        .frame(width: 200, height: 44)
-                        .background(Color(hex: "00FF88"))
-                        .cornerRadius(6)
-                }
-                .padding(.top, 10)
-            }
-            .padding(28)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.black.opacity(0.92))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color(hex: "FF00AA").opacity(0.55), lineWidth: 1.5)
-                    )
-            )
-            .padding(.horizontal, 22)
         }
+    }
+
+    /// Pinned outside the briefing's ScrollView — a variable-length rules list
+    /// must never be able to push the only way into the mission off-screen.
+    private var rideButton: some View {
+        Button(action: {
+            HapticsManager.shared.buttonTap()
+            withAnimation(.easeIn(duration: 0.25)) { showBriefing = false }
+        }) {
+            Text("RIDE")
+                .font(.system(size: 13, weight: .black, design: .monospaced))
+                .tracking(3)
+                .foregroundColor(.black)
+                .frame(width: 200, height: 44)
+                .background(Color(hex: "00FF88"))
+                .cornerRadius(6)
+        }
+        .padding(.top, 10)
     }
 
     private func briefingRule(icon: String, color: Color,

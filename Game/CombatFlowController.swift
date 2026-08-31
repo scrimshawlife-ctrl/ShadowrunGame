@@ -1128,13 +1128,19 @@ struct CombatFlowController {
         NGPlusStore.shared.scaleForTier(boss)   // NG+ durability/stat scaling (matches deployBoss)
         boss.positionX = x
         boss.positionY = y
+
+        // SPLASH FIRST, then the boss lands on the board. Presenting the reveal
+        // before the append means the card is already rising when the sprite
+        // materialises behind it, so dismissing the card IS the moment you first
+        // see him — rather than watching him pop in and getting a card about it
+        // afterwards.
+        gameState.presentBossIntro(archetype: "bossmage", name: boss.name)
         gameState.enemies.append(boss)
 
         // Narrative beats — these are loud on purpose. The player should
         // feel that the fight just got serious.
         gameState.addLog("☠️  SATO RISES — his blood magic was only the start.")
         gameState.addLog("⚠️  BOSS — \(boss.name) (\(boss.maxHP) HP). Burn him down before he summons.")
-        gameState.presentBossIntro(archetype: "bossmage", name: boss.name)
         HapticsManager.shared.combatStart()
 
         // Bespoke boss-fight music. Falls back to the mission's track if the
@@ -1552,6 +1558,22 @@ struct CombatFlowController {
                 // its slot comes up — a corpse takes no turn.
                 if enemy.isAlive {
                     gameState.runEnemyAI(enemy: enemy, livingEnemies: livingEnemies)
+                    // BOSS ACTION ECONOMY. A boss is one unit against a squad of
+                    // four: the party takes four actions to its one, so it spent
+                    // the fight walking and was dead before it could threaten
+                    // anyone. Playtest 2026-07-25: "he moves a little, but didn't
+                    // make any attacks" (M5) and "he just kinda sat there" (M3).
+                    // A second activation lets a boss close AND fire in the same
+                    // round, which is what makes it read as a boss rather than a
+                    // slow elite. Still one unit, so the party keeps the edge.
+                    if Self.isBossArchetype(enemy.archetype), enemy.isAlive,
+                       !gameState.combatEnded {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                            guard gameState.missionAttemptId == attempt,
+                                  !gameState.combatEnded, enemy.isAlive else { return }
+                            gameState.runEnemyAI(enemy: enemy, livingEnemies: livingEnemies)
+                        }
+                    }
                 }
                 // Leave group only after the enemy's full move+attack animation
                 // window has played (move ≈0.35s + attack pose/VFX ≈0.4s).
@@ -1779,6 +1801,12 @@ struct CombatFlowController {
 
         adjudicateExtractionIfEligible(gameState: gameState)
         return true
+    }
+
+    /// Boss-class archetypes. These get a second activation per enemy phase —
+    /// see the action-economy note in the enemy-phase loop.
+    static func isBossArchetype(_ archetype: String) -> Bool {
+        archetype.lowercased().hasPrefix("boss")
     }
 
     /// Owner path for extraction mission completion resolution.

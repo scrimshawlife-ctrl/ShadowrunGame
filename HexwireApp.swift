@@ -229,8 +229,13 @@ struct BossIntroOverlay: View {
     let intro: GameState.BossIntro
     var onDismiss: () -> Void = {}
 
+    /// How long the reveal ignores taps. Must outlast the 0.9s fade-up, or the
+    /// card can be dismissed before it is fully visible.
+    static let tapGraceSeconds: TimeInterval = 1.2
+
     @State private var appear = false
     @State private var pulse = false
+    @State private var canDismiss = false
     @State private var splash: UIImage? = nil
 
     private var accent: Color { Color(hex: intro.accentHex) }
@@ -318,7 +323,15 @@ struct BossIntroOverlay: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture { onDismiss() }
+        // Tap-to-skip is DEADENED for the first beat. The reveal fires the
+        // instant the player's killing blow lands, and combat is played by
+        // tapping — an inherited tap (or the second half of an eager
+        // double-tap) dismissed the card inside a frame, so the boss simply
+        // appeared with no splash at all (playtest 2026-07-25: "boss appeared
+        // without the boss splash screen"). The card also fades up over 0.9s,
+        // so anything shorter than that was dismissing a card the player had
+        // not even seen yet.
+        .onTapGesture { if canDismiss { onDismiss() } }
         .onAppear {
             splash = loadBossSplashImage(intro.splashKey)
             // Slow ease-in (was a fast 0.45 spring that read as a hard "pop"):
@@ -326,6 +339,10 @@ struct BossIntroOverlay: View {
             // reveal builds instead of jumping onto the screen with no warning.
             withAnimation(.easeIn(duration: 0.9)) { appear = true }
             withAnimation(.easeInOut(duration: 0.55).repeatForever(autoreverses: true)) { pulse = true }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: UInt64(Self.tapGraceSeconds * 1_000_000_000))
+                canDismiss = true
+            }
         }
     }
 
@@ -1542,6 +1559,13 @@ struct TitleView: View {
 // MARK: - Mission Select View
 
 struct MissionSelectView: View {
+    #if DEBUG
+    /// Unlocks every mission for direct testing. DEBUG-only by construction —
+    /// Release compiles the whole check out, so progression is always correct
+    /// in a shipped build no matter what this is set to.
+    static let devUnlockAllMissions = true
+    #endif
+
     @ObservedObject var manager: PhaseManager
     @ObservedObject private var stats = MissionStatsStore.shared
     @ObservedObject private var contracts = ContractStore.shared
@@ -1744,10 +1768,16 @@ struct MissionSelectView: View {
                         //     (the chase mission is optional and does NOT
                         //     gate M4). Chase unlocks when M3 is completed.
                         let isLocked: Bool = {
-                            // DEV TEST TOGGLE: unlock every mission for direct testing.
-                            // Set `devUnlockAllMissions` back to false to restore progression.
-                            let devUnlockAllMissions = true
-                            if devUnlockAllMissions { return false }
+                            // DEV TEST TOGGLE: unlock every mission for direct
+                            // testing. Compiled out of Release entirely, so a
+                            // release candidate CANNOT ship with progression
+                            // disabled — this used to be a plain `let ... = true`
+                            // that a human had to remember to flip before
+                            // cutting a build (a standing WP10 ship blocker).
+                            // Debug builds stay unlocked for playtesting.
+                            #if DEBUG
+                            if Self.devUnlockAllMissions { return false }
+                            #endif
                             guard index > 0 else { return false }
                             if record.completed { return false }   // already beaten = always replayable
                             let prevTactical = missions.prefix(index).reversed().first { !$0.isChase }

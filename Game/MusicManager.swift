@@ -879,18 +879,29 @@ final class MusicManager {
         let startVolume = p.volume
         let startTime = Date()
         fadeTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self, weak p] timer in
-            // Identity check: if the player this fade was started for has been
-            // replaced, the fade is stale — die without consuming the (new
-            // fade's) pending completion.
-            guard let self = self, let pp = p, self.player === pp else { timer.invalidate(); return }
-            let t = min(1.0, Date().timeIntervalSince(startTime) / duration)
-            pp.volume = startVolume + Float(t) * (target - startVolume)
-            if t >= 1.0 {
-                timer.invalidate()
-                self.fadeTimer = nil
-                let pending = self.pendingFadeCompletion
-                self.pendingFadeCompletion = nil
-                pending?()
+            // The timer body touches @MainActor state. `scheduledTimer` installs
+            // on the run loop it was created from, and `fade` is only reachable
+            // from this @MainActor class, so the callback IS on main — but the
+            // compiler can't prove that through the @Sendable closure and
+            // emitted four isolation warnings here. Assert the invariant instead
+            // of hopping (a hop would let the fade tick land a frame late and
+            // stutter the ramp); this traps loudly if it is ever false.
+            MainActor.assumeIsolated {
+                // Identity check: if the player this fade was started for has
+                // been replaced, the fade is stale — die without consuming the
+                // (new fade's) pending completion.
+                guard let self = self, let pp = p, self.player === pp else {
+                    timer.invalidate(); return
+                }
+                let t = min(1.0, Date().timeIntervalSince(startTime) / duration)
+                pp.volume = startVolume + Float(t) * (target - startVolume)
+                if t >= 1.0 {
+                    timer.invalidate()
+                    self.fadeTimer = nil
+                    let pending = self.pendingFadeCompletion
+                    self.pendingFadeCompletion = nil
+                    pending?()
+                }
             }
         }
     }

@@ -108,18 +108,26 @@ final class MissionStatsStore: ObservableObject {
         if missionId.hasPrefix("Contract_t3") { return ContractStore.basePay(tier: 3) }
         if missionId.hasPrefix("Contract_t2") { return ContractStore.basePay(tier: 2) }
         if missionId.hasPrefix(ContractStore.contractIdPrefix) { return ContractStore.basePay(tier: 1) }
+        // 2026-07 pass: trimmed ~25% on top of the 2026-06 cut. Measured against
+        // the catalogue — one of every item is ¥111,000, and kitting all four
+        // runners is ~¥444,000. The old table totalled ¥228,000 base, which with
+        // the (then multiplicative) bonus stack and kill bounties banked ~¥570k
+        // across a campaign: enough to buy everything for everyone. These
+        // numbers plus the additive stack land a strong run near ~¥245,000 —
+        // about half the full-kit cost, so gear stays a real choice and you
+        // outfit a couple of runners properly rather than the whole team.
         switch missionId {
-        case "Mission001":   return 9_000
-        case "Mission002":   return 16_000
-        case "Mission002_5": return 8_000    // mirrorline = solo astral bonus
-        case "Mission003":   return 22_000
-        case "Mission003_5": return 6_000    // chase = clean exfil bonus
-        case "Mission004":   return 28_000
-        case "Mission004_5": return 7_000    // basement brawl = solo melee bonus
-        case "Mission005":   return 34_000
-        case "Mission005_5": return 18_000   // cold trace = solo decker run + Neural Imprint
-        case "Mission006":   return 80_000   // finale payout (was a 500k placeholder)
-        default:             return 9_000
+        case "Mission001":   return 7_000
+        case "Mission002":   return 12_000
+        case "Mission002_5": return 6_000    // mirrorline = solo astral bonus
+        case "Mission003":   return 16_000
+        case "Mission003_5": return 4_500    // chase = clean exfil bonus
+        case "Mission004":   return 21_000
+        case "Mission004_5": return 5_500    // basement brawl = solo melee bonus
+        case "Mission005":   return 25_000
+        case "Mission005_5": return 13_000   // cold trace = solo decker run + Neural Imprint
+        case "Mission006":   return 55_000   // finale payout (was a 500k placeholder)
+        default:             return 7_000
         }
     }
 
@@ -266,7 +274,16 @@ final class MissionStatsStore: ObservableObject {
         let firstClear = !paidThisRun.contains(missionId)
         let runFactor  = firstClear ? 1.0 : 0.25
         if firstClear { paidThisRun.insert(missionId) }
-        let credit = Int((Double(contract) * rankMult * rewardMultiplier * runFactor).rounded())
+        // Rank and risk stack ADDITIVELY, not multiplicatively. Multiplied, a
+        // top clear ran 1.6 × 1.5 = 2.40× base — M5 paid ¥94,800 off a ¥34,000
+        // contract, and a full campaign banked ~¥570k against the ~¥444k it
+        // costs to buy every item for all four runners, so you could buy out
+        // the shop and still have change (playtest 2026-07-25: "the pay scale
+        // is kinda crazy"). Additive keeps both incentives legible — an S rank
+        // is still worth chasing and heat still pays for the risk — while
+        // capping the best case at 1.60× instead of 2.40×.
+        let bonusStack = 1.0 + (rankMult - 1.0) + (rewardMultiplier - 1.0)
+        let credit = Int((Double(contract) * bonusStack * runFactor).rounded())
         playerNuyen += credit
         // Expose the factors so the debrief can show WHY the number is what
         // it is ("RANK S ×1.6 · HEAT ×1.25 · REPLAY 25%") instead of a bare

@@ -347,7 +347,11 @@ struct MissionSetupService {
             gameState.extractionX = firstRoomExtraction.x
             gameState.extractionY = firstRoomExtraction.y
             gameState.addLog("🚁 Extraction marker active — reach it when all rooms are clear!")
-        } else if let pad = firstExtractionTile(in: firstRoom.map) {
+        // Uses the SAME lookup the room-entry path uses. A private copy lived
+        // here briefly; two implementations of "where is the extraction tile"
+        // is exactly how the backtrack-spawn bug happened (RoomManager and
+        // BattleScene each had their own answer and disagreed).
+        } else if let pad = GameState.firstExtractionTile(in: firstRoom.map) {
             gameState.extractionX = pad.x
             gameState.extractionY = pad.y
             gameState.addLog("🚁 Extraction marker active — reach it when all rooms are clear!")
@@ -391,17 +395,6 @@ struct MissionSetupService {
             RoomManager.shared.applyDroppedBarriers(to: &adjusted, room: room)
         }
         gameState.currentMissionTiles = adjusted
-    }
-
-    /// First extraction tile painted into a room's map, scanning top-left to
-    /// bottom-right so the choice is deterministic across runs.
-    private static func firstExtractionTile(in map: [[Int]]) -> (x: Int, y: Int)? {
-        for (y, row) in map.enumerated() {
-            if let x = row.firstIndex(of: TileType.extraction.rawValue) {
-                return (x: x, y: y)
-            }
-        }
-        return nil
     }
 
     private static func tilesWithoutDataTerminals(_ tiles: [[Int]]) -> [[Int]] {

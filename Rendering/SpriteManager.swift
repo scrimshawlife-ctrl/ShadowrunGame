@@ -1596,6 +1596,14 @@ final class SpriteManager {
                 // grunts (playtest 2026-06-12). Bump its target height to
                 // bring the figure up to peer size.
                 case "rigger":              targetH = 82
+                // Cyber-Zombie. `targetH` scales the CANVAS, and the juggernaut
+                // art only fills 86% of its canvas vertically — so at the
+                // default 70 it rendered a ~60pt figure, the SMALLEST enemy on
+                // the board, for a unit the codex calls "a walking wall of
+                // bolted chrome" (playtest 2026-07-25: "should be bigger").
+                // 99 × 0.86 ≈ 85pt: clearly the biggest non-boss, still well
+                // under the 120–140 boss tier.
+                case "juggernaut":          targetH = 99
                 // Riot art re-extracted 2026-07 from the enemy sheet with a
                 // FULL helmet (the old frames had the crown cropped flat).
                 // 264x200 canvas, figure ~0.85 of height → 79 renders it

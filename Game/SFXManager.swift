@@ -199,9 +199,11 @@ final class SFXManager {
             let weaponType     = note.userInfo?["weaponType"] as? String ?? "pistol"
             let enemyArchetype = note.userInfo?["enemyArchetype"] as? String ?? ""
             let clip: String
-            // Per-clip volume so SMG (which came out hotter than the rest)
-            // sits at parity. Other clips use SFXManager's default.
-            var clipVolume: Float? = nil
+            // SMG came out hotter than the rest of the pack, so it plays at a
+            // scaled fraction of the master volume rather than the default.
+            // Cumulative −15% × −20% × −15% × −10% ≈ 0.522; Raze's SMG was
+            // still hot on iPhone at anything above that.
+            var smgScale: Float? = nil
             if enemyArchetype == "bossmech" {
                 clip = "mech_autocannon"   // boss-class autocannon burst
             } else if enemyArchetype == "bossagi" {
@@ -211,14 +213,19 @@ final class SFXManager {
             } else {
                 switch weaponType {
                 case "rifle":  clip = "gunshot_rifle"
-                case "smg":
-                    clip = "gunshot_smg"
-                    clipVolume = SFXManager.shared.targetVolume * 0.522  // cumulative −15% × −20% × −15% × −10% ≈ 0.522. Raze's SMG was still hot on iPhone.
+                case "smg":    clip = "gunshot_smg"; smgScale = 0.522
                 case "pistol": clip = "gunshot_pistol"
                 default:       clip = "gunshot_pistol"
                 }
             }
-            Task { @MainActor in SFXManager.shared.play(clip, volume: clipVolume) }
+            // Resolve the volume against `targetVolume` INSIDE the main-actor
+            // hop. Reading the singleton out here tripped actor-isolation
+            // warnings from this @Sendable notification closure, and the value
+            // is only meaningful on the actor that owns it anyway.
+            Task { @MainActor in
+                let mgr = SFXManager.shared
+                mgr.play(clip, volume: smgScale.map { mgr.targetVolume * $0 })
+            }
         }
 
         // Melee swing — fires on every melee attempt (hit or miss). Unarmed

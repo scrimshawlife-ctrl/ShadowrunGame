@@ -1579,11 +1579,13 @@ final class GameState: ObservableObject {
         // room_2 wall cluster is now just a static obstacle you walk past, so
         // no tile-conversion happens on boss deploy.)
 
+        // Cinematic reveal card FIRST, then the unit lands on the board — same
+        // ordering as the M3 Sato reveal, so the card is already rising as the
+        // sprite materialises behind it.
+        presentBossIntro(archetype: enemy.archetype, name: enemy.name)
+
         enemies.append(enemy)
         addLog("⚠️  HEAVY UNIT DEPLOYED — \(enemy.name)")
-
-        // Cinematic reveal card — slams in over the board, holds, auto-clears.
-        presentBossIntro(archetype: enemy.archetype, name: enemy.name)
 
         // Visual + audio reveal — fire each notification with userInfo so
         // the BattleScene observer can place sprite + run intro sequence.
@@ -1945,6 +1947,11 @@ final class GameState: ObservableObject {
     /// each enemy movement step. Returns the number of shots fired (0 or 1 per overwatcher).
     /// One reaction shot per Overwatch action: the entry is consumed when the shot
     /// resolves (fumble/miss/dodge included), not at round end.
+    ///
+    /// Discardable: every AI call site fires this for its side effects (the shot
+    /// resolving) and has no use for the count, which was generating 18 identical
+    /// unused-result warnings and burying the real ones.
+    @discardableResult
     func fireOverwatchShot(atEnemy enemy: Enemy, attackerId: UUID) -> Int {
         guard let ovwPool = overwatchers[attackerId] else { return 0 }
         // Only fire if enemy is in LOS with no wall blocking

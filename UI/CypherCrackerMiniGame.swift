@@ -74,6 +74,27 @@ struct CypherCrackerMiniGame: View {
         }
     }
 
+    /// Per-level identity. The three levels already escalate mechanically, but
+    /// they were visually identical, so clearing one and starting the next read
+    /// as the same screen repeating rather than progress (playtest 2026-07-25:
+    /// "should have more than just 1 screen, maybe 3"). Naming and colouring
+    /// each tier makes the progression legible.
+    static func levelName(_ level: Int) -> String {
+        switch level {
+        case 1:  return "OUTER SHELL"
+        case 2:  return "CIPHER LAYER"
+        default: return "BLACK ICE CORE"
+        }
+    }
+
+    static func levelAccentHex(_ level: Int) -> String {
+        switch level {
+        case 1:  return "00FF88"   // green — safe warm-up
+        case 2:  return "FFC844"   // amber — pressure
+        default: return "FF3355"   // red — black ice
+        }
+    }
+
     // MARK: - Tuning
 
     /// Number of glyphs around each ring's circumference.
@@ -120,6 +141,9 @@ struct CypherCrackerMiniGame: View {
     /// Brief flash overlay around the lock arrow when player locks/misses.
     @State private var flashKind: FlashKind? = nil
     @State private var flashSeconds: Double = 0
+    /// Name of the tier just entered, shown briefly so each level announces itself.
+    @State private var stageBanner: String? = nil
+    @State private var stageBannerSeconds: Double = 0
     enum FlashKind { case success, fail }
 
     struct RainColumn: Identifiable {
@@ -269,6 +293,27 @@ struct CypherCrackerMiniGame: View {
                         Rectangle().stroke(didWin ? Color(hex: "00FFCC") : Color(hex: "FF3344"), lineWidth: 1.5)
                     )
                 }
+                // Tier callout — each level announces itself by name so the
+                // three stages read as progress, not the same board again.
+                if let banner = stageBanner, stageBannerSeconds > 0 {
+                    VStack(spacing: 2) {
+                        Text("LEVEL \(currentLevel)")
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                            .tracking(3)
+                            .foregroundColor(.white.opacity(0.65))
+                        Text(banner)
+                            .font(.system(size: 20, weight: .black, design: .monospaced))
+                            .tracking(2)
+                            .foregroundColor(Color(hex: CypherCrackerMiniGame.levelAccentHex(currentLevel)))
+                    }
+                    .padding(.horizontal, 20).padding(.vertical, 10)
+                    .background(Color.black.opacity(0.78))
+                    .overlay(Rectangle().stroke(
+                        Color(hex: CypherCrackerMiniGame.levelAccentHex(currentLevel)).opacity(0.7),
+                        lineWidth: 1.5))
+                    .opacity(min(1.0, stageBannerSeconds * 2.0))
+                    .allowsHitTesting(false)
+                }
             }
             .contentShape(Rectangle())
             .onTapGesture { location in
@@ -284,9 +329,9 @@ struct CypherCrackerMiniGame: View {
 
     private var hud: some View {
         HStack(spacing: 8) {
-            statusBlock(label: "LEVEL",
+            statusBlock(label: CypherCrackerMiniGame.levelName(currentLevel),
                         value: "\(currentLevel) / \(CypherCrackerMiniGame.totalLevels)",
-                        color: Color(hex: "FF00AA"))
+                        color: Color(hex: CypherCrackerMiniGame.levelAccentHex(currentLevel)))
             statusBlock(label: "RINGS",
                         value: "\(rings.filter(\.isLocked).count) / \(rings.count)",
                         color: Color(hex: "00FFCC"))
@@ -629,6 +674,10 @@ struct CypherCrackerMiniGame: View {
             flashSeconds = max(0, flashSeconds - dt)
             if flashSeconds == 0 { flashKind = nil }
         }
+        if stageBannerSeconds > 0 {
+            stageBannerSeconds = max(0, stageBannerSeconds - dt)
+            if stageBannerSeconds == 0 { stageBanner = nil }
+        }
     }
 
     private func initialise() {
@@ -653,6 +702,11 @@ struct CypherCrackerMiniGame: View {
         misses = 0
         flashKind = .success
         flashSeconds = 0.55
+        // Announce the new tier by name. Without this the next level started
+        // silently on an identical-looking board and the three stages read as
+        // one repeating screen.
+        stageBanner = CypherCrackerMiniGame.levelName(currentLevel)
+        stageBannerSeconds = 1.6
         chiptune?.sfxRingLock()
         HapticsManager.shared.selectAffirm()
     }

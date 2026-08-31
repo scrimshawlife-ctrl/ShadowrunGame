@@ -258,7 +258,10 @@ final class Enemy: ObservableObject, Identifiable, Codable {
         case "turret":      return 0   // bolted down — never repositions
         case "spider", "infiltrator": return 3   // fast flankers
         case "riot", "mech", "juggernaut": return 1   // heavy/slow walls
-        case "bossmech":    return 2   // boss-class mech advances faster than the regular grunt mech
+        // Playtest 2026-07-25: at 2 tiles the mech spent the whole fight walking
+        // and never got a shot off — the party out-ranged it and killed it on the
+        // approach. 3 lets it actually reach a firing position.
+        case "bossmech":    return 3   // boss-class mech advances faster than the regular grunt mech
         case "bossagi":     return 3   // AGI phase-shifts — moves 3 tiles per turn
         case "bossmage":    return 3   // Sato glides fast — closes on the party instead of planting at range (playtest: "doesn't move much")
         default:            return 2

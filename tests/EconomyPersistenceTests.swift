@@ -77,9 +77,13 @@ final class EconomyPersistenceTests: XCTestCase {
     func testFirstClearPayoutUsesRankRiskAndFullRunFactor() {
         let store = MissionStatsStore.shared
         store.resetAll()
-        // Score 2600 = rank S (×1.6). Risk ×1.25. First clear ×1.0.
+        // Score 2600 = rank S (+60%). Risk +25%. First clear x1.0.
+        // Rank and risk stack ADDITIVELY (2026-07 rebalance), so this is
+        // x(1 + 0.6 + 0.25), not x1.6 * 1.25. Derived from basePayout so the
+        // test tracks tuning changes instead of pinning a magic number.
         store.recordVictory(missionId: "Mission001", score: 2600, rewardMultiplier: 1.25)
-        let expected = Int((9_000.0 * 1.6 * 1.25 * 1.0).rounded())
+        let base = Double(MissionStatsStore.basePayout(missionId: "Mission001"))
+        let expected = Int((base * (1.0 + 0.6 + 0.25) * 1.0).rounded())
         XCTAssertEqual(store.playerNuyen, expected)
         XCTAssertEqual(store.lastWalletCredit, expected)
         XCTAssertEqual(store.lastRunFactor, 1.0)
@@ -90,13 +94,14 @@ final class EconomyPersistenceTests: XCTestCase {
     func testReplayPaysResidualRateNotFullContract() {
         let store = MissionStatsStore.shared
         store.resetAll()
-        store.recordVictory(missionId: "Mission001", score: 1, rewardMultiplier: 1.0) // C rank ×1.0
+        store.recordVictory(missionId: "Mission001", score: 1, rewardMultiplier: 1.0) // C rank x1.0
         let afterFirst = store.playerNuyen
-        XCTAssertEqual(afterFirst, 9_000)
+        let m1 = MissionStatsStore.basePayout(missionId: "Mission001")
+        XCTAssertEqual(afterFirst, m1)
 
         // Replay: same mission pays the 25% residual, never a second full payout.
         store.recordVictory(missionId: "Mission001", score: 1, rewardMultiplier: 1.0)
-        XCTAssertEqual(store.playerNuyen - afterFirst, Int((9_000.0 * 0.25).rounded()))
+        XCTAssertEqual(store.playerNuyen - afterFirst, Int((Double(m1) * 0.25).rounded()))
         XCTAssertEqual(store.lastRunFactor, 0.25)
         XCTAssertEqual(store.record(for: "Mission001").attempts, 2)
     }
@@ -106,7 +111,10 @@ final class EconomyPersistenceTests: XCTestCase {
         store.resetAll()
         store.recordVictory(missionId: "Mission003", score: 1,
                             dataAcquired: true, grimoireAcquired: true, rewardMultiplier: 1.0)
-        XCTAssertEqual(store.playerNuyen, 22_000 + 4_000 + 6_000)
+        XCTAssertEqual(store.playerNuyen,
+                       MissionStatsStore.basePayout(missionId: "Mission003")
+                       + MissionStatsStore.dataBonus(missionId: "Mission003")
+                       + MissionStatsStore.grimoireBonus(missionId: "Mission003"))
     }
 
     func testPayoutNeverNegativeAndZeroScoreIsUnranked() {
@@ -280,6 +288,49 @@ final class EconomyPersistenceTests: XCTestCase {
         XCTAssertEqual(scaled.maxHP, Int((Double(preHP) * 1.5).rounded()))
         XCTAssertEqual(scaled.currentHP, scaled.maxHP)
         XCTAssertEqual(scaled.attributes.agi, preAgi + 2)
+    }
+
+    // MARK: - Payout ceiling (2026-07 rebalance)
+
+    /// Rank and risk must stack ADDITIVELY. Multiplied they hit 1.6 x 1.5 =
+    /// 2.40x, which let a full campaign out-earn the entire shop catalogue
+    /// (playtest 2026-07-25: "the pay scale is kinda crazy").
+    func testRankAndRiskStackAdditivelyNotMultiplicatively() {
+        MissionStatsStore.shared.resetAll()
+        let base = MissionStatsStore.basePayout(missionId: "Mission005")
+        // Best case: S rank (1.6) + high heat (1.5).
+        MissionStatsStore.shared.recordVictory(
+            missionId: "Mission005", score: 100_000,
+            dataAcquired: false, grimoireAcquired: false, rewardMultiplier: 1.5)
+        let paid = MissionStatsStore.shared.playerNuyen
+        let multiplicative = Int((Double(base) * 1.6 * 1.5).rounded())
+        let additive       = Int((Double(base) * (1.0 + 0.6 + 0.5)).rounded())
+        XCTAssertEqual(paid, additive,
+                       "best-case payout must use the additive stack (1.60x), not 2.40x")
+        XCTAssertLessThan(paid, multiplicative,
+                          "additive stacking must pay strictly less than the old compounding")
+    }
+
+    /// A full campaign of FIRST clears at the best rank and heat must not fund
+    /// the entire catalogue for the whole team — gear has to stay a choice.
+    func testFullCampaignCannotBuyOutTheShopForEveryone() {
+        MissionStatsStore.shared.resetAll()
+        let ids = ["Mission001","Mission002","Mission002_5","Mission003","Mission003_5",
+                   "Mission004","Mission004_5","Mission005","Mission005_5","Mission006"]
+        for id in ids {
+            MissionStatsStore.shared.recordVictory(
+                missionId: id, score: 100_000,
+                dataAcquired: false, grimoireAcquired: false, rewardMultiplier: 1.5)
+        }
+        let banked = MissionStatsStore.shared.playerNuyen
+        // One of every catalogue item, for one runner.
+        let oneOfEverything = 111_000
+        XCTAssertGreaterThan(banked, oneOfEverything,
+                             "a perfect campaign should still afford a strong single loadout")
+        XCTAssertLessThan(banked, oneOfEverything * 4,
+                          "a perfect campaign must NOT fully kit all four runners "
+                          + "(banked \(banked) vs \(oneOfEverything * 4) to buy everything)")
+        MissionStatsStore.shared.resetAll()
     }
 }
 #endif

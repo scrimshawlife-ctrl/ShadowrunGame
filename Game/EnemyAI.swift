@@ -867,7 +867,13 @@ extension GameState {
                 // Design intent: rewards the player for spreading out.
                 let afterDist = hexDistance(x1: closestPlayer.positionX, y1: closestPlayer.positionY,
                                             x2: enemy.positionX, y2: enemy.positionY)
-                if afterDist <= 6 {
+                // Autocannon reach. Was a hard 6, which combined with a 2-tile
+                // move budget meant a mech that started the fight across the
+                // arena never fired at all — it walked, ate four runners' worth
+                // of fire, and died (playtest 2026-07-25). 8 lets a heavy weapon
+                // threaten from where it actually spawns; the closing turns are
+                // still the party's window to hurt it for free.
+                if afterDist <= 8 {
                     let inBlast = livingPlayers.filter {
                         hexDistance(x1: $0.positionX, y1: $0.positionY,
                                     x2: closestPlayer.positionX, y2: closestPlayer.positionY) <= 1

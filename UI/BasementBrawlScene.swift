@@ -162,6 +162,22 @@ struct BasementBrawlScene: View {
     @State private var gameOver = false
     @State private var didWin = false
     @State private var roundIntro: Double = 0     // counts down at wave start (lock input)
+    /// True while the VS card is parked waiting for the player to tap in.
+    @State private var awaitingFightTap = false
+    /// How long the card has been parked — drives the auto-advance safety net.
+    @State private var fightCardHold: Double = 0
+    /// Backstop so a missed tap can't strand the brawl on the VS card.
+    private static let fightCardAutoAdvance: Double = 12.0
+
+    /// Leave the VS card and roll into the FIGHT! beat.
+    private func beginFightFromCard() {
+        awaitingFightTap = false
+        fightCardHold = 0
+        // Drop straight to the "FIGHT!" portion of the intro (the card is drawn
+        // while roundIntro > 0.7) so tapping in feels immediate.
+        roundIntro = min(roundIntro, 0.7)
+        HapticsManager.shared.buttonTap()
+    }
     @State private var bannerText = ""
     @State private var bannerHold: Double = 0
 
@@ -376,8 +392,41 @@ struct BasementBrawlScene: View {
             }
         }
         .scaleEffect(x: f.facing, y: 1)
+        .rotationEffect(.degrees(Self.swingTilt(f) * Double(f.facing)),
+                        anchor: .bottom)
         .modifier(EnemyHitFlash(active: f.hitFlash > 0))
-        .position(x: f.x, y: groundY - h / 2 + (isDown ? 0 : f.jumpY + crouchDrop))
+        .position(x: f.x + Self.swingLunge(f, figH: h) * f.facing,
+                  y: groundY - h / 2 + (isDown ? 0 : f.jumpY + crouchDrop))
+    }
+
+    /// Forward/back displacement across an attack. Swapping poses alone read as
+    /// a flicker rather than a strike (playtest 2026-07-25: "some of the attacks
+    /// don't really show a definitive swing"), because the ACTIVE beat is only
+    /// 0.10–0.12s. Coiling BACK on the wind-up and driving THROUGH on the strike
+    /// gives the eye the travel it needs to register a swing, without touching
+    /// the hit windows that drive the fight's timing.
+    private static func swingLunge(_ f: FighterState, figH: CGFloat) -> CGFloat {
+        guard f.hp > 0, let atk = f.attack else { return 0 }
+        let heavy = atk == .heavy || f.special
+        switch f.phase {
+        case .windup:  return figH * (heavy ? -0.085 : -0.035)   // coil back
+        case .active:  return figH * (heavy ?  0.150 :  0.080)   // drive through
+        case .recover: return figH * (heavy ?  0.055 :  0.028)   // settle
+        default:       return 0
+        }
+    }
+
+    /// Body tilt that sells the weight of the blow — a heavy leans hard into it,
+    /// a jab barely rocks. Degrees, applied in the direction the fighter faces.
+    private static func swingTilt(_ f: FighterState) -> Double {
+        guard f.hp > 0, let atk = f.attack else { return 0 }
+        let heavy = atk == .heavy || f.special
+        switch f.phase {
+        case .windup:  return heavy ? -7.0 : -2.5
+        case .active:  return heavy ? 10.0 :  4.5
+        case .recover: return heavy ?  3.5 :  1.5
+        default:       return 0
+        }
     }
 
     /// Incoming-attack tell shown above the enemy during wind-up. Colour + arrow
@@ -535,6 +584,14 @@ struct BasementBrawlScene: View {
                 .blendMode(.plusLighter).allowsHitTesting(false)
         }
         if roundIntro > 0 {
+            // Full-screen catcher while the card waits, so a tap anywhere rolls
+            // into the bout and no stray tap leaks to the fight controls behind.
+            if awaitingFightTap {
+                Color.black.opacity(0.001)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { beginFightFromCard() }
+            }
             if roundIntro > 0.7 {
                 // Fight-night VS card — names the bout, shows the patch-up.
                 VStack(spacing: 4) {
@@ -556,6 +613,13 @@ struct BasementBrawlScene: View {
                         Text("PATCHED UP  +\(healedLastBreak) HP")
                             .font(.system(size: 11, weight: .black, design: .monospaced)).tracking(1)
                             .foregroundColor(Color(hex: "00FF88"))
+                    }
+                    if awaitingFightTap {
+                        Text("TAP TO FIGHT")
+                            .font(.system(size: 11, weight: .black, design: .monospaced)).tracking(3)
+                            .foregroundColor(Color(hex: "00FF88"))
+                            .padding(.top, 6)
+                            .opacity(0.55 + 0.45 * abs(sin(clock * 3)))
                     }
                 }
                 .padding(.horizontal, 26).padding(.vertical, 14)
@@ -684,6 +748,9 @@ struct BasementBrawlScene: View {
         enemy = FighterState(x: W * 0.74, hp: p.maxHP + heatHP, maxHP: p.maxHP + heatHP, facing: 1)
         hpAtWaveStart = player.hp
         roundIntro = initial ? 1.0 : 1.4
+        // Park on the VS card until the player taps in.
+        awaitingFightTap = true
+        fightCardHold = 0
         comboCount = 0
         enemySuperCD = 5.0
         koActive = false
@@ -847,7 +914,22 @@ struct BasementBrawlScene: View {
             if superActive <= 0 { player.phase = .none; player.attack = nil; player.special = false }
             return
         }
-        if roundIntro > 0 { roundIntro -= dt; return }
+        if roundIntro > 0 {
+            // The VS card WAITS for the player. It used to be on screen for
+            // 0.3–0.7s, which was not long enough to read who you were about to
+            // fight or that you had been patched up (playtest 2026-07-25:
+            // "fight cards only pop up too quick"). Holding here parks the
+            // countdown on the card until they tap in.
+            if awaitingFightTap {
+                fightCardHold += dt
+                // Safety net, same reasoning as the boss-intro card: a missed
+                // tap must never strand the brawl on a static screen.
+                if fightCardHold > Self.fightCardAutoAdvance { beginFightFromCard() }
+                return
+            }
+            roundIntro -= dt
+            return
+        }
 
         // KO beat — when an enemy is downed, hold on the fall before the next
         // challenger walks in, instead of cutting instantly to the next fight.
